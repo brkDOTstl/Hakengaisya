@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-19. Current suite version: **0.8.1**. Current milestone: **complete researched workflow presets and scale variants**.
+Updated: 2026-10-19. Current suite version: **0.8.2**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -22,6 +22,7 @@ Stay on 0.8.x until preset completion. Patch numbers identify delivered incremen
 | Hierarchical control | Rooted reporting lines, scoped assignment, direct-supervisor acceptance, upward integration and correction history | Actual host context identity and physical permissions are supplied by the host |
 | Intake triage | Bounded native-model contract and optional Jev adapter with fallback | Live Jev triage and reliable automatic host invocation are not established |
 | Organization composition | Capability modules, role hats, responsibility merges, phase activation and independent-QA constraints | Outputs are unbound organization proposals, not complete company workflow presets |
+| Same-host agency coordination | Subcontract brief compilation, immutable local mailbox, one-claim semantics, receipt validation and buyer-only acceptance | Synthetic control/transport tests only; actual client launch, Desktop wake and per-client capacity adapters remain unconnected |
 | Existing examples | Small-tool organization and indie-game organization; older software/product reference templates | No project family yet satisfies the complete preset contract across its scale variants |
 | Employee evaluator | Independent recorder/API, signed local HTTP, offline retry, task/skill profiles, ranking and model details | Peer scores are observations, not verified ground truth or proof of AI authorship; hosted operation is separate |
 | Public source and checks | MIT suite, both plugins, executable tests and Windows/Linux CI | Passing structural or synthetic tests does not establish real-task completion or measured savings |
@@ -43,7 +44,19 @@ The earlier Pomodoro trial was real and exposed excessive coordination overhead.
 | P09 | Planned | Verify every required family/scale combination structurally, including rejected work, missing evidence and blocked tools |
 | P10 | Planned | Complete usage guides, realistic de-identified examples, known limitations and the final 0.8 coverage review |
 
-Keep active work focused on the contract and source-backed preset design before adding more generic framework layers. Each finished increment updates this table and links its actual artifact/check evidence.
+The user added same-host multi-client agency coordination to the 0.8 scope. Track it alongside the preset contract and research without dropping the existing required families. Each finished increment updates this table and links its actual artifact/check evidence.
+
+## Same-host multi-client workstream - required in 0.8
+
+| ID | Status | Deliverable |
+| --- | --- | --- |
+| F01 | Draft contract and structural prototype in 0.8.2 | [Buyer/supplier operating structure](docs/multi-client-coordination.md), client capabilities and independent supplier hierarchies |
+| F02 | Local transport/control simulation implemented in 0.8.2 | Bounded immutable inbox/outbox/claim records, attempt-bound receipts and buyer review; separate fixture process is not a real AI client |
+| F03 | Pending | Register and connect an actual same-host CLI adapter with model/tool access, capacity and process/status capture |
+| F04 | Pending | Register and connect a supported Desktop native-tool or scheduled/UI wake/check adapter |
+| F05 | Pending | Complete supported Desktop/Desktop, CLI/CLI and both mixed-direction contracts, recovery and documentation; preserve the direct router path |
+
+The first target is several clients on one computer. Cross-machine coordination is deferred. No scheduler, GUI automation, other conversation or external model is started just by declaring this feature. A router-capable agency can keep ordinary model calls internal and outsource only when the project warrants it.
 
 ## Required preset baseline for 0.8
 
@@ -86,12 +99,14 @@ These are work patterns, not fixed headcount promises. Each family needs all app
 - [ ] Technical, human and external-provider steps are identified without invented observations or implicit external authorization.
 - [ ] Structural checks and simulated successful/failing paths pass for the supported variants.
 - [ ] A reader can choose and inspect the preset, understand its limits and reproduce its documented example.
+- [ ] Applicable same-host supplier handoffs identify the buyer, supplier lead, client capacity, scoped artifacts, wake/delivery method and buyer acceptance; direct single-agency/router use remains available.
 
 These boxes define each preset's contract. They do not state that the whole library is complete.
 
 ## Gate from 0.8 to 0.9
 
 - [ ] P02-P10 are complete with linked artifacts and checks.
+- [ ] F01-F05 have the declared same-host adapter/coordination contracts and implementation required for the supported client scope; unconnected paths remain explicit blockers.
 - [ ] Every required family has a complete preset and applicable scale coverage, or an explicitly recorded scope decision.
 - [ ] Preset selection/expansion preserves deliverable dependencies and superior-subordinate authority.
 - [ ] Cross-preset structural tests, negative paths, clean-checkout build, documentation and privacy checks pass.
@@ -103,6 +118,7 @@ These boxes define each preset's contract. They do not state that the whole libr
 
 - [ ] Exercise representative real tasks and applicable scales using the completed presets.
 - [ ] Verify actual native model/tool invocation and actual context/reporting bindings in the supported host.
+- [ ] Verify actual same-host Desktop/Desktop, CLI/CLI, Desktop-buyer/CLI-supplier and CLI-buyer/Desktop-supplier flows where claimed, including unavailable clients, stale/duplicate replies and uncertain execution.
 - [ ] Trace complete task delivery, supervisor rejection/correction, missing capability, interruption/recovery and final acceptance.
 - [ ] Compare suitable direct/smaller-team baselines with the same acceptance criteria; record observed cost, latency, startup, waits, handoff and rework. Preserve unknown measurements.
 - [ ] Establish de-identified evaluator recording, deduplication, queue/retry and useful contextual feedback without polluting live evidence with simulations.

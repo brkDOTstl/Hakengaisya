@@ -6,12 +6,16 @@ import { planWork } from '../lib/planning.mjs';
 import { prepareTriage, finishTriage, triageWithJev } from '../lib/triage.mjs';
 import { prepareDispatch, prepareReview } from '../lib/dispatch.mjs';
 import { composeOrganization } from '../lib/organization.mjs';
+import { compileFederation, prepareHandoff, proposeReceiptImport } from '../lib/federation.mjs';
 
-const [command, target, source] = process.argv.slice(2);
+const [command, target, source, extra] = process.argv.slice(2);
 const json = async filename => JSON.parse(await readFile(filename, 'utf8'));
 try {
   let result;
-  if (command === 'organize' && target) result = composeOrganization(await json(new URL('../config/organization-modules.json', import.meta.url)), await json(target), source);
+  if (command === 'federation-plan' && target && !source) result = compileFederation(await json(target));
+  else if (command === 'handoff' && target && source && extra) result = prepareHandoff(await json(target), await json(source), extra);
+  else if (command === 'receipt' && target && source && extra) result = proposeReceiptImport(await json(target), await json(source), await json(extra));
+  else if (command === 'organize' && target) result = composeOrganization(await json(new URL('../config/organization-modules.json', import.meta.url)), await json(target), source);
   else if (command === 'triage-request' && target && !source) result = prepareTriage(await json(target));
   else if (command === 'triage' && target && source) result = finishTriage(await json(target), await json(source));
   else if (command === 'triage-jev' && target && source) result = await triageWithJev(await json(target), await json(source));
@@ -39,6 +43,6 @@ try {
       await handle.close(); await unlink(lock);
       try { await unlink(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     }
-  } else throw new Error('Usage: node scripts/workflow.mjs organize <project.json> [phase] | triage-request <intake.json> | triage <intake.json> <response.json> | triage-jev <approved-intake.json> <jev-options.json> | select <brief.json> | plan <brief.json> <workers.json> | dispatch <run.json> <packet-id> | review <run.json> <packet-id> | create <run.json> <brief.json> | next <run.json> | event <run.json> <event.json>');
+  } else throw new Error('Usage: node scripts/workflow.mjs federation-plan <project.json> | handoff <run.json> <project.json> <packet-id> | receipt <run.json> <request.json> <receipt.json> | organize <project.json> [phase] | triage-request <intake.json> | triage <intake.json> <response.json> | triage-jev <approved-intake.json> <jev-options.json> | select <brief.json> | plan <brief.json> <workers.json> | dispatch <run.json> <packet-id> | review <run.json> <packet-id> | create <run.json> <brief.json> | next <run.json> | event <run.json> <event.json>');
   console.log(JSON.stringify(result, null, 2));
 } catch (error) { console.error(error.message); process.exitCode = 1; }

@@ -23,6 +23,12 @@ For a new project, select capability modules from actual deliverables and constr
 
 Keep logical positions, actual employee/model bindings and concurrently running agents separate. Activate specialist positions by phase or bottleneck; do not keep them running to fill an organization chart. Phase proposals do not change a running hierarchy. Unknown cost, skill/tool availability and workload remain unknown. Game-art/audio slots need actual artifact tools and qualified review; they do not extend the technical evaluator into automatic aesthetic scoring or prove player enjoyment.
 
+## Coordinate registered client agencies
+
+For explicitly configured same-host outsourcing, one buyer lead contracts with supplier leads, each of which controls its own local hierarchy and model/tool pool. Use federation-plan and the bounded handoff/receipt helpers; read [the client-agency contract](references/multi-client.md). Supplier completion produces a submission for buyer review, not buyer acceptance. Scope and interface changes go through the buyer. Preserve global and local client limits, immutable attempts, current artifact evidence and uncertain-execution stops.
+
+Choose connections from actual capabilities: native task tool, supported CLI adapter, inbox pull or an approved Desktop wake/UI adapter. A surface label does not prove an invocation API exists or is absent. The 0.8.2 mailbox is a local contract/control prototype; it does not connect real clients, start schedulers or grant permission to message another conversation. When one router-capable agency can perform the work adequately, use its direct permitted model routes without adding a supplier agency. Keep all subcontract contents separate from evaluator uploads.
+
 ## Triage before dispatch
 
 The intake_triage role classifies domain, work type, difficulty, scope, risk and primary skill. It returns bounded work to its responsible supervisor for one adequate employee, larger work to host planning, or uncertainty to one host judgment. Classification does not confer dispatch or signoff authority. It performs no implementation, detailed decomposition, staff evaluation or acceptance review and adds no management layer.
@@ -58,7 +64,7 @@ Unknown ability, cost, duration, or review/handoff overhead stays unknown. The p
 ## Execute with bounded control
 
 1. Use next's dispatchable batch, then the dispatch helper for each selected packet. It provides current task inputs, outputs, checks, writes, dispatched attempt and binding. Pass only needed material; do not forward the global journal or unrelated history. The snapshot reserves capacity only in its proposed batch; the host records start before launch and replans readiness after state changes.
-2. Use authorized Codex-native subagents for useful work. Do not start another Codex CLI or external provider to imitate them. Respect actual pool and concurrency limits.
+2. Prefer authorized native subagents within one host. Genuine cross-client outsourcing uses an explicitly registered recipient and verified host adapter; do not launch another CLI/provider merely to imitate a native worker or bypass host/account permissions. Respect global and supplier-local pool limits.
 3. Run independent ready work in parallel where ownership and capacity permit. Reuse contexts for compatible sequential work. Workers return results; the host alone writes run state.
 4. Inspect real artifacts and behavior. A completion message is a submission to the responsible supervisor. Use the review helper for current results and criteria. The supervisor differs from every producer and signs its own subordinate scope. QA findings support that decision. Batch related checks without inventing observations or cross-team signoff authority.
 5. Preserve rejected attempts and unaffected valid evidence. Reopen affected work, discard stale results, and renew ability-fit assignment before correction. Unpriced trials default to one attempt. Stop at the configured limit with the concrete unresolved issue.

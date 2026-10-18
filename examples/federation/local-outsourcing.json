@@ -1,0 +1,26 @@
+{
+  "id": "same-host-outsourcing-example",
+  "scope": "same-host",
+  "workspace_id": "synthetic-project",
+  "objective": "Synthetic buyer-controlled integration of two independently delivered components; no real client launch.",
+  "domain": "software-engineering",
+  "evidence_kind": "simulation",
+  "acceptance": ["Both components integrate and the buyer verifies the final behavior."],
+  "constraints": ["Only contracted workspace-relative outputs may be changed.", "No external client, model, scheduler or UI automation is launched by this example."],
+  "max_parallel": 2,
+  "buyer": {"client_id":"buyer-desktop","lead_context":"buyer-lead"},
+  "clients": [
+    {"id":"buyer-desktop","surface":"desktop","transport":"native-task","capability_status":"declared","max_parallel":2},
+    {"id":"supplier-cli","surface":"cli","transport":"cli-command","capability_status":"declared","max_parallel":1},
+    {"id":"supplier-desktop","surface":"desktop","transport":"mailbox-pull","capability_status":"declared","max_parallel":1}
+  ],
+  "teams": [
+    {"id":"engineering-agency","client_id":"supplier-cli","lead_context":"engineering-agency-lead"},
+    {"id":"client-agency","client_id":"supplier-desktop","lead_context":"client-agency-lead"}
+  ],
+  "contracts": [
+    {"id":"service","supplier_team":"engineering-agency","work":{"objective":"Deliver a bounded service component.","task_type":"implementation","difficulty":"routine","skills":["implementation"],"depends_on":[],"inputs":["task_brief"],"writes":["src/service"],"outputs":["service_component"],"acceptance":["The component passes its agreed interface checks."]}},
+    {"id":"client","supplier_team":"client-agency","work":{"objective":"Deliver a bounded client component.","task_type":"implementation","difficulty":"routine","skills":["implementation"],"depends_on":[],"inputs":["task_brief"],"writes":["src/client"],"outputs":["client_component"],"acceptance":["The component passes its agreed interface checks."]}},
+    {"id":"integrated","supplier_team":"engineering-agency","work":{"objective":"Integrate the accepted components and submit to the buyer.","task_type":"implementation","difficulty":"standard","skills":["implementation"],"depends_on":["service","client"],"inputs":["service_component","client_component"],"writes":["dist"],"outputs":["integrated_delivery"],"acceptance":["The accepted components work together in the requested scenario."]}}
+  ]
+}

@@ -18,6 +18,7 @@ A preset describes a reusable way to deliver a project family at an applicable s
 | Model and tool needs | Required skills/difficulty, actual tool access, unavailable/human steps and contextual evidence needed before live assignment |
 | Resource assumptions | Pool/concurrency limits, scope/budget constraints, measured or explicitly estimated startup/handoff/review overhead |
 | Exception paths | Blocked tools, missing evidence, changed scope, bounded retries, interruption/recovery and final handover |
+| Execution topology | Single-agency/native/router path or same-host buyer/supplier agencies; registered leads, declared capabilities, scoped artifacts, handoff/receipt states and buyer acceptance |
 | Verification and use | Source-backed rationale, structural/simulation checks, example inputs, selection guidance and declared limitations |
 
 ## Execution semantics
@@ -34,6 +35,8 @@ Stage names do not require separate workers, documents or model calls. A micro w
 Large workflows add a level or specialist only for a named integration, capability or review bottleneck. Scale overlays cannot bypass acceptance, merge QA into its producer or silently change a running context's reporting line. Phase changes and scope changes require a reviewed work graph and explicit state handling.
 
 The proposed expansion path should reuse [work-item forms](../plugins/hakengaisya/skills/company-workflow/references/task-first.md), [supervision](../plugins/hakengaisya/skills/company-workflow/references/supervision.md) and [organization proposals](organization-composition.md). The preset layer does not replace the controller, evaluator or host tool permissions.
+
+For cross-client use, also follow [same-host coordination](multi-client-coordination.md). The buyer contracts with each supplier lead; supplier-internal acceptance is separate from buyer acceptance. Desktop/CLI labels do not substitute for capability checks. Router access inside one agency does not require an outsourcing layer. Transport acknowledgment, client completion and accepted project delivery remain separate states.
 
 ## Maturity and completion
 

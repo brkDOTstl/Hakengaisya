@@ -13,6 +13,7 @@ wiki/
 **/.data/
 **/.local/
 **/.hakengaisya-evaluator/
+**/.hakengaisya-exchange/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
