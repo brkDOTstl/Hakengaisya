@@ -2,6 +2,8 @@
 
 Hakengaisya is an experimental technical-agent suite with explicit reporting lines, delegated work and upward acceptance. It derives a task-sized organization from real deliverables and dependencies, then matches adequate workers by contextual ability, cost and useful parallelism. The workflow and employee evaluator can each be used independently.
 
+**Development stage: 0.8.x preset completion.** See [ROADMAP.md](ROADMAP.md) for current work, preset/scale coverage gaps and completion criteria. The project stays on 0.8.x until the main researched workflow presets are complete; 0.9 is reserved for real-task testing/optimization, and 1.0 follows successful validation.
+
 ## Current scope
 
 Version 0.8 adds [capability-module organization composition](docs/organization-composition.md). A small software tool composes two positions; the indie-game reference composes seven core positions with temporary specialists and phase-specific activation. These are unbound role proposals, not launched agents, game-production adapters or measured delivery forecasts.
