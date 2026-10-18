@@ -1,0 +1,20 @@
+{
+  "id": "indie-game-one-year",
+  "objective": "Propose a task-sized indie studio for a bounded single-player PC game using an established engine.",
+  "assumptions": ["2D or lightweight 3D presentation", "No custom engine, online service or simultaneous console launch", "A twelve-month human planning reference, not an AI speed estimate", "Seven core positions with scoped specialist help; actual staffing depends on content volume and evidence"],
+  "reference_duration_months": 12,
+  "max_positions": 10,
+  "max_active_agents": 3,
+  "core_modules": ["core", "software", "gameplay", "game-design", "visual-direction", "visual-production", "quality-release"],
+  "optional_modules": ["audio", "release-support"],
+  "position_overrides": {
+    "project_lead": {"title":"Producer / game direction","functions":["Define product scope, audience, priorities and milestone decisions","Coordinate actual playtests and early release positioning","Integrate accepted team deliveries against owner requirements"]}
+  },
+  "phases": [
+    {"id":"prototype","months":[1,2],"modules":["core","software","game-design","visual-direction"],"exit_criteria":["An actual prototype tests the core loop with intended players","Major technical and scope risks have observed findings"]},
+    {"id":"vertical-slice","months":[3,4],"modules":["core","software","gameplay","game-design","visual-direction","quality-release","audio"],"exit_criteria":["One representative section is playable with representative visual and audio targets","Observed content-production throughput supports a revised remaining scope"]},
+    {"id":"production","months":[5,8],"modules":["core","software","gameplay","game-design","visual-direction","visual-production","quality-release","audio"],"exit_criteria":["The bounded content plan is playable end to end","Cross-discipline interfaces and remaining defects have accountable owners"]},
+    {"id":"stabilization","months":[9,10],"modules":["core","software","gameplay","game-design","visual-direction","visual-production","quality-release","audio","release-support"],"exit_criteria":["Release-critical behavior, compatibility and performance are checked on target builds","Real playtest findings are addressed or explicitly accepted by the owner"]},
+    {"id":"release","months":[11,12],"modules":["core","software","gameplay","game-design","visual-direction","visual-production","quality-release","release-support"],"exit_criteria":["The release candidate meets the agreed technical and product criteria","The owner authorizes external publication and post-release support has a plan"]}
+  ]
+}

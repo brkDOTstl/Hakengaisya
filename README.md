@@ -4,6 +4,14 @@ Hakengaisya is an experimental technical-agent suite with explicit reporting lin
 
 ## Current scope
 
+Version 0.8 adds [capability-module organization composition](docs/organization-composition.md). A small software tool composes two positions; the indie-game reference composes seven core positions with temporary specialists and phase-specific activation. These are unbound role proposals, not launched agents, game-production adapters or measured delivery forecasts.
+
+```powershell
+node scripts/workflow.mjs organize examples/organizations/indie-game.json
+node scripts/workflow.mjs organize examples/organizations/indie-game.json production
+node scripts/workflow.mjs organize examples/organizations/small-software.json
+```
+
 The suite has two independently usable plugins. [Hakengaisya-evaluator](packages/evaluator) is the local recorder and skill-feedback service. Hakengaisya itself defines company topology, work contracts, assignment, progress control, supervisory review, integration and final delivery. See [the suite boundary](docs/suite-architecture.md).
 
 ## Install or run

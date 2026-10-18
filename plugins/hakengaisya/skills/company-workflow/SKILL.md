@@ -17,6 +17,12 @@ A separate QA agent or specialist can supply technical findings as evidence. It 
 
 Read [task planning and forms](references/task-first.md) to create a persisted work graph or route plan. The host fills internal forms; users provide goals and constraints. The evaluator is optional and independently usable.
 
+## Compose a project-sized organization
+
+For a new project, select capability modules from actual deliverables and constraints, then use organize PROJECT.json [PHASE] to validate a role proposal. Read [composition forms](references/organization-composition.md) when doing so. Combine compatible production responsibilities where ability and workload permit; preserve the root and upward acceptance. Working leads produce real outputs, and their own production is checked by their parent with independent technical findings where needed.
+
+Keep logical positions, actual employee/model bindings and concurrently running agents separate. Activate specialist positions by phase or bottleneck; do not keep them running to fill an organization chart. Phase proposals do not change a running hierarchy. Unknown cost, skill/tool availability and workload remain unknown. Game-art/audio slots need actual artifact tools and qualified review; they do not extend the technical evaluator into automatic aesthetic scoring or prove player enjoyment.
+
 ## Triage before dispatch
 
 The intake_triage role classifies domain, work type, difficulty, scope, risk and primary skill. It returns bounded work to its responsible supervisor for one adequate employee, larger work to host planning, or uncertainty to one host judgment. Classification does not confer dispatch or signoff authority. It performs no implementation, detailed decomposition, staff evaluation or acceptance review and adds no management layer.

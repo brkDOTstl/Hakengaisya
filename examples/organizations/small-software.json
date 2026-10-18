@@ -1,0 +1,16 @@
+{
+  "id": "bounded-software-tool",
+  "objective": "Propose a supervisor and one working engineer for a coherent small software tool.",
+  "max_positions": 3,
+  "max_active_agents": 2,
+  "core_modules": ["core", "software"],
+  "optional_modules": ["quality-release"],
+  "position_overrides": {
+    "project_lead": {"title":"Task supervisor"},
+    "technical_lead": {"title":"Software engineer"}
+  },
+  "phases": [
+    {"id":"delivery","modules":["core","software"],"exit_criteria":["The supervisor checks actual behavior and user criteria"]},
+    {"id":"independent-check","modules":["core","software","quality-release"],"exit_criteria":["Independent technical findings support the supervisor's final acceptance"]}
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "name": "hakengaisya",
-  "version": "0.7.0",
-  "description": "Delegate technical work through explicit reporting lines, direct-supervisor acceptance and bounded cost-aware staffing.",
+  "version": "0.8.0",
+  "description": "Compose project-sized organizations, then delegate qualified technical work through explicit reporting and upward acceptance.",
   "author": { "name": "brkDOTstl" },
   "skills": "./skills/"
 }
