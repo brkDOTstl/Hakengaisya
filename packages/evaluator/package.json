@@ -1,0 +1,17 @@
+{
+  "name": "hakengaisya-evaluator",
+  "version": "0.2.1",
+  "license": "MIT",
+  "repository": {"type": "git", "url": "https://github.com/brkDOTstl/Hakengaisya.git", "directory": "packages/evaluator"},
+  "private": true,
+  "type": "module",
+  "description": "Independent local-work skill guidance and cost-aware dispatch service for the Hakengaisya suite",
+  "engines": {"node": ">=24.13.0 <25"},
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "example": "node scripts/example.mjs",
+    "audit": "node scripts/privacy-audit.mjs",
+    "plugin:build": "node scripts/build-plugin.mjs"
+  }
+}

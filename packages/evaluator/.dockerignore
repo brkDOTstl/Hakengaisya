@@ -1,0 +1,7 @@
+.git
+.data
+.local
+.env
+*.key
+*.pem
+test

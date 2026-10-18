@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "version": "local-peer-v1",
+  "dimensions": {
+    "D1": "Evidence precision",
+    "D2": "Change precision",
+    "D3": "Diagnosis depth",
+    "D4": "Review rigour",
+    "D5": "Effective delivery speed",
+    "D6": "Reliability and coordination"
+  },
+  "credibility": {
+    "relevant_dimensions": ["D1", "D4"],
+    "unknown_weight": 0.25,
+    "minimum_weight": 0.1,
+    "ability_exponent": 2,
+    "historical_seed_influence": 0.5,
+    "max_single_peer_share_for_supported": 0.75,
+    "basis": "A frozen credibility registry, using evidence precision, review ability, and the dimension being evaluated. New feedback never changes its own reviewers' weights in the same batch."
+  },
+  "relationship_weights": {
+    "direct_collaboration": 1,
+    "artifact_review": 0.8,
+    "indirect": 0.35
+  },
+  "confidence": {
+    "minimum_distinct_task_inputs": 2,
+    "minimum_distinct_peer_models": 2,
+    "disagreement_gap": 4,
+    "labels": ["unmeasured", "provisional", "supported-peer-feedback", "disputed"]
+  },
+  "survey": {
+    "after_completed_stage": true,
+    "periodic_interval_seconds": 1800,
+    "minimum_new_completed_tasks": 3,
+    "participants": "Only models that worked on or reviewed the same task",
+    "runtime_status": "hook-contract-only"
+  },
+  "role_weights": {
+    "requirements_analyst": {"D1": 3, "D3": 2, "D4": 1, "D6": 2},
+    "technical_lead": {"D1": 2, "D2": 1, "D3": 3, "D4": 2, "D6": 2},
+    "delivery_team": {"D1": 1, "D2": 3, "D3": 2, "D5": 1, "D6": 2},
+    "assurance_team": {"D1": 3, "D3": 2, "D4": 3, "D6": 2},
+    "research_team": {"D1": 3, "D3": 2, "D4": 2, "D6": 1},
+    "design_lead": {"D1": 2, "D2": 2, "D3": 2, "D4": 1, "D6": 2},
+    "engineering_lead": {"D1": 2, "D2": 2, "D3": 3, "D4": 2, "D6": 1},
+    "prototype_team": {"D1": 1, "D2": 3, "D3": 2, "D5": 1, "D6": 2},
+    "evaluation_team": {"D1": 3, "D3": 2, "D4": 3, "D6": 2}
+  },
+  "dispatch": {
+    "minimum_dimension_coverage": 0.8,
+    "automatic_assignment": false,
+    "meaning": "Role fit is a peer-derived estimate. It does not override a task acceptance gate."
+  }
+}

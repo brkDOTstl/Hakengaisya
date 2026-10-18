@@ -1,0 +1,7 @@
+{
+  "name": "hakengaisya",
+  "version": "0.7.0",
+  "description": "Delegate technical work through explicit reporting lines, direct-supervisor acceptance and bounded cost-aware staffing.",
+  "author": { "name": "brkDOTstl" },
+  "skills": "./skills/"
+}

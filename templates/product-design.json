@@ -1,0 +1,429 @@
+{
+  "schema_version": 1,
+  "id": "product-design",
+  "name": "Product design company",
+  "status": "draft",
+  "purpose": "Develop a technical product concept through practical user needs, feasibility evidence, and prototype evaluation.",
+  "reference_ids": [
+    "ideo",
+    "svpg"
+  ],
+  "root": "product_lead",
+  "roles": [
+    {
+      "id": "product_lead",
+      "name": "Product lead",
+      "kind": "lead",
+      "optional": false,
+      "purpose": "Own the target outcome, priorities, and business constraints.",
+      "decisions": [
+        "Frame the opportunity within the user's goal",
+        "Prioritize concepts using evidence",
+        "Resolve competing outcome constraints"
+      ],
+      "deliverables": [
+        "Opportunity brief",
+        "Product decisions"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "research_team",
+      "name": "Research team",
+      "kind": "team",
+      "optional": false,
+      "purpose": "Investigate user needs and distinguish observation from assumption.",
+      "decisions": [
+        "Choose research questions and evidence methods",
+        "Flag unsupported user claims"
+      ],
+      "deliverables": [
+        "Research findings",
+        "Evidence provenance"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "design_lead",
+      "name": "Design lead",
+      "kind": "lead",
+      "optional": false,
+      "purpose": "Design technical product behavior, information flow, interaction, and prototype production.",
+      "decisions": [
+        "Choose technical product alternatives with product and engineering input",
+        "Define functional behavior and interaction contracts"
+      ],
+      "deliverables": [
+        "Concept plan",
+        "Design handover"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "engineering_lead",
+      "name": "Engineering lead",
+      "kind": "specialist",
+      "optional": false,
+      "purpose": "Contribute technical possibilities, constraints, and feasibility findings early.",
+      "decisions": [
+        "Identify feasibility risks",
+        "Recommend prototype fidelity and technical approaches"
+      ],
+      "deliverables": [
+        "Feasibility note",
+        "Technical prototype guidance"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "prototype_team",
+      "name": "Prototype team",
+      "kind": "team",
+      "optional": false,
+      "purpose": "Build the smallest artifact that can test the concept's important assumptions.",
+      "decisions": [
+        "Choose production details within the concept and test protocol"
+      ],
+      "deliverables": [
+        "Prototype",
+        "Test protocol"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "evaluation_team",
+      "name": "Evaluation team",
+      "kind": "team",
+      "optional": false,
+      "purpose": "Evaluate user value, usability, feasibility evidence, and remaining assumptions.",
+      "decisions": [
+        "Reject unsupported findings",
+        "Identify what the prototype did and did not establish"
+      ],
+      "deliverables": [
+        "Prototype evaluation",
+        "Rework findings"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "staff_coordinator",
+      "name": "Evaluation recorder adapter",
+      "kind": "specialist",
+      "optional": true,
+      "purpose": "Emit structured peer observations through the independent evaluator recorder; no separately running grading model is required.",
+      "decisions": [
+        "Record observed peer contributions without inventing an independent verdict",
+        "Preserve uncertainty and de-identify examples before optional upload",
+        "Read contextual capability advice from the independent evaluator when available"
+      ],
+      "deliverables": [
+        "Optional peer observation records",
+        "Referenced evaluator advice"
+      ],
+      "model_binding": null
+    }
+  ],
+  "authority": [
+    {
+      "from": "product_lead",
+      "to": "research_team"
+    },
+    {
+      "from": "product_lead",
+      "to": "design_lead"
+    },
+    {
+      "from": "product_lead",
+      "to": "engineering_lead"
+    },
+    {
+      "from": "design_lead",
+      "to": "prototype_team"
+    },
+    {
+      "from": "product_lead",
+      "to": "evaluation_team"
+    },
+    {
+      "from": "product_lead",
+      "to": "staff_coordinator"
+    }
+  ],
+  "interactions": [
+    {
+      "from": "research_team",
+      "to": "design_lead",
+      "type": "collaboration",
+      "contract": "Use user evidence to develop and challenge design alternatives."
+    },
+    {
+      "from": "product_lead",
+      "to": "design_lead",
+      "type": "collaboration",
+      "contract": "Explore user value and business viability together."
+    },
+    {
+      "from": "design_lead",
+      "to": "engineering_lead",
+      "type": "collaboration",
+      "contract": "Explore experience and technical possibilities together."
+    },
+    {
+      "from": "engineering_lead",
+      "to": "prototype_team",
+      "type": "service",
+      "contract": "Provide feasibility constraints and bounded technical support."
+    },
+    {
+      "from": "evaluation_team",
+      "to": "research_team",
+      "type": "review",
+      "contract": "Check provenance and the limits of research claims."
+    },
+    {
+      "from": "evaluation_team",
+      "to": "prototype_team",
+      "type": "review",
+      "contract": "Evaluate the prototype against its declared assumptions."
+    },
+    {
+      "from": "design_lead",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "engineering_lead",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "prototype_team",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "evaluation_team",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "staff_coordinator",
+      "to": "product_lead",
+      "type": "service",
+      "contract": "Supply contextual capability estimates, dissent, and advisory role-fit suggestions."
+    }
+  ],
+  "workflow": {
+    "external_inputs": [
+      "task_brief",
+      "constraints",
+      "existing_assets"
+    ],
+    "on_rejection": "Record a finding, reopen the named rework stage as a new attempt, and invalidate affected downstream artifacts.",
+    "stages": [
+      {
+        "id": "framing",
+        "owner": "product_lead",
+        "contributors": [],
+        "depends_on": [],
+        "inputs": [
+          "task_brief",
+          "constraints"
+        ],
+        "outputs": [
+          "opportunity_brief"
+        ],
+        "gate": {
+          "reviewer": "research_team",
+          "checks": [
+            "Target users and outcomes are explicit",
+            "Assumptions are distinguished from supplied evidence"
+          ],
+          "rework_to": "framing"
+        }
+      },
+      {
+        "id": "research",
+        "owner": "research_team",
+        "contributors": [],
+        "depends_on": [
+          "framing"
+        ],
+        "inputs": [
+          "opportunity_brief",
+          "existing_assets"
+        ],
+        "outputs": [
+          "research_findings"
+        ],
+        "gate": {
+          "reviewer": "evaluation_team",
+          "checks": [
+            "Each factual finding has a traceable real source; an empty evidence inventory supports hypothesis exploration only",
+            "Invented interviews or simulated users are not represented as observed evidence",
+            "Unresolved evidence gaps are explicit; missing user evidence blocks a scope that requires validated user needs"
+          ],
+          "rework_to": "research"
+        }
+      },
+      {
+        "id": "feasibility",
+        "owner": "engineering_lead",
+        "contributors": [],
+        "depends_on": [
+          "framing"
+        ],
+        "inputs": [
+          "opportunity_brief",
+          "constraints",
+          "existing_assets"
+        ],
+        "outputs": [
+          "feasibility_note"
+        ],
+        "gate": {
+          "reviewer": "evaluation_team",
+          "checks": [
+            "Material technical and production constraints have supporting evidence",
+            "Unsupported feasibility claims remain assumptions"
+          ],
+          "rework_to": "feasibility"
+        }
+      },
+      {
+        "id": "concept",
+        "owner": "design_lead",
+        "contributors": [
+          "research_team",
+          "engineering_lead"
+        ],
+        "depends_on": [
+          "research",
+          "feasibility"
+        ],
+        "inputs": [
+          "research_findings",
+          "feasibility_note",
+          "opportunity_brief"
+        ],
+        "outputs": [
+          "concept_plan"
+        ],
+        "gate": {
+          "reviewer": "product_lead",
+          "checks": [
+            "Concept addresses the target outcome",
+            "Design alternatives and their tradeoffs are recorded",
+            "Important assumptions have a planned prototype check"
+          ],
+          "rework_to": "concept"
+        }
+      },
+      {
+        "id": "prototype",
+        "owner": "prototype_team",
+        "contributors": [
+          "engineering_lead"
+        ],
+        "depends_on": [
+          "concept"
+        ],
+        "inputs": [
+          "concept_plan",
+          "feasibility_note",
+          "constraints"
+        ],
+        "outputs": [
+          "prototype",
+          "test_protocol"
+        ],
+        "gate": {
+          "reviewer": "design_lead",
+          "checks": [
+            "Prototype supports the named evaluation tasks",
+            "Fidelity limitations are explicit"
+          ],
+          "rework_to": "prototype"
+        }
+      },
+      {
+        "id": "evaluation",
+        "owner": "evaluation_team",
+        "contributors": [],
+        "depends_on": [
+          "prototype"
+        ],
+        "inputs": [
+          "prototype",
+          "test_protocol",
+          "research_findings",
+          "opportunity_brief"
+        ],
+        "outputs": [
+          "prototype_evaluation"
+        ],
+        "gate": {
+          "reviewer": "product_lead",
+          "checks": [
+            "Each important assumption has evidence or an explicit unresolved status",
+            "Aesthetic approval alone cannot establish usability or user value",
+            "A gate requiring user testing needs actual user evidence"
+          ],
+          "rework_to": "concept"
+        }
+      },
+      {
+        "id": "handover",
+        "owner": "design_lead",
+        "contributors": [
+          "engineering_lead"
+        ],
+        "depends_on": [
+          "evaluation"
+        ],
+        "inputs": [
+          "concept_plan",
+          "prototype",
+          "prototype_evaluation",
+          "feasibility_note"
+        ],
+        "outputs": [
+          "product_design_handover"
+        ],
+        "gate": {
+          "reviewer": "product_lead",
+          "checks": [
+            "Handover includes the design, evidence, constraints, and unresolved risks",
+            "Readiness claims match the evaluation"
+          ],
+          "rework_to": "handover"
+        }
+      }
+    ]
+  },
+  "domain": "technical-product-design",
+  "staff_feedback": {
+    "coordinator_role": "staff_coordinator",
+    "observer_roles": [
+      "design_lead",
+      "engineering_lead",
+      "prototype_team",
+      "evaluation_team"
+    ],
+    "policy": "staff/policy.json",
+    "events": [
+      "peer_comment",
+      "peer_review_completed",
+      "task_completed"
+    ],
+    "effect": "advisory",
+    "adapter": "lib/staff.mjs",
+    "runtime_status": "contract-only",
+    "independent_plugin": "hakengaisya-evaluator"
+  }
+}

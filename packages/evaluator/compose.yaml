@@ -1,0 +1,10 @@
+services:
+  evaluator:
+    build: .
+    ports:
+      - "127.0.0.1:4317:4317"
+    volumes:
+      - evaluator-data:/app/.data
+    restart: unless-stopped
+volumes:
+  evaluator-data:

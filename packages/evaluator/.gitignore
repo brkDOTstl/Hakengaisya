@@ -1,0 +1,12 @@
+.data/
+.local/
+node_modules/
+.env
+.env.*
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.key
+*.pem
+*.log
+coverage/

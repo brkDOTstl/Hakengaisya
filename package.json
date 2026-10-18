@@ -1,0 +1,23 @@
+{
+  "name": "hakengaisya",
+  "version": "0.7.0",
+  "license": "MIT",
+  "repository": {"type": "git", "url": "https://github.com/brkDOTstl/Hakengaisya.git"},
+  "private": true,
+  "description": "Company topology templates for task orchestration",
+  "type": "module",
+  "scripts": {
+    "inspect": "node scripts/inspect.mjs",
+    "staff": "node scripts/staff.mjs",
+    "staff:build": "node scripts/staff.mjs build",
+    "workflow": "node scripts/workflow.mjs",
+    "plugin:build": "node scripts/build-plugin.mjs",
+    "test": "node scripts/check-suite.mjs",
+    "test:workflow": "node --test tests/*.test.mjs",
+    "test:evaluator": "npm --prefix packages/evaluator test",
+    "audit": "node scripts/release-audit.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

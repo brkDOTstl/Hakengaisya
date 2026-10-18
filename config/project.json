@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "phase": "technical-local-practice",
+  "active_templates": [
+    "software-delivery",
+    "product-design"
+  ],
+  "deferred_templates": [
+    "education-production"
+  ],
+  "domains": [
+    "software-engineering",
+    "technical-product-design"
+  ],
+  "excluded_domains": [
+    "artistic-production",
+    "abstract-aesthetic-assessment"
+  ],
+  "staff_policy": "staff/policy.json",
+  "staff_coordinator": {
+    "responsibility": "Fill structured peer observations through the standalone evaluator recorder. No extra grading model or polling process is required by default.",
+    "model_binding": null,
+    "provider_status": "host-filled-records"
+  },
+  "independent_evaluator": {
+    "repository": "https://github.com/brkDOTstl/Hakengaisya",
+    "package_path": "packages/evaluator",
+    "recorder_tool": "record_evaluation",
+    "workflow_role": "optional-adapter"
+  }
+}

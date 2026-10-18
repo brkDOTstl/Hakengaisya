@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "kind": "historical_summary",
+  "provenance": "De-identified summaries from an existing local staff chart. Scores are source-author claims. Skill labels and task contexts are illustrative classifications, not new observations.",
+  "examples": [
+    {
+      "report_id": "history-example-01",
+      "subject_model": "gpt-6-astra",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "verification",
+          "code-review"
+        ]
+      },
+      "ratings": {
+        "D1": 10,
+        "D2": 9,
+        "D3": 9,
+        "D4": 10,
+        "D5": 6,
+        "D6": 9
+      },
+      "comment": "Independent checks identified evidence and contract inconsistencies.",
+      "example": "A comparison exposed an ambiguous label mapping before acceptance.",
+      "guidance": "Consider evidence verification and technical review work; measure cost on the next actual task."
+    },
+    {
+      "report_id": "history-example-02",
+      "subject_model": "claude-opus-5-5",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "diagnosis",
+          "reverse-engineering"
+        ]
+      },
+      "ratings": {
+        "D1": 9,
+        "D2": 8,
+        "D3": 9,
+        "D4": 9,
+        "D5": 7,
+        "D6": 9
+      },
+      "comment": "Local summaries report useful diagnosis and independent review work.",
+      "example": "A separator comparison explained why a measurement produced an unexpected result.",
+      "guidance": "Consider diagnosis and reverse-engineering investigations, with independent result checks."
+    },
+    {
+      "report_id": "history-example-03",
+      "subject_model": "claude-fable-5-1",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "technical-planning"
+        ]
+      },
+      "ratings": {
+        "D1": null,
+        "D2": null,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null
+      },
+      "comment": "The source chart has no measured capability scores for this model.",
+      "example": "No completed capability observation was available in the source summary.",
+      "guidance": "Collect a small bounded task observation before proposing a skill fit."
+    },
+    {
+      "report_id": "history-example-04",
+      "subject_model": "claude-sonnet-5-5",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "routine-scripting",
+          "code-review"
+        ]
+      },
+      "ratings": {
+        "D1": 8,
+        "D2": 8,
+        "D3": 6,
+        "D4": 7,
+        "D5": 8,
+        "D6": 9
+      },
+      "comment": "Local summaries report reliable structured extraction and contract work.",
+      "example": "A structured technical document was produced while unresolved questions were preserved.",
+      "guidance": "Consider bounded routine work and review assistance; verify complex diagnosis separately."
+    },
+    {
+      "report_id": "history-example-05",
+      "subject_model": "claude-sonnet-5-5",
+      "route": "alternate-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "verification",
+          "routine-scripting"
+        ]
+      },
+      "ratings": {
+        "D1": 8,
+        "D2": null,
+        "D3": 5,
+        "D4": null,
+        "D5": 9,
+        "D6": 9
+      },
+      "comment": "Local summaries report consistent short supervision tasks.",
+      "example": "A count inconsistency was noticed during a routine status check.",
+      "guidance": "Consider short evidence checks and bounded monitoring tasks; record actual cost and elapsed work time."
+    },
+    {
+      "report_id": "history-example-06",
+      "subject_model": "muse-spark-1.3",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "implementation"
+        ]
+      },
+      "ratings": {
+        "D1": null,
+        "D2": 7,
+        "D3": null,
+        "D4": null,
+        "D5": 7,
+        "D6": 6
+      },
+      "comment": "Local summaries report implementation after correction cycles.",
+      "example": "A multi-file change needed compilation corrections before the checks completed.",
+      "guidance": "Consider scoped implementation with a clear contract and review support."
+    },
+    {
+      "report_id": "history-example-07-v2",
+      "subject_model": "grok-4.7",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "implementation"
+        ]
+      },
+      "ratings": {
+        "D1": 7,
+        "D2": 7,
+        "D3": 7,
+        "D4": 7,
+        "D5": 6,
+        "D6": 6
+      },
+      "comment": "Historical summaries report scoped implementation, review, and diagnosis work.",
+      "example": "A bounded implementation passed its specified checks while incomplete runs remained recorded.",
+      "guidance": "Consider bounded implementation and technical review work, with explicit tool constraints and independent checks."
+    },
+    {
+      "report_id": "history-example-08",
+      "subject_model": "claude-haiku-5-5",
+      "route": "historical-route",
+      "effort": "source-summary",
+      "task": {
+        "domain": "software-engineering",
+        "type": "mixed-technical-work",
+        "difficulty": "standard",
+        "skills": [
+          "routine-scripting"
+        ]
+      },
+      "ratings": {
+        "D1": null,
+        "D2": null,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null
+      },
+      "comment": "The source chart has no scored local work for this model.",
+      "example": "The model was an unused candidate in the historical reference.",
+      "guidance": "Start with a small, inexpensive observation before assigning a specialized task."
+    }
+  ]
+}

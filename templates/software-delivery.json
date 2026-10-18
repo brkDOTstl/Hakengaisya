@@ -1,0 +1,410 @@
+{
+  "schema_version": 1,
+  "id": "software-delivery",
+  "name": "Software delivery company",
+  "status": "draft",
+  "purpose": "Deliver a software change with explicit ownership and reproducible verification evidence.",
+  "reference_ids": [
+    "team-topologies",
+    "capra-consulting"
+  ],
+  "root": "delivery_lead",
+  "roles": [
+    {
+      "id": "delivery_lead",
+      "name": "Delivery lead",
+      "kind": "lead",
+      "optional": false,
+      "purpose": "Coordinate the task, resolve ownership conflicts, and assemble the final handover.",
+      "decisions": [
+        "Prioritize work within the user's scope",
+        "Resolve blocked handoffs",
+        "Accept evidence-backed internal milestones"
+      ],
+      "deliverables": [
+        "Delivery plan",
+        "Final handover"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "requirements_analyst",
+      "name": "Requirements analyst",
+      "kind": "specialist",
+      "optional": false,
+      "purpose": "Translate the user's goal into concrete behavior, constraints, and acceptance criteria.",
+      "decisions": [
+        "Identify ambiguities requiring escalation",
+        "Specify observable acceptance criteria"
+      ],
+      "deliverables": [
+        "Accepted scope"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "technical_lead",
+      "name": "Technical lead",
+      "kind": "lead",
+      "optional": false,
+      "purpose": "Own technical design and coordinate implementation work.",
+      "decisions": [
+        "Choose technical boundaries within scope",
+        "Decompose implementation tasks"
+      ],
+      "deliverables": [
+        "Architecture proposal",
+        "Verification plan"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "delivery_team",
+      "name": "Delivery team",
+      "kind": "team",
+      "optional": false,
+      "purpose": "Implement and integrate the change, including checks appropriate to the behavior.",
+      "decisions": [
+        "Choose local implementation details",
+        "Report blockers and implementation findings"
+      ],
+      "deliverables": [
+        "Implementation",
+        "Change notes",
+        "Developer check evidence"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "platform_team",
+      "name": "Platform team",
+      "kind": "team",
+      "optional": true,
+      "purpose": "Provide reusable environment, build, and execution services when needed.",
+      "decisions": [
+        "Define shared service interfaces within task constraints"
+      ],
+      "deliverables": [
+        "Environment readiness evidence"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "assurance_team",
+      "name": "Assurance team",
+      "kind": "team",
+      "optional": false,
+      "purpose": "Review technical claims and independently verify the requested behavior.",
+      "decisions": [
+        "Reject unsupported acceptance claims",
+        "Identify required rework with evidence"
+      ],
+      "deliverables": [
+        "Review findings",
+        "Verification report"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "enablement_team",
+      "name": "Enablement team",
+      "kind": "team",
+      "optional": true,
+      "purpose": "Resolve a specific capability gap without taking over delivery ownership.",
+      "decisions": [
+        "Recommend a bounded assistance plan"
+      ],
+      "deliverables": [
+        "Specialist guidance",
+        "Capability handoff"
+      ],
+      "model_binding": null
+    },
+    {
+      "id": "staff_coordinator",
+      "name": "Evaluation recorder adapter",
+      "kind": "specialist",
+      "optional": true,
+      "purpose": "Emit structured peer observations through the independent evaluator recorder; no separately running grading model is required.",
+      "decisions": [
+        "Record observed peer contributions without inventing an independent verdict",
+        "Preserve uncertainty and de-identify examples before optional upload",
+        "Read contextual capability advice from the independent evaluator when available"
+      ],
+      "deliverables": [
+        "Optional peer observation records",
+        "Referenced evaluator advice"
+      ],
+      "model_binding": null
+    }
+  ],
+  "authority": [
+    {
+      "from": "delivery_lead",
+      "to": "requirements_analyst"
+    },
+    {
+      "from": "delivery_lead",
+      "to": "technical_lead"
+    },
+    {
+      "from": "technical_lead",
+      "to": "delivery_team"
+    },
+    {
+      "from": "delivery_lead",
+      "to": "platform_team"
+    },
+    {
+      "from": "delivery_lead",
+      "to": "assurance_team"
+    },
+    {
+      "from": "delivery_lead",
+      "to": "enablement_team"
+    },
+    {
+      "from": "delivery_lead",
+      "to": "staff_coordinator"
+    }
+  ],
+  "interactions": [
+    {
+      "from": "requirements_analyst",
+      "to": "technical_lead",
+      "type": "collaboration",
+      "contract": "Resolve requirement and technical tradeoffs using the accepted scope."
+    },
+    {
+      "from": "platform_team",
+      "to": "delivery_team",
+      "type": "service",
+      "contract": "Provide a documented environment interface and readiness evidence when needed."
+    },
+    {
+      "from": "enablement_team",
+      "to": "delivery_team",
+      "type": "facilitation",
+      "contract": "Provide bounded assistance for a named skill or investigation gap."
+    },
+    {
+      "from": "assurance_team",
+      "to": "technical_lead",
+      "type": "review",
+      "contract": "Review architecture claims and verification coverage."
+    },
+    {
+      "from": "assurance_team",
+      "to": "delivery_team",
+      "type": "review",
+      "contract": "Verify requested behavior and return concrete findings."
+    },
+    {
+      "from": "technical_lead",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "delivery_team",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "assurance_team",
+      "to": "staff_coordinator",
+      "type": "service",
+      "contract": "Supply comments about other models from shared task experience, with difficulty and concrete examples."
+    },
+    {
+      "from": "staff_coordinator",
+      "to": "delivery_lead",
+      "type": "service",
+      "contract": "Supply contextual capability estimates, dissent, and advisory role-fit suggestions."
+    }
+  ],
+  "workflow": {
+    "external_inputs": [
+      "task_brief",
+      "constraints",
+      "existing_assets"
+    ],
+    "on_rejection": "Record a finding, reopen the named rework stage as a new attempt, and invalidate affected downstream artifacts.",
+    "stages": [
+      {
+        "id": "scope",
+        "owner": "requirements_analyst",
+        "contributors": [],
+        "depends_on": [],
+        "inputs": [
+          "task_brief",
+          "constraints",
+          "existing_assets"
+        ],
+        "outputs": [
+          "accepted_scope"
+        ],
+        "gate": {
+          "reviewer": "delivery_lead",
+          "checks": [
+            "Requested behavior and exclusions are explicit",
+            "Acceptance criteria can be observed",
+            "Material unknowns are resolved or recorded as blockers"
+          ],
+          "rework_to": "scope"
+        }
+      },
+      {
+        "id": "design",
+        "owner": "technical_lead",
+        "contributors": [],
+        "depends_on": [
+          "scope"
+        ],
+        "inputs": [
+          "accepted_scope",
+          "existing_assets"
+        ],
+        "outputs": [
+          "architecture_proposal",
+          "verification_plan"
+        ],
+        "gate": {
+          "reviewer": "assurance_team",
+          "checks": [
+            "Design meets accepted scope",
+            "Interfaces and ownership are explicit",
+            "Verification covers behavior and material risks"
+          ],
+          "rework_to": "design"
+        }
+      },
+      {
+        "id": "environment",
+        "owner": "platform_team",
+        "contributors": [],
+        "depends_on": [
+          "scope"
+        ],
+        "inputs": [
+          "accepted_scope",
+          "constraints",
+          "existing_assets"
+        ],
+        "outputs": [
+          "environment_readiness"
+        ],
+        "gate": {
+          "reviewer": "technical_lead",
+          "checks": [
+            "Required environment is available or its missing capability is a blocker",
+            "Existing environment may satisfy this stage without starting a platform worker"
+          ],
+          "rework_to": "environment"
+        }
+      },
+      {
+        "id": "implementation",
+        "owner": "delivery_team",
+        "contributors": [
+          "technical_lead"
+        ],
+        "depends_on": [
+          "design",
+          "environment"
+        ],
+        "inputs": [
+          "architecture_proposal",
+          "verification_plan",
+          "environment_readiness",
+          "existing_assets"
+        ],
+        "outputs": [
+          "implementation",
+          "change_notes",
+          "developer_evidence"
+        ],
+        "gate": {
+          "reviewer": "assurance_team",
+          "checks": [
+            "Change is inspectable",
+            "Relevant developer checks have evidence",
+            "Implementation stays within accepted scope"
+          ],
+          "rework_to": "implementation"
+        }
+      },
+      {
+        "id": "verification",
+        "owner": "assurance_team",
+        "contributors": [],
+        "depends_on": [
+          "implementation"
+        ],
+        "inputs": [
+          "implementation",
+          "developer_evidence",
+          "verification_plan",
+          "accepted_scope"
+        ],
+        "outputs": [
+          "verification_report"
+        ],
+        "gate": {
+          "reviewer": "delivery_lead",
+          "checks": [
+            "Required behavior has independent evidence",
+            "Failures and unverified claims are explicit",
+            "Unresolved required failures prevent completion"
+          ],
+          "rework_to": "implementation"
+        }
+      },
+      {
+        "id": "handover",
+        "owner": "delivery_lead",
+        "contributors": [],
+        "depends_on": [
+          "verification"
+        ],
+        "inputs": [
+          "implementation",
+          "change_notes",
+          "verification_report",
+          "accepted_scope"
+        ],
+        "outputs": [
+          "software_handover"
+        ],
+        "gate": {
+          "reviewer": "assurance_team",
+          "checks": [
+            "Handover includes artifacts, evidence, and remaining limitations",
+            "Completion claims agree with verification results"
+          ],
+          "rework_to": "handover"
+        }
+      }
+    ]
+  },
+  "domain": "software-engineering",
+  "staff_feedback": {
+    "coordinator_role": "staff_coordinator",
+    "observer_roles": [
+      "technical_lead",
+      "delivery_team",
+      "assurance_team"
+    ],
+    "policy": "staff/policy.json",
+    "events": [
+      "peer_comment",
+      "peer_review_completed",
+      "task_completed"
+    ],
+    "effect": "advisory",
+    "adapter": "lib/staff.mjs",
+    "runtime_status": "contract-only",
+    "independent_plugin": "hakengaisya-evaluator"
+  }
+}

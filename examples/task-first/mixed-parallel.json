@@ -1,0 +1,97 @@
+{
+  "run_id": "synthetic-task-first",
+  "objective": "Synthetic planning example only; no measured prices or savings.",
+  "domain": "software-engineering",
+  "evidence_kind": "simulation",
+  "lead_context": "fixture-host",
+  "acceptance": [
+    "The integrated requested result passes review."
+  ],
+  "constraints": [
+    "All route prices and durations here are synthetic."
+  ],
+  "planning_limits": {
+    "max_parallel": 3,
+    "max_workers": 3,
+    "budget_usd": 0.3,
+    "deadline_seconds": 150,
+    "overhead_seconds": 2,
+    "overhead_cost_usd": 0.003,
+    "context_startup_seconds": 0,
+    "context_startup_cost_usd": 0
+  },
+  "work_items": [
+    {
+      "id": "routine_component",
+      "objective": "Deliver routine_component.",
+      "task_type": "implementation",
+      "difficulty": "routine",
+      "skills": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "inputs": [
+        "task_brief"
+      ],
+      "writes": [
+        "src/routine_component"
+      ],
+      "outputs": [
+        "routine_component_artifact"
+      ],
+      "acceptance": [
+        "The specified result has checkable evidence."
+      ]
+    },
+    {
+      "id": "hard_component",
+      "objective": "Deliver hard_component.",
+      "task_type": "implementation",
+      "difficulty": "complex",
+      "skills": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "inputs": [
+        "task_brief"
+      ],
+      "writes": [
+        "src/hard_component"
+      ],
+      "outputs": [
+        "hard_component_artifact"
+      ],
+      "acceptance": [
+        "The specified result has checkable evidence."
+      ]
+    },
+    {
+      "id": "integrated_review",
+      "objective": "Deliver integrated_review.",
+      "task_type": "code-review",
+      "difficulty": "standard",
+      "skills": [
+        "code-review"
+      ],
+      "depends_on": [
+        "routine_component",
+        "hard_component"
+      ],
+      "inputs": [
+        "routine_component_artifact",
+        "hard_component_artifact"
+      ],
+      "writes": [],
+      "outputs": [
+        "integrated_review_artifact"
+      ],
+      "acceptance": [
+        "The specified result has checkable evidence."
+      ],
+      "audit_sources": [
+        "routine_component",
+        "hard_component"
+      ]
+    }
+  ]
+}

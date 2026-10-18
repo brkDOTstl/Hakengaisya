@@ -1,0 +1,149 @@
+[
+  {
+    "id": "cheap",
+    "model_id": "fixture-cheap",
+    "route": "fixture",
+    "effort": "unknown",
+    "available": true,
+    "tools_verified": true,
+    "tools": [],
+    "profiles": [
+      {
+        "model_id": "fixture-cheap",
+        "route": "fixture",
+        "effort": "unknown",
+        "evaluation_kind": "simulation",
+        "domain": "software-engineering",
+        "task_type": "implementation",
+        "difficulty": "routine",
+        "skill": "implementation",
+        "dimensions": {
+          "D1": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D2": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D3": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D4": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D5": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D6": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          }
+        },
+        "observed_cost_usd": 0.01,
+        "observed_wall_seconds": 30
+      }
+    ]
+  },
+  {
+    "id": "expert",
+    "model_id": "fixture-expert",
+    "route": "fixture",
+    "effort": "unknown",
+    "available": true,
+    "tools_verified": true,
+    "tools": [],
+    "profiles": [
+      {
+        "model_id": "fixture-expert",
+        "route": "fixture",
+        "effort": "unknown",
+        "evaluation_kind": "simulation",
+        "domain": "software-engineering",
+        "task_type": "implementation",
+        "difficulty": "complex",
+        "skill": "implementation",
+        "dimensions": {
+          "D1": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D2": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D3": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D4": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D5": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D6": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          }
+        },
+        "observed_cost_usd": 0.2,
+        "observed_wall_seconds": 90
+      }
+    ]
+  },
+  {
+    "id": "reviewer",
+    "model_id": "fixture-reviewer",
+    "route": "fixture",
+    "effort": "unknown",
+    "available": true,
+    "tools_verified": true,
+    "tools": [],
+    "profiles": [
+      {
+        "model_id": "fixture-reviewer",
+        "route": "fixture",
+        "effort": "unknown",
+        "evaluation_kind": "simulation",
+        "domain": "software-engineering",
+        "task_type": "code-review",
+        "difficulty": "standard",
+        "skill": "code-review",
+        "dimensions": {
+          "D1": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D2": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D3": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D4": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D5": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          },
+          "D6": {
+            "score": 8,
+            "support": "supported-peer-observations"
+          }
+        },
+        "observed_cost_usd": 0.03,
+        "observed_wall_seconds": 20
+      }
+    ]
+  }
+]

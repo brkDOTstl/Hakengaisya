@@ -1,0 +1,47 @@
+{
+  "run_id": "synthetic-pomodoro-plan",
+  "objective": "Synthetic planning example only; no measured prices or savings.",
+  "domain": "software-engineering",
+  "evidence_kind": "simulation",
+  "lead_context": "fixture-host",
+  "acceptance": [
+    "The integrated requested result passes review."
+  ],
+  "constraints": [
+    "All route prices and durations here are synthetic."
+  ],
+  "planning_limits": {
+    "max_parallel": 3,
+    "max_workers": 3,
+    "budget_usd": 0.3,
+    "deadline_seconds": 150,
+    "overhead_seconds": 2,
+    "overhead_cost_usd": 0.003,
+    "context_startup_seconds": 0,
+    "context_startup_cost_usd": 0
+  },
+  "work_items": [
+    {
+      "id": "timer",
+      "objective": "Implement a small timer and its relevant developer checks.",
+      "task_type": "implementation",
+      "difficulty": "routine",
+      "skills": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "inputs": [
+        "task_brief"
+      ],
+      "writes": [
+        "app"
+      ],
+      "outputs": [
+        "timer_artifact"
+      ],
+      "acceptance": [
+        "The specified result has checkable evidence."
+      ]
+    }
+  ]
+}

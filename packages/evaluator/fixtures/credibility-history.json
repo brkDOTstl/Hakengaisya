@@ -1,0 +1,86 @@
+[
+  {
+    "model_id": "gpt-6-astra",
+    "scores": {
+      "D1": 10,
+      "D2": 9,
+      "D3": 9,
+      "D4": 10,
+      "D5": 6,
+      "D6": 9
+    },
+    "status": "historical-unverified"
+  },
+  {
+    "model_id": "claude-opus-5-5",
+    "scores": {
+      "D1": 9,
+      "D2": 8,
+      "D3": 9,
+      "D4": 9,
+      "D5": 7,
+      "D6": 9
+    },
+    "status": "historical-unverified"
+  },
+  {
+    "model_id": "claude-fable-5-1",
+    "scores": {
+      "D1": null,
+      "D2": null,
+      "D3": null,
+      "D4": null,
+      "D5": null,
+      "D6": null
+    },
+    "status": "historical-unverified"
+  },
+  {
+    "model_id": "claude-sonnet-5-5",
+    "scores": {
+      "D1": 8,
+      "D2": 8,
+      "D3": 5.5,
+      "D4": 7,
+      "D5": 8.5,
+      "D6": 9
+    },
+    "status": "historical-unverified"
+  },
+  {
+    "model_id": "muse-spark-1.3",
+    "scores": {
+      "D1": null,
+      "D2": 7,
+      "D3": null,
+      "D4": null,
+      "D5": 7,
+      "D6": 6
+    },
+    "status": "historical-unverified"
+  },
+  {
+    "model_id": "grok-4.7",
+    "scores": {
+      "D1": 7,
+      "D2": 7,
+      "D3": 7,
+      "D4": 7,
+      "D5": 6,
+      "D6": 6
+    },
+    "status": "historical-unverified"
+  },
+  {
+    "model_id": "claude-haiku-5-5",
+    "scores": {
+      "D1": null,
+      "D2": null,
+      "D3": null,
+      "D4": null,
+      "D5": null,
+      "D6": null
+    },
+    "status": "historical-unverified"
+  }
+]

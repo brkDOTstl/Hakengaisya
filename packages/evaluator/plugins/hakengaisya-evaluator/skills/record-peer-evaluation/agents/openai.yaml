@@ -1,0 +1,5 @@
+interface:
+  display_name: "Record peer evaluation"
+  short_description: "Record observed AI peer skills after technical work."
+policy:
+  allow_implicit_invocation: true

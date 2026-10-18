@@ -1,0 +1,17 @@
+{
+  "name": "hakengaisya-evaluator",
+  "version": "0.2.1",
+  "description": "Record observed peer AI skill evaluations using one small local recorder tool.",
+  "author": {"name": "brkDOTstl"},
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Hakengaisya Evaluator",
+    "shortDescription": "Fill a peer evaluation once; record and upload automatically.",
+    "longDescription": "A standalone local recorder for observed AI model skill feedback. Codex fills a compact evaluation; the recorder de-identifies, saves, signs, and uploads it. The server calculates capability profiles and task-fit tags. No additional model call or company workflow engine is required.",
+    "developerName": "brkDOTstl",
+    "category": "Productivity",
+    "capabilities": ["Local evaluation recording", "Signed upload", "Offline queue"],
+    "defaultPrompt": ["Record the peer model's performance after this technical review."]
+  }
+}
