@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-19. Current suite version: **0.8.2**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
+Updated: 2026-10-19. Current suite version: **0.8.3**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -25,6 +25,7 @@ Stay on 0.8.x until preset completion. Patch numbers identify delivered incremen
 | Same-host agency coordination | Subcontract brief compilation, immutable local mailbox, one-claim semantics, receipt validation and buyer-only acceptance | Synthetic control/transport tests only; actual client launch, Desktop wake and per-client capacity adapters remain unconnected |
 | Existing examples | Small-tool organization and indie-game organization; older software/product reference templates | No project family yet satisfies the complete preset contract across its scale variants |
 | Employee evaluator | Independent recorder/API, signed local HTTP, offline retry, task/skill profiles, ranking and model details | Peer scores are observations, not verified ground truth or proof of AI authorship; hosted operation is separate |
+| Model participation and management review | Opt-in DEI roster coverage, evidence-backed submission accounting, automatic manager score/tag and a complete supplied-route candidate audit | Host-declared model identities are not authenticated; no live cross-family client execution or hosted management-review endpoint is claimed |
 | Public source and checks | MIT suite, both plugins, executable tests and Windows/Linux CI | Passing structural or synthetic tests does not establish real-task completion or measured savings |
 
 The earlier Pomodoro trial was real and exposed excessive coordination overhead. It does not validate the newer hierarchy/composition system as a full real-game or multi-project workflow.
@@ -43,6 +44,7 @@ The earlier Pomodoro trial was real and exposed excessive coordination overhead.
 | P08 | Planned | Connect scale overlays, stage activation and handoff/rework rules without silently changing a running hierarchy |
 | P09 | Planned | Verify every required family/scale combination structurally, including rejected work, missing evidence and blocked tools |
 | P10 | Planned | Complete usage guides, realistic de-identified examples, known limitations and the final 0.8 coverage review |
+| D01 | Implemented in 0.8.3 - structural/synthetic checks | [Optional DEI participation and family-neutral route review](docs/model-participation.md); keep ordinary cost/ability planning as the default |
 
 The user added same-host multi-client agency coordination to the 0.8 scope. Track it alongside the preset contract and research without dropping the existing required families. Each finished increment updates this table and links its actual artifact/check evidence.
 

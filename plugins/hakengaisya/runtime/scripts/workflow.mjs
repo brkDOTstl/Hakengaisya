@@ -7,6 +7,7 @@ import { prepareTriage, finishTriage, triageWithJev } from '../lib/triage.mjs';
 import { prepareDispatch, prepareReview } from '../lib/dispatch.mjs';
 import { composeOrganization } from '../lib/organization.mjs';
 import { compileFederation, prepareHandoff, proposeReceiptImport } from '../lib/federation.mjs';
+import { agentReview } from '../lib/participation.mjs';
 
 const [command, target, source, extra] = process.argv.slice(2);
 const json = async filename => JSON.parse(await readFile(filename, 'utf8'));
@@ -30,6 +31,7 @@ try {
     const run = createRun(template, brief);
     await writeFile(target, JSON.stringify(run, null, 2) + '\n', { flag: 'wx' }); result = nextActions(run);
   } else if (command === 'next' && target && !source) result = nextActions(await json(target));
+  else if (command === 'agent-review' && target && !source) result = agentReview(await json(target));
   else if (command === 'event' && target && source) {
     const filename = path.resolve(target); const lock = filename + '.lock';
     let handle;
@@ -43,6 +45,6 @@ try {
       await handle.close(); await unlink(lock);
       try { await unlink(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     }
-  } else throw new Error('Usage: node scripts/workflow.mjs federation-plan <project.json> | handoff <run.json> <project.json> <packet-id> | receipt <run.json> <request.json> <receipt.json> | organize <project.json> [phase] | triage-request <intake.json> | triage <intake.json> <response.json> | triage-jev <approved-intake.json> <jev-options.json> | select <brief.json> | plan <brief.json> <workers.json> | dispatch <run.json> <packet-id> | review <run.json> <packet-id> | create <run.json> <brief.json> | next <run.json> | event <run.json> <event.json>');
+  } else throw new Error('Usage: node scripts/workflow.mjs federation-plan <project.json> | handoff <run.json> <project.json> <packet-id> | receipt <run.json> <request.json> <receipt.json> | organize <project.json> [phase] | triage-request <intake.json> | triage <intake.json> <response.json> | triage-jev <approved-intake.json> <jev-options.json> | select <brief.json> | plan <brief.json> <workers.json> | dispatch <run.json> <packet-id> | review <run.json> <packet-id> | agent-review <run.json> | create <run.json> <brief.json> | next <run.json> | event <run.json> <event.json>');
   console.log(JSON.stringify(result, null, 2));
 } catch (error) { console.error(error.message); process.exitCode = 1; }

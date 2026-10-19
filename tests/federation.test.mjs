@@ -29,6 +29,17 @@ test('buyer controls supplier leads while each client declares its own delivery 
   assert.equal(request.dispatch.supervision.acceptance_authority, 'buyer-lead');
 });
 
+test('federation preserves an explicit model roster instead of silently disabling DEI', () => {
+  const p = project(); p.dei = { enabled: true, model_ids: ['fixture-model'] };
+  const plan = compileFederation(p); assert.deepEqual(plan.brief.dei, p.dei);
+  const run = createRun(null, plan.brief);
+  const event = { id: 'fixture-dei-assignment', expected_revision: 0, packet_id: 'work_service', attempt: 1, actor_context: 'buyer-lead', type: 'assign', assignment: { owner_context: 'engineering-agency-lead', reviewer_context: 'buyer-lead', contributor_contexts: [], writes: run.packets.work_service.declared_writes } };
+  assert.throws(() => applyEvent(run, event), /selected model/);
+  const bound = applyEvent(run, { ...event, assignment: { ...event.assignment, model_id: 'fixture-model', route: 'fixture-route' } });
+  assert.equal(prepareHandoff(bound, p, 'work_service').dispatch.model_binding.model_id, 'fixture-model');
+  assert.throws(() => prepareHandoff(bound, { ...p, dei: { enabled: false } }, 'work_service'), /DEI policy/);
+});
+
 test('Desktop, CLI and mixed directions share one contract without assuming live adapters', () => {
   for (const [buyerSurface, supplierSurface] of [['desktop', 'desktop'], ['cli', 'cli'], ['desktop', 'cli'], ['cli', 'desktop']]) {
     const p = project(); p.clients[0].surface = buyerSurface; p.clients[1].surface = supplierSurface;

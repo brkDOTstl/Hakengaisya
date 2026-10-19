@@ -4,6 +4,8 @@ Hakengaisya is an experimental technical-agent suite with explicit reporting lin
 
 **Development stage: 0.8.x preset completion.** See [ROADMAP.md](ROADMAP.md) for current work, preset/scale coverage gaps and completion criteria. The project stays on 0.8.x until the main researched workflow presets are complete; 0.9 is reserved for real-task testing/optimization, and 1.0 follows successful validation.
 
+Version 0.8.3 adds [optional DEI model participation and Agent Review](docs/model-participation.md). A selected roster must each receive qualified deliverable work when enabled; completed omissions give the responsible manager one DEI point and a policy tag. Ordinary routing remains family-neutral and records every supplied candidate with its selection or exclusion reason. These local management observations do not change the evaluator's technical skill scores or connect new model providers.
+
 Version 0.8.2 adds a [same-host agency-coordination contract and local mailbox prototype](docs/multi-client-coordination.md). One buyer coordinates supplier teams across declared Desktop/CLI/router clients, validates attempt-bound deliveries and retains final acceptance. The actual client launch/wake adapters are not connected; the executable example validates local control and fixture-process exchange without invoking a model.
 
 ## Current scope

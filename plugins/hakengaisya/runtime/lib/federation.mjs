@@ -3,6 +3,7 @@ import { mkdir, writeFile, link, unlink, realpath, lstat, open } from 'node:fs/p
 import path from 'node:path';
 import { validateWorkGraph } from './planning.mjs';
 import { prepareDispatch } from './dispatch.mjs';
+import { normalizeDei } from './participation.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 const text = value => check(typeof value === 'string' && value.trim(), 'Supply nonempty contract text');
@@ -37,6 +38,7 @@ export function compileFederation(project) {
     return { ...structuredClone(contract.work), id: contract.id, supervisor_context: project.buyer.lead_context };
   });
   const brief = { run_id: project.id, objective: project.objective, domain: project.domain, lead_context: project.buyer.lead_context,
+    dei: normalizeDei(project.dei),
     evidence_kind: project.evidence_kind ?? 'local_work', acceptance: structuredClone(project.acceptance), constraints: structuredClone(project.constraints),
     planning_limits: { max_parallel: project.max_parallel ?? 3 }, work_items: work,
     reporting_lines: [...teams.values()].map(team => ({ subordinate_context: team.lead_context, supervisor_context: project.buyer.lead_context })) };
@@ -62,6 +64,7 @@ export function prepareHandoff(run, project, packetId) {
   const declaredScope = { objective: item.objective, inputs: item.inputs, outputs: item.outputs, checks: item.acceptance, writes: item.writes, task_type: item.task_type, difficulty: item.difficulty, skills: item.skills, dependencies: item.depends_on.map(id => plan.contracts.find(contract => contract.work_id === id).packet_id) };
   const actualScope = { objective: packet?.objective, inputs: packet?.inputs, outputs: packet?.required_outputs, checks: packet?.checks, writes: packet?.declared_writes, task_type: packet?.task_type, difficulty: packet?.difficulty, skills: packet?.skills, dependencies: packet?.depends_on };
   check(canonical(declaredScope) === canonical(actualScope) && canonical(run.acceptance) === canonical(plan.brief.acceptance) && canonical(run.constraints) === canonical(plan.brief.constraints), 'Buyer work scope differs from the registered subcontract');
+  check(canonical(normalizeDei(run.dei)) === canonical(plan.brief.dei), 'Buyer DEI policy differs from the registered project');
   const dispatch = prepareDispatch(run, packetId);
   check(dispatch.actor_context === binding.owner_context && dispatch.supervision?.acceptance_authority === binding.reviewer_context, 'Handoff must follow the buyer-to-supplier lead binding');
   const identity = { project_id: project.id, packet_id: packetId, attempt: dispatch.attempt, team_id: binding.supplier_team };

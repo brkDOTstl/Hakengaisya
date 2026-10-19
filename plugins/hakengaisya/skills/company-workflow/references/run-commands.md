@@ -8,10 +8,13 @@ The self-contained helper is at `../../../runtime/scripts/workflow.mjs` relative
 node HELPER select BRIEF.json
 node HELPER create RUN.json BRIEF.json
 node HELPER next RUN.json
+node HELPER agent-review RUN.json
 node HELPER event RUN.json EVENT.json
 ```
 
 The task workspace must exist. `create` refuses to overwrite a run. `event` takes a single-writer lock, requires the current revision and attempt, and atomically replaces the persisted state. If a crash leaves a lock, inspect the running writer before removing it. The snapshot embeds its reference organization, packets, artifact references, attempts, and event journal. It stays local.
+
+Optional [DEI participation](model-participation.md) is configured in task-first briefs. Agent Review reports candidate consideration and the root manager's participation score/tag; it does not launch models or update technical ability scores.
 
 ## Brief
 

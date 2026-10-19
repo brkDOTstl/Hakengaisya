@@ -1,5 +1,6 @@
 import { assertStartable } from './workflow.mjs';
 import { assertSupervisedReview } from './supervision.mjs';
+import { agentReview } from './participation.mjs';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 function envelope(run, packet) {
@@ -34,6 +35,7 @@ export function prepareReview(run, packetId) {
   check(![packet.assignment.owner_context, ...packet.assignment.contributor_contexts].includes(packet.assignment.reviewer_context), 'Review must be independent of every producer');
   assertSupervisedReview(run, packet);
   return { ...envelope(run, packet), role: 'review', actor_context: packet.assignment.reviewer_context, writes: [],
+    agent_review_preview: packet.id === 'handover' ? agentReview(run, true) : null,
     result: structuredClone(packet.result),
     task_acceptance: packet.id === 'handover' ? structuredClone(run.acceptance) : [],
     return_contract: 'Return accepted/rejected and an evidence-backed pass/fail/unverified check for each criterion. Terminal acceptance also checks every task criterion. Completion text alone is not evidence.'

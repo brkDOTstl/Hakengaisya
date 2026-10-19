@@ -61,6 +61,12 @@ Compare the planner's staffing alternatives before opening more contexts. Includ
 
 Unknown ability, cost, duration, or review/handoff overhead stays unknown. The planner reports missing evidence or unmet constraints. Without route data, a bounded host-default trial may proceed, but do not call it optimized or assume a native subagent is cheap. Respect host model-selection permissions and availability; never invent model identity or silently override defaults.
 
+## Consider all permitted model families
+
+Supply the user's permitted route inventory without silently narrowing it to the current model's family. The planner is family-neutral; inspect routing_audit for selected, adequate-but-unselected and excluded candidates. Separate missing host/provider connectivity from a scheduler's selection. An optional declared model_family is metadata, not an ability score or a ranking preference.
+
+An explicitly enabled DEI policy requires every selected model to contribute actual contracted work. Read [the participation contract](references/model-participation.md). It is off by default and grants no extra permission, budget, provider access or concurrency. Do not add ceremonial tasks or count planned assignments as execution. Completed omissions automatically give the root manager one DEI point and dei-non-compliant in the local Agent Review; keep this separate from technical skill dimensions and evaluator uploads.
+
 ## Execute with bounded control
 
 1. Use next's dispatchable batch, then the dispatch helper for each selected packet. It provides current task inputs, outputs, checks, writes, dispatched attempt and binding. Pass only needed material; do not forward the global journal or unrelated history. The snapshot reserves capacity only in its proposed batch; the host records start before launch and replans readiness after state changes.
