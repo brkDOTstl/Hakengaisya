@@ -23,10 +23,10 @@ The public suite includes both independent plugins. For local authoring of only 
 
 ## One-time connection
 
-Set up a private recorder data directory and bind it to the actual host model. `scripts/setup-recorder.mjs` creates a signing key and random task salt without printing them. For an owner-operated loopback service, it can enroll the public identity against the existing local evaluator database:
+Set up a private recorder data directory and bind it to the actual host model. `scripts/setup-recorder.ts` creates a signing key and random task salt without printing them. For an owner-operated loopback service, it can enroll the public identity against the existing local evaluator database:
 
 ```powershell
-node scripts/setup-recorder.mjs --home PRIVATE-RECORDER-DIRECTORY --reviewer-model ACTUAL-HOST-MODEL --enroll-local .data/evaluator.sqlite
+node scripts/setup-recorder.ts --home PRIVATE-RECORDER-DIRECTORY --reviewer-model ACTUAL-HOST-MODEL --enroll-local .data/evaluator.sqlite
 ```
 
 The default runtime directory is `.hakengaisya-evaluator` under the user's home directory. Alternatively set `HAKENGAISYA_RECORDER_HOME` in the host environment before launching Codex. Set the endpoint once during setup; AI tool arguments cannot redirect uploads. Remote endpoints must use HTTPS. For remote service enrollment, provide only `agent-public.json` to its operator. Private keys and salts stay local.

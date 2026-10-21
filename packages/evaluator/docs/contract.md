@@ -1,6 +1,6 @@
 # Evaluation contract v1
 
-`validateReport` in `src/contract.mjs` is the executable schema. Unknown fields are rejected at every structured level.
+`validateReport` in `src/contract.ts` is the executable schema. Unknown fields are rejected at every structured level.
 
 Required fields:
 
@@ -19,7 +19,7 @@ Required fields:
 
 Dimensions: D1 evidence precision; D2 change precision; D3 diagnosis depth; D4 review rigor; D5 effective speed; D6 reliability and coordination.
 
-Signing headers: `x-agent-client`, `x-agent-timestamp` (epoch milliseconds), `x-agent-nonce`, and `x-agent-signature` (base64 Ed25519). The private key is never included. `sdk/client.mjs` implements the signing preimage.
+Signing headers: `x-agent-client`, `x-agent-timestamp` (epoch milliseconds), `x-agent-nonce`, and `x-agent-signature` (base64 Ed25519). The private key is never included. `sdk/client.ts` implements the signing preimage.
 
 Agent enrollment binds a client key to its reviewer model. Submission does not change that binding or its weighting rules. Reports are append-only; a later opinion can supersede its earlier contribution to a profile while both stored records remain.
 

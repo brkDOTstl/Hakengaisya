@@ -15,6 +15,7 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run lint
+      - run: npm run typecheck
       - run: npm run plugin:build
       - run: npm test
       - run: npm run inspect

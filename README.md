@@ -4,6 +4,8 @@ Hakengaisya is an experimental technical-agent suite with explicit reporting lin
 
 **Development stage: 0.8.x preset completion.** See [ROADMAP.md](ROADMAP.md) for current work, preset/scale coverage gaps and completion criteria. The project stays on 0.8.x until the main researched workflow presets are complete; 0.9 is reserved for real-task testing/optimization, and 1.0 follows successful validation.
 
+Version 0.8.6 moves the whole suite except the browser leaderboard to strict TypeScript. Node 24 runs the `.ts` sources directly, so both plugins still need no build step; `npm run typecheck` checks the suite and the evaluator. The type checker exposed latent crashes on malformed input (a supervised review without an assignment, a federation project without clients, teams or contracts, a missing planned route), which now fail with validation errors instead. The planner gains an opt-in trial policy for the cold start: with `planning_limits.unproven_routes: "trial"` and an explicit `trial_estimate`, routine and standard work that has no qualifying observation can still be planned on a labelled trial route instead of turning the whole plan into needs-evidence. The run journal was measured rather than compacted: a 300-item run with 1200 events persists as 1.3 MB and one locked update takes about 7 ms, so the full audit trail stays.
+
 Version 0.8.5 restructures the controller for maintainability and speed without changing its contracts. Events copy only the packets they touch, so a 300-item lifecycle drops from about 4.3 s to 70 ms of controller time; the planner validates and scores routes once instead of once per pool size. Assignment write scopes now use the same normalization as planned work, reference templates declare their independent audits with `audits`, cost estimates are rounded to whole nano-dollars, and the plugin runtime file list is derived in one place for the build and the release audit. Development uses [Biome](https://biomejs.dev) for formatting and linting (`npm run format`, `npm run lint`); it is the only development dependency and is not shipped in either plugin.
 
 Version 0.8.4 exposes the run controller to the host as [MCP tools](plugins/hakengaisya/skills/company-workflow/references/run-commands.md) alongside the file-based helper: `hakengaisya_select`, `plan`, `create_run`, `next`, `dispatch`, `review`, `event`, `agent_review`, `triage_request`, `triage` and `organize` share one command table with the CLI. `event` applies an atomic batch of events under the single-writer lock, the lock now records its holder's pid and start time, `create` builds missing run directories and each journal entry records the controller clock. These reduce per-transition host overhead; they do not launch models, inspect artifacts or establish automatic invocation.
@@ -17,18 +19,21 @@ Version 0.8.2 adds a [same-host agency-coordination contract and local mailbox p
 Version 0.8 adds [capability-module organization composition](docs/organization-composition.md). A small software tool composes two positions; the indie-game reference composes seven core positions with temporary specialists and phase-specific activation. These are unbound role proposals, not launched agents, game-production adapters or measured delivery forecasts.
 
 ```powershell
-node scripts/workflow.mjs organize examples/organizations/indie-game.json
-node scripts/workflow.mjs organize examples/organizations/indie-game.json production
-node scripts/workflow.mjs organize examples/organizations/small-software.json
+node scripts/workflow.ts organize examples/organizations/indie-game.json
+node scripts/workflow.ts organize examples/organizations/indie-game.json production
+node scripts/workflow.ts organize examples/organizations/small-software.json
 ```
 
 The suite has two independently usable plugins. [Hakengaisya-evaluator](packages/evaluator) is the local recorder and skill-feedback service. Hakengaisya itself defines company topology, work contracts, assignment, progress control, supervisory review, integration and final delivery. See [the suite boundary](docs/suite-architecture.md).
 
 ## Install or run
 
-The full suite requires Node.js 24.13 or newer in the Node 24 line. No third-party runtime packages are required. From the repository root:
+The full suite requires Node.js 24.13 or newer in the Node 24 line. Sources are TypeScript that Node 24 runs directly through native type stripping, so there is no build step and no third-party runtime package. Development tools (TypeScript for `npm run typecheck`, Biome for `npm run lint`) are installed with `npm ci` and are never shipped in a plugin. From the repository root:
 
 ```powershell
+npm ci
+npm run typecheck
+npm run lint
 npm run plugin:build
 npm test
 npm run inspect
@@ -43,7 +48,7 @@ codex plugin add hakengaisya@hakengaisya-suite --json
 codex plugin add hakengaisya-evaluator@hakengaisya-suite --json
 ```
 
-Restart the host or use a fresh conversation to load installed components. The workflow plugin registers one stdio MCP server (`plugins/hakengaisya/mcp.mjs`) whose tools accept absolute run-file paths inside the task workspace; set `HAKENGAISYA_WORKSPACE` to allow relative paths. Installation alone does not establish automatic invocation. The evaluator needs one-time identity/endpoint setup described in [its recorder guide](packages/evaluator/docs/recorder-plugin.md); no hosted evaluation service or provider credentials are included.
+Restart the host or use a fresh conversation to load installed components. The workflow plugin registers one stdio MCP server (`plugins/hakengaisya/mcp.ts`) whose tools accept absolute run-file paths inside the task workspace; set `HAKENGAISYA_WORKSPACE` to allow relative paths. Installation alone does not establish automatic invocation. The evaluator needs one-time identity/endpoint setup described in [its recorder guide](packages/evaluator/docs/recorder-plugin.md); no hosted evaluation service or provider credentials are included.
 
 To run only the evaluator, use packages/evaluator as the working directory, then run npm test, npm run example and npm start. Its optional read-only leaderboard is served at http://127.0.0.1:4317. The example exercises signed local HTTP with explicitly historical, de-identified observations; it performs no live model inference. See [the evaluator README](packages/evaluator/README.md).
 
@@ -66,23 +71,23 @@ The initial templates adapt public operating practices. They are our proposed ag
 The host AI writes a brief and small events; users do not fill internal forms. Run files stay in the task workspace. The controller preserves the selected organization, required artifacts, independent gate checks, actual context bindings, writable paths, revision history, and rework attempts.
 
 ```powershell
-node scripts/workflow.mjs triage-request intake.json
-node scripts/workflow.mjs triage intake.json triage-response.json
-node scripts/workflow.mjs select task-brief.json
-node scripts/workflow.mjs plan task-brief.json permitted-workers.json
-node scripts/workflow.mjs create runs/task-01.json task-brief.json
-node scripts/workflow.mjs next runs/task-01.json
-node scripts/workflow.mjs dispatch runs/task-01.json handover
-node scripts/workflow.mjs review runs/task-01.json handover
-node scripts/workflow.mjs event runs/task-01.json task-event.json
-node scripts/workflow.mjs event runs/task-01.json task-events-batch.json
+node scripts/workflow.ts triage-request intake.json
+node scripts/workflow.ts triage intake.json triage-response.json
+node scripts/workflow.ts select task-brief.json
+node scripts/workflow.ts plan task-brief.json permitted-workers.json
+node scripts/workflow.ts create runs/task-01.json task-brief.json
+node scripts/workflow.ts next runs/task-01.json
+node scripts/workflow.ts dispatch runs/task-01.json handover
+node scripts/workflow.ts review runs/task-01.json handover
+node scripts/workflow.ts event runs/task-01.json task-event.json
+node scripts/workflow.ts event runs/task-01.json task-events-batch.json
 npm run plugin:build
 npm test
 ```
 
 `create` builds missing run directories and refuses to overwrite a run; `event` accepts one event or an ordered array applied atomically. [The skill](plugins/hakengaisya/skills/company-workflow/SKILL.md) links the intake contract and work/event forms. The staged runtime makes the plugin self-contained; rebuilding copies the controller, planner, triage helper and two active reference templates.
 
-Ordinary briefs supply work_items using [the task-first forms](plugins/hakengaisya/skills/company-workflow/references/task-first.md). The old full-template path requires reference_workflow:true for an explicit rehearsal. To inspect a labelled synthetic mixed-difficulty plan, run `node scripts/workflow.mjs plan examples/task-first/mixed-parallel.json examples/task-first/fixture-workers.json`. These example prices/times are fabricated and never qualify live model selection.
+Ordinary briefs supply work_items using [the task-first forms](plugins/hakengaisya/skills/company-workflow/references/task-first.md). The old full-template path requires reference_workflow:true for an explicit rehearsal. To inspect a labelled synthetic mixed-difficulty plan, run `node scripts/workflow.ts plan examples/task-first/mixed-parallel.json examples/task-first/fixture-workers.json`. These example prices/times are fabricated and never qualify live model selection.
 
 ## Optional evaluator and legacy staff prototype
 
@@ -104,10 +109,10 @@ Weighted estimates preserve dissent and the contribution of each reviewer. A mod
 The legacy build command generates a local Staff Chart under wiki/. It stays outside Git. See [Staff evaluation design](docs/staff-evaluation.md) for the weighting policy, feedback format and connection boundary.
 
 ```powershell
-node scripts/staff.mjs record path-to-peer-feedback.json
-node scripts/staff.mjs survey path-to-task-context.json path-to-participants.json
-node scripts/staff.mjs build
-node --test tests/staff.test.mjs
+node scripts/staff.ts record path-to-peer-feedback.json
+node scripts/staff.ts survey path-to-task-context.json path-to-participants.json
+node scripts/staff.ts build
+node --test tests/staff.test.ts
 ```
 
 Legacy `survey` creates requests without sending them. `collectSurvey(plan, askPeer)` is a legacy callable adapter boundary. These contracts do not activate polling in the company plugin.
@@ -184,9 +189,9 @@ Factual correctness and learning effectiveness have distinct owners. Early lesso
 Uses the same Node.js 24 runtime as the suite; no packages need to be installed.
 
 ```powershell
-node scripts/inspect.mjs
-node scripts/inspect.mjs product-design
-node scripts/inspect.mjs education-production --mermaid
+node scripts/inspect.ts
+node scripts/inspect.ts product-design
+node scripts/inspect.ts education-production --mermaid
 ```
 
 The inspector checks active templates by default, including their staff-feedback hooks. An explicitly selected deferred draft can also be inspected. It validates identifiers, role references, delegation structure, artifact availability, workflow dependencies, review separation, and rework destinations. This is structural validation, not task execution or acceptance evidence.

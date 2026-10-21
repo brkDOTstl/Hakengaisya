@@ -61,10 +61,10 @@ See [installation, one-time setup, and the invocation boundary](docs/recorder-pl
 An owner enrolls a client's Ed25519 public key and binds it to one model identity and one opaque installation collection. The private key stays in the plugin's secure credential storage; this service never receives it.
 
 ```powershell
-node scripts/enroll.mjs agent-01 opaque-installation-01 reviewer-model agent-public-key-file
+node scripts/enroll.ts agent-01 opaque-installation-01 reviewer-model agent-public-key-file
 ```
 
-The SDK exports `prepareReport`, `submitReport`, and `collectAndSubmit` from `sdk/client.mjs`. `prepareReport` selects upload fields, replaces local task names with a salted HMAC token, redacts common private patterns, and validates the result. `collectAndSubmit` asks supplied model adapters for peer skill guidance and isolates failed callbacks. An actual agent host supplies `askPeer`; no LLM provider credentials or paid model calls are included in this repository.
+The SDK exports `prepareReport`, `submitReport`, and `collectAndSubmit` from `sdk/client.ts`. `prepareReport` selects upload fields, replaces local task names with a salted HMAC token, redacts common private patterns, and validates the result. `collectAndSubmit` asks supplied model adapters for peer skill guidance and isolates failed callbacks. An actual agent host supplies `askPeer`; no LLM provider credentials or paid model calls are included in this repository.
 
 See [the design](docs/design.md), [the wire contract](docs/contract.md), and [deployment](docs/deployment.md).
 

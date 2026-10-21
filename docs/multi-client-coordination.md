@@ -37,9 +37,9 @@ examples/federation/local-outsourcing.json describes one buyer and two supplier 
 Each team names its registered lead and client. Each contract supplies a normal deliverable work item, required inputs/outputs, dependencies, exact workspace-relative writes and acceptance. compileFederation creates an ordinary buyer work brief using the existing hierarchical controller. Supplier leads report to the buyer in that brief; supplier-private internal hierarchies remain within their own client.
 
 ```text
-node scripts/workflow.mjs federation-plan PROJECT.json
-node scripts/workflow.mjs handoff RUN.json PROJECT.json PACKET_ID
-node scripts/workflow.mjs receipt RUN.json REQUEST.json RECEIPT.json
+node scripts/workflow.ts federation-plan PROJECT.json
+node scripts/workflow.ts handoff RUN.json PROJECT.json PACKET_ID
+node scripts/workflow.ts receipt RUN.json REQUEST.json RECEIPT.json
 ```
 
 federation-plan returns a draft brief and supplier bindings. It does not launch anything. Create a normal run from its brief, then assign each contract to the declared supplier lead with the buyer as its reviewer.

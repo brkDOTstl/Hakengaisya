@@ -1,6 +1,6 @@
 # Same-host buyer and supplier agencies
 
-This is a contract/control prototype, not connected Desktop/CLI transport. The source design is docs/multi-client-coordination.md. Use the packaged helper ../../../runtime/scripts/workflow.mjs with absolute input paths.
+This is a contract/control prototype, not connected Desktop/CLI transport. The source design is docs/multi-client-coordination.md. Use the packaged helper ../../../runtime/scripts/workflow.ts with absolute input paths.
 
 ```text
 node HELPER federation-plan PROJECT.json

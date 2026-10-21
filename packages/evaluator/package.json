@@ -14,10 +14,10 @@
     "node": ">=24.13.0 <25"
   },
   "scripts": {
-    "start": "node src/server.mjs",
-    "test": "node --test test/*.test.mjs",
-    "example": "node scripts/example.mjs",
-    "audit": "node scripts/privacy-audit.mjs",
-    "plugin:build": "node scripts/build-plugin.mjs"
+    "start": "node src/server.ts",
+    "test": "node --test test/*.test.ts",
+    "example": "node scripts/example.ts",
+    "audit": "node scripts/privacy-audit.ts",
+    "plugin:build": "node scripts/build-plugin.ts"
   }
 }

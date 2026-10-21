@@ -11,4 +11,4 @@ USER node
 ENV EVALUATOR_HOST=0.0.0.0 EVALUATOR_PORT=4317 EVALUATOR_DATA_DIR=/app/.data
 EXPOSE 4317
 HEALTHCHECK --interval=30s --timeout=5s CMD node -e "fetch('http://127.0.0.1:4317/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "src/server.mjs"]
+CMD ["node", "src/server.ts"]

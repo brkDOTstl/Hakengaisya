@@ -26,7 +26,7 @@ The SDK refuses remote plaintext HTTP and redirected uploads. It accepts loopbac
 
 ## Agent enrollment
 
-The agent host creates and retains an Ed25519 private key in its own credential store. Provide only its public key to the operator. Enroll through `scripts/enroll.mjs`, binding an opaque client and installation collection to one reviewer model. Client disabling is supported by `Store.disable`; a remote enrollment or moderation interface is deliberately absent in this first release.
+The agent host creates and retains an Ed25519 private key in its own credential store. Provide only its public key to the operator. Enroll through `scripts/enroll.ts`, binding an opaque client and installation collection to one reviewer model. Client disabling is supported by `Store.disable`; a remote enrollment or moderation interface is deliberately absent in this first release.
 
 ## Validation
 

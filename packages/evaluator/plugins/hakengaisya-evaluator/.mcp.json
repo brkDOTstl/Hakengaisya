@@ -2,7 +2,7 @@
   "mcpServers": {
     "recorder": {
       "command": "node",
-      "args": ["./mcp.mjs"]
+      "args": ["./mcp.ts"]
     }
   }
 }

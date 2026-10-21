@@ -1,6 +1,6 @@
 {
   "name": "hakengaisya",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -10,22 +10,25 @@
   "description": "Company topology templates for task orchestration",
   "type": "module",
   "scripts": {
-    "inspect": "node scripts/inspect.mjs",
-    "staff": "node scripts/staff.mjs",
-    "staff:build": "node scripts/staff.mjs build",
-    "workflow": "node scripts/workflow.mjs",
-    "plugin:build": "node scripts/build-plugin.mjs",
-    "test": "node scripts/check-suite.mjs",
-    "test:workflow": "node --test tests/*.test.mjs",
+    "inspect": "node scripts/inspect.ts",
+    "staff": "node scripts/staff.ts",
+    "staff:build": "node scripts/staff.ts build",
+    "workflow": "node scripts/workflow.ts",
+    "plugin:build": "node scripts/build-plugin.ts",
+    "test": "node scripts/check-suite.ts",
+    "test:workflow": "node --test tests/*.test.ts",
     "test:evaluator": "npm --prefix packages/evaluator test",
-    "audit": "node scripts/release-audit.mjs",
+    "audit": "node scripts/release-audit.ts",
     "format": "biome check --write .",
-    "lint": "biome ci ."
+    "lint": "biome ci .",
+    "typecheck": "tsc -p tsconfig.json && tsc -p packages/evaluator/tsconfig.json"
   },
   "engines": {
     "node": ">=24.13.0 <25"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15"
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
   }
 }

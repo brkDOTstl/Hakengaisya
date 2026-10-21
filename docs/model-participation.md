@@ -40,7 +40,7 @@ A rejected submission still counts as participation. Quality, corrections and ev
 ## Management review
 
 ```powershell
-node scripts/workflow.mjs agent-review runs/task.json
+node scripts/workflow.ts agent-review runs/task.json
 ```
 
 The same report appears in next/event results as agent_review. The terminal review helper provides agent_review_preview; the accepted terminal review stores the final report automatically under packets.handover.review.agent_review. The accountable subject is the run's root manager context, which owns the overall roster obligation. Subordinate technical reviews and authority remain unchanged.
@@ -60,8 +60,8 @@ This is a deterministic local management-policy report, not a seventh technical 
 
 ```powershell
 npm run plugin:build
-node scripts/workflow.mjs plan examples/task-first/dei-participation.json examples/task-first/fixture-workers.json
-node --test tests/participation.test.mjs
+node scripts/workflow.ts plan examples/task-first/dei-participation.json examples/task-first/fixture-workers.json
+node --test tests/participation.test.ts
 ```
 
 The fixture checks optional/off behavior, selected and omitted models, qualification/cost constraints, family-neutral candidate consideration, rejected attempts, final score persistence and packaged CLI relocation. It invokes no model or provider and does not establish live cross-family collaboration. Real adapter/capacity and task evidence remain part of the declared 0.8/0.9 workstreams.

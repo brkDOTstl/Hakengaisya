@@ -2,7 +2,7 @@
 
 The front door is intake_triage. It is a bounded classification role, not a new permanent supervisor. The host supplies a short objective, acceptance array and constraints array. Missing arrays default to empty for intake only; execution still needs observable acceptance. Keep these fields stable in the later brief so the input fingerprint remains valid.
 
-The packaged helper is ../../../runtime/scripts/workflow.mjs relative to this directory. Use absolute paths and the actual workspace. The host writes English internal forms; the user does not fill them.
+The packaged helper is ../../../runtime/scripts/workflow.ts relative to this directory. Use absolute paths and the actual workspace. The host writes English internal forms; the user does not fill them.
 
 ```text
 node HELPER triage-request INTAKE.json

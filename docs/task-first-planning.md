@@ -18,6 +18,7 @@ The Pomodoro trial had four actual contexts and one application producer. Role r
 - Schedules respect dependencies, contexts, writes, pool/concurrency, bounded parallel-cost premium, estimated deadline and cheapest-remaining budget reserve.
 - Unknown costs/times/overheads remain unknown; budget/deadline estimates cannot assume missing overhead is zero. Confirmed model failures exclude failed routes; environment stops do not imply poor ability.
 - Runtime requires the planned binding declaration when provided, and renewed fit justification after rejection. Unpriced trials default to one attempt.
+- An opt-in trial policy (planning_limits.unproven_routes trial with an explicit trial_estimate) fills evidence gaps for routine and standard work only, so one unobserved work item no longer forces the whole plan to needs-evidence. Qualified routes always win, non-evidence constraints are never bypassed, and trial assignments stay labelled through the run and dispatch envelope.
 - State records and summaries are mechanical. Related ready checks can share one reviewer invocation without fabricating future observations.
 
 Tests cover simple structure, cheap adequate work, stronger complex work, parallel integration, conflicts, aliases, pool limits, budgets/deadlines, unknown data, retries, independence, overhead and relocated packaged CLI. Numeric model/cost/duration examples are synthetic, not current prices or measured savings.
@@ -26,4 +27,4 @@ Runnable fixtures are examples/task-first/small-timer.json, mixed-parallel.json 
 
 The planner is greedy advice and does not launch models or prove global optimality. Historical observations and declared overhead are estimates. Actual host model switching, provider billing, installed automatic invocation and physical isolation remain separate integration work. The optional Jev adapter sends only an explicitly permitted short intake summary; it imports no credentials or project assets and does not launch the native fallback itself. The host executes native calls. Default-model changes and publication are outside this change.
 
-Read [the forms](../plugins/hakengaisya/skills/company-workflow/references/task-first.md), then use node scripts/workflow.mjs plan BRIEF.json WORKERS.json. Full-template execution now requires reference_workflow:true; ordinary execution requires work_items.
+Read [the forms](../plugins/hakengaisya/skills/company-workflow/references/task-first.md), then use node scripts/workflow.ts plan BRIEF.json WORKERS.json. Full-template execution now requires reference_workflow:true; ordinary execution requires work_items.

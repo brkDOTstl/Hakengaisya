@@ -310,7 +310,7 @@
     "policy": "staff/policy.json",
     "events": ["peer_comment", "peer_review_completed", "task_completed"],
     "effect": "advisory",
-    "adapter": "lib/staff.mjs",
+    "adapter": "lib/staff.ts",
     "runtime_status": "contract-only",
     "independent_plugin": "hakengaisya-evaluator"
   }

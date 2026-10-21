@@ -2,7 +2,7 @@
 
 Default briefs use [deliverable work_items](task-first.md) and create only actual work packets. The legacy example below needs reference_workflow:true for an explicitly requested full-template rehearsal.
 
-The self-contained helper is at `../../../runtime/scripts/workflow.mjs` relative to this reference directory. Resolve that path to an absolute file path and use the task workspace as the working directory. The lead writes brief and event JSON directly; the user does not operate an internal form. Use English for these artifacts.
+The self-contained helper is at `../../../runtime/scripts/workflow.ts` relative to this reference directory. Resolve that path to an absolute file path and use the task workspace as the working directory. The lead writes brief and event JSON directly; the user does not operate an internal form. Use English for these artifacts.
 
 ```text
 node HELPER select BRIEF.json
@@ -16,7 +16,7 @@ node HELPER event RUN.json EVENT.json
 
 ## MCP tools
 
-The plugin registers a stdio MCP server (`.mcp.json`, `mcp.mjs`) with the same commands as inline-JSON tools: `hakengaisya_triage_request`, `hakengaisya_triage`, `hakengaisya_select`, `hakengaisya_plan`, `hakengaisya_organize`, `hakengaisya_create_run`, `hakengaisya_next`, `hakengaisya_dispatch`, `hakengaisya_review`, `hakengaisya_event` and `hakengaisya_agent_review`. Run-file tools take `run_file`; pass an absolute path inside the task workspace, because a relative path is only accepted when the server was started with `HAKENGAISYA_WORKSPACE`. `hakengaisya_event` takes `events`, an ordered array applied atomically, and returns the next-actions snapshot. Tool availability does not prove the host will invoke them; the same host permissions and evidence duties apply.
+The plugin registers a stdio MCP server (`.mcp.json`, `mcp.ts`) with the same commands as inline-JSON tools: `hakengaisya_triage_request`, `hakengaisya_triage`, `hakengaisya_select`, `hakengaisya_plan`, `hakengaisya_organize`, `hakengaisya_create_run`, `hakengaisya_next`, `hakengaisya_dispatch`, `hakengaisya_review`, `hakengaisya_event` and `hakengaisya_agent_review`. Run-file tools take `run_file`; pass an absolute path inside the task workspace, because a relative path is only accepted when the server was started with `HAKENGAISYA_WORKSPACE`. `hakengaisya_event` takes `events`, an ordered array applied atomically, and returns the next-actions snapshot. Tool availability does not prove the host will invoke them; the same host permissions and evidence duties apply.
 
 Optional [DEI participation](model-participation.md) is configured in task-first briefs. Agent Review reports candidate consideration and the root manager's participation score/tag; it does not launch models or update technical ability scores.
 

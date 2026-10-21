@@ -1,6 +1,6 @@
 # Organization proposal forms
 
-Use the packaged helper ../../../runtime/scripts/workflow.mjs and absolute project-file paths. organize PROJECT.json [PHASE] reads the bundled capability catalog and returns an unbound organization proposal. It launches no agents and does not modify a run.
+Use the packaged helper ../../../runtime/scripts/workflow.ts and absolute project-file paths. organize PROJECT.json [PHASE] reads the bundled capability catalog and returns an unbound organization proposal. It launches no agents and does not modify a run.
 
 A project supplies id, objective, max_positions, max_active_agents, core_modules and optional_modules. Optional phases have unique id, approved modules and observable exit_criteria. A reference calendar can supply reference_duration_months and phase.months:[FIRST,LAST]; this describes human planning, not model runtime.
 

@@ -2,12 +2,12 @@
 
 An organization proposal selects capability modules, combines compatible responsibilities, establishes one accountable reporting root and activates positions for a project phase. The output is separate from the deliverable dependency graph, model catalog and live context bindings. It is not a task execution or a staffing forecast backed by real workload telemetry.
 
-The generic composer is lib/organization.mjs. Capability modules are data in config/organization-modules.json. The host selects modules after intake and deliverable analysis; a project-type label alone does not discover the required work. The first examples are a small software tool and a twelve-month indie game reference.
+The generic composer is lib/organization.ts. Capability modules are data in config/organization-modules.json. The host selects modules after intake and deliverable analysis; a project-type label alone does not discover the required work. The first examples are a small software tool and a twelve-month indie game reference.
 
 ```text
-node scripts/workflow.mjs organize examples/organizations/small-software.json
-node scripts/workflow.mjs organize examples/organizations/indie-game.json
-node scripts/workflow.mjs organize examples/organizations/indie-game.json production
+node scripts/workflow.ts organize examples/organizations/small-software.json
+node scripts/workflow.ts organize examples/organizations/indie-game.json
+node scripts/workflow.ts organize examples/organizations/indie-game.json production
 ```
 
 The core game proposal has seven positions. A representative production phase has eight including temporary audio support; stabilization has nine including release support. The small software example has two positions, or three when separate technical QA is justified. All are unbound proposals with unknown monetary cost and automatic_execution:false.

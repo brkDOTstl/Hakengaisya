@@ -54,10 +54,10 @@ Role-fit estimates include dimension coverage. Sparse or disputed profiles do no
 Records are idempotent when their content matches. A conflicting record with an existing identifier is rejected. Evidence paths and hashes are references; this prototype does not automatically read or independently verify those referenced files.
 
 ```powershell
-node scripts/staff.mjs import-legacy path-to-private-chart.html
-node scripts/staff.mjs record feedback.json
-node scripts/staff.mjs survey context.json participants.json
-node scripts/staff.mjs build
+node scripts/staff.ts import-legacy path-to-private-chart.html
+node scripts/staff.ts record feedback.json
+node scripts/staff.ts survey context.json participants.json
+node scripts/staff.ts build
 ```
 
 A feedback record has `schema_version`, `feedback_id`, `created_at`, `reviewer`, `subject`, `context`, `relationship`, `attribution`, `summary`, `ratings`, and `evidence`; `request_id` and `experience` are optional. Survey plans include a structured response template. `validateFeedback` is the executable input contract.
