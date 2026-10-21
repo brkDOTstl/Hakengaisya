@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "workflow": {
+      "command": "node",
+      "args": ["./mcp.mjs"]
+    }
+  }
+}

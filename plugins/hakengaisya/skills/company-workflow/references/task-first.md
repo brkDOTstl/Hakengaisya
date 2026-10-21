@@ -1,6 +1,6 @@
 # Task-first planning and run forms
 
-Resolve the packaged helper at `../../../runtime/scripts/workflow.mjs` relative to this directory. Use absolute input/output/helper paths and the actual task workspace. The host AI writes internal English forms.
+Resolve the packaged helper at `../../../runtime/scripts/workflow.mjs` relative to this directory, or call the equivalent `hakengaisya_*` MCP tools when the host loaded them (see [run commands](run-commands.md)). Use absolute input/output/helper paths and the actual task workspace. The host AI writes internal English forms.
 
 Start new intake with [the lightweight triage role](intake-triage.md). It routes bounded work directly or returns planning/uncertainty to the existing host. Attach a resolved intake_triage record when keeping its decision in a persisted run; no extra triage work packet is created.
 

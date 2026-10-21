@@ -1,7 +1,8 @@
 {
   "name": "hakengaisya",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Compose project-sized organizations, then delegate qualified technical work through explicit reporting and upward acceptance.",
   "author": { "name": "brkDOTstl" },
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
 }

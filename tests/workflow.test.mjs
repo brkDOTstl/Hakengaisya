@@ -4,7 +4,7 @@ import { readFile, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { chooseStructure, createRun, applyEvent, nextActions } from '../lib/workflow.mjs';
+import { chooseStructure, createRun, applyEvent, applyEvents, nextActions } from '../lib/workflow.mjs';
 
 const software = JSON.parse(await readFile(new URL('../templates/software-delivery.json', import.meta.url)));
 const product = JSON.parse(await readFile(new URL('../templates/product-design.json', import.meta.url)));
@@ -149,4 +149,25 @@ test('CLI persists a run and event, rejects stale updates, and protects an exist
   await writeFile(action, JSON.stringify({ id: 'assign-scope', expected_revision: 0, type: 'assign', packet_id: 'scope', attempt: 1, actor_context: 'host', assignment: { owner_context: 'native-worker', reviewer_context: 'host', contributor_contexts: [], writes: [] } }));
   assert.equal(cli('event', run, action).revision, 1); assert.throws(() => cli('event', run, action));
   assert.equal(cli('next', run).revision, 1);
+  await writeFile(action, JSON.stringify([
+    { id: 'start-scope', expected_revision: 1, type: 'start', packet_id: 'scope', attempt: 1, actor_context: 'native-worker' },
+    { id: 'block-scope', type: 'block', packet_id: 'scope', attempt: 1, actor_context: 'native-worker', reason: 'Synthetic missing input.' }
+  ]));
+  const batched = cli('event', run, action); assert.equal(batched.revision, 3); assert.equal(batched.blocked.length, 1);
+  const nested = path.join(directory, 'deeper', 'runs', 'created.json');
+  assert.equal(cli('create', nested, input).run_file, nested);
+});
+
+test('event batches apply atomically in order and record the controller clock', () => {
+  const h = harness(); const before = JSON.stringify(h.run);
+  const assign = { id: 'batch-assign', expected_revision: h.run.revision, type: 'assign', packet_id: 'scope', attempt: 1, actor_context: 'host', assignment: { owner_context: 'worker-scope', reviewer_context: 'host', contributor_contexts: [], writes: [] } };
+  const start = { id: 'batch-start', type: 'start', packet_id: 'scope', attempt: 1, actor_context: 'worker-scope' };
+  assert.throws(() => applyEvents(h.run, [{ ...assign, expected_revision: undefined }, start]), /first event/);
+  assert.throws(() => applyEvents(h.run, [assign, { ...start, actor_context: 'someone-else' }]), /assigned owner/);
+  assert.throws(() => applyEvents(h.run, []), /one or more/);
+  assert.equal(JSON.stringify(h.run), before);
+  const run = applyEvents(h.run, [assign, start], '2026-01-01T00:00:00.000Z');
+  assert.equal(run.revision, 2); assert.equal(run.packets.scope.status, 'running');
+  assert.deepEqual(run.journal.map(entry => [entry.revision, entry.recorded_at, entry.event.expected_revision]), [[1, '2026-01-01T00:00:00.000Z', 0], [2, '2026-01-01T00:00:00.000Z', 1]]);
+  assert.match(applyEvent(h.run, assign).journal[0].recorded_at, /^\d{4}-\d{2}-\d{2}T/);
 });

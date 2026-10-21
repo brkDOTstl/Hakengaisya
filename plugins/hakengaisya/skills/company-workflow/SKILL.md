@@ -69,6 +69,7 @@ An explicitly enabled DEI policy requires every selected model to contribute act
 
 ## Execute with bounded control
 
+0. When the host has loaded the plugin's `hakengaisya_*` MCP tools, call them with inline JSON and an absolute run_file path instead of writing form files and running the helper script; both paths share one command table and the same checks. Batch dependent events that you already hold (for example assign and start, or a worker's submit and your own review) in one `hakengaisya_event` call; the batch is atomic.
 1. Use next's dispatchable batch, then the dispatch helper for each selected packet. It provides current task inputs, outputs, checks, writes, dispatched attempt and binding. Pass only needed material; do not forward the global journal or unrelated history. The snapshot reserves capacity only in its proposed batch; the host records start before launch and replans readiness after state changes.
 2. Prefer authorized native subagents within one host. Genuine cross-client outsourcing uses an explicitly registered recipient and verified host adapter; do not launch another CLI/provider merely to imitate a native worker or bypass host/account permissions. Respect global and supplier-local pool limits.
 3. Run independent ready work in parallel where ownership and capacity permit. Reuse contexts for compatible sequential work. Workers return results; the host alone writes run state.

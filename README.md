@@ -4,6 +4,8 @@ Hakengaisya is an experimental technical-agent suite with explicit reporting lin
 
 **Development stage: 0.8.x preset completion.** See [ROADMAP.md](ROADMAP.md) for current work, preset/scale coverage gaps and completion criteria. The project stays on 0.8.x until the main researched workflow presets are complete; 0.9 is reserved for real-task testing/optimization, and 1.0 follows successful validation.
 
+Version 0.8.4 exposes the run controller to the host as [MCP tools](plugins/hakengaisya/skills/company-workflow/references/run-commands.md) alongside the file-based helper: `hakengaisya_select`, `plan`, `create_run`, `next`, `dispatch`, `review`, `event`, `agent_review`, `triage_request`, `triage` and `organize` share one command table with the CLI. `event` applies an atomic batch of events under the single-writer lock, the lock now records its holder's pid and start time, `create` builds missing run directories and each journal entry records the controller clock. These reduce per-transition host overhead; they do not launch models, inspect artifacts or establish automatic invocation.
+
 Version 0.8.3 adds [optional DEI model participation and Agent Review](docs/model-participation.md). A selected roster must each receive qualified deliverable work when enabled; completed omissions give the responsible manager one DEI point and a policy tag. Ordinary routing remains family-neutral and records every supplied candidate with its selection or exclusion reason. These local management observations do not change the evaluator's technical skill scores or connect new model providers.
 
 Version 0.8.2 adds a [same-host agency-coordination contract and local mailbox prototype](docs/multi-client-coordination.md). One buyer coordinates supplier teams across declared Desktop/CLI/router clients, validates attempt-bound deliveries and retains final acceptance. The actual client launch/wake adapters are not connected; the executable example validates local control and fixture-process exchange without invoking a model.
@@ -39,7 +41,7 @@ codex plugin add hakengaisya@hakengaisya-suite --json
 codex plugin add hakengaisya-evaluator@hakengaisya-suite --json
 ```
 
-Restart the host or use a fresh conversation to load installed components. Installation alone does not establish automatic invocation. The evaluator needs one-time identity/endpoint setup described in [its recorder guide](packages/evaluator/docs/recorder-plugin.md); no hosted evaluation service or provider credentials are included.
+Restart the host or use a fresh conversation to load installed components. The workflow plugin registers one stdio MCP server (`plugins/hakengaisya/mcp.mjs`) whose tools accept absolute run-file paths inside the task workspace; set `HAKENGAISYA_WORKSPACE` to allow relative paths. Installation alone does not establish automatic invocation. The evaluator needs one-time identity/endpoint setup described in [its recorder guide](packages/evaluator/docs/recorder-plugin.md); no hosted evaluation service or provider credentials are included.
 
 To run only the evaluator, use packages/evaluator as the working directory, then run npm test, npm run example and npm start. Its optional read-only leaderboard is served at http://127.0.0.1:4317. The example exercises signed local HTTP with explicitly historical, de-identified observations; it performs no live model inference. See [the evaluator README](packages/evaluator/README.md).
 
@@ -71,11 +73,12 @@ node scripts/workflow.mjs next runs/task-01.json
 node scripts/workflow.mjs dispatch runs/task-01.json handover
 node scripts/workflow.mjs review runs/task-01.json handover
 node scripts/workflow.mjs event runs/task-01.json task-event.json
+node scripts/workflow.mjs event runs/task-01.json task-events-batch.json
 npm run plugin:build
 npm test
 ```
 
-Create the `runs` directory before creating a run. [The skill](plugins/hakengaisya/skills/company-workflow/SKILL.md) links the intake contract and work/event forms. The staged runtime makes the plugin self-contained; rebuilding copies the controller, planner, triage helper and two active reference templates.
+`create` builds missing run directories and refuses to overwrite a run; `event` accepts one event or an ordered array applied atomically. [The skill](plugins/hakengaisya/skills/company-workflow/SKILL.md) links the intake contract and work/event forms. The staged runtime makes the plugin self-contained; rebuilding copies the controller, planner, triage helper and two active reference templates.
 
 Ordinary briefs supply work_items using [the task-first forms](plugins/hakengaisya/skills/company-workflow/references/task-first.md). The old full-template path requires reference_workflow:true for an explicit rehearsal. To inspect a labelled synthetic mixed-difficulty plan, run `node scripts/workflow.mjs plan examples/task-first/mixed-parallel.json examples/task-first/fixture-workers.json`. These example prices/times are fabricated and never qualify live model selection.
 
@@ -176,7 +179,7 @@ Factual correctness and learning effectiveness have distinct owners. Early lesso
 
 ## Inspect the templates
 
-Requires Node.js 22 or later; no packages need to be installed.
+Uses the same Node.js 24 runtime as the suite; no packages need to be installed.
 
 ```powershell
 node scripts/inspect.mjs

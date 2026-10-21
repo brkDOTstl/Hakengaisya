@@ -66,7 +66,9 @@ Rejection may reopen an earlier responsible packet and every descendant instead 
 - Each required output and each gate check must be present. An unverified check cannot pass.
 - Final handover checks every user acceptance criterion in addition to the template's generic gate.
 - Attempt, dispatch, and concurrency limits prevent unbounded re-dispatch. They do not represent money or model capability.
-- A single-writer lock and revision check prevent silent concurrent snapshot replacement. A crash may leave a lock requiring inspection; the helper does not guess that it is stale.
+- A single-writer lock and revision check prevent silent concurrent snapshot replacement. The lock records the writer's pid and start time; a crash may leave a lock requiring inspection, and the helper does not guess that it is stale.
+- An event batch is applied in order inside one lock and persisted only if every event is valid. Journal entries carry the controller clock, which measures recording and waiting time, not model execution.
+- The CLI helper and the plugin's MCP tools share one command table, so a host using either transport meets the same checks.
 
 ## Current proof and limits
 

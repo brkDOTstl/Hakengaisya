@@ -12,7 +12,11 @@ node HELPER agent-review RUN.json
 node HELPER event RUN.json EVENT.json
 ```
 
-The task workspace must exist. `create` refuses to overwrite a run. `event` takes a single-writer lock, requires the current revision and attempt, and atomically replaces the persisted state. If a crash leaves a lock, inspect the running writer before removing it. The snapshot embeds its reference organization, packets, artifact references, attempts, and event journal. It stays local.
+`create` builds missing parent directories and refuses to overwrite a run. `event` takes a single-writer lock, requires the current revision and attempt, and atomically replaces the persisted state. The EVENT file may hold one event or an ordered array; an array is applied as one atomic batch whose first entry states `expected_revision` and whose later entries may omit it. If a crash leaves a lock, read `RUN.json.lock` for the writer's pid and start time and inspect that process before removing it. Each journal entry records `recorded_at`, the controller clock at recording time; it measures handoff and waiting, not model execution time. The snapshot embeds its reference organization, packets, artifact references, attempts, and event journal. It stays local.
+
+## MCP tools
+
+The plugin registers a stdio MCP server (`.mcp.json`, `mcp.mjs`) with the same commands as inline-JSON tools: `hakengaisya_triage_request`, `hakengaisya_triage`, `hakengaisya_select`, `hakengaisya_plan`, `hakengaisya_organize`, `hakengaisya_create_run`, `hakengaisya_next`, `hakengaisya_dispatch`, `hakengaisya_review`, `hakengaisya_event` and `hakengaisya_agent_review`. Run-file tools take `run_file`; pass an absolute path inside the task workspace, because a relative path is only accepted when the server was started with `HAKENGAISYA_WORKSPACE`. `hakengaisya_event` takes `events`, an ordered array applied atomically, and returns the next-actions snapshot. Tool availability does not prove the host will invoke them; the same host permissions and evidence duties apply.
 
 Optional [DEI participation](model-participation.md) is configured in task-first briefs. Agent Review reports candidate consideration and the root manager's participation score/tag; it does not launch models or update technical ability scores.
 
