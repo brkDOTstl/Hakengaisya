@@ -3,22 +3,15 @@
   "phase": "workflow-preset-completion",
   "development_series": "0.8.x",
   "roadmap": "ROADMAP.md",
-  "next_milestone": {"series": "0.9.x", "purpose": "real-task-validation-and-optimization", "preset_completion_gate_met": false},
-  "active_templates": [
-    "software-delivery",
-    "product-design"
-  ],
-  "deferred_templates": [
-    "education-production"
-  ],
-  "domains": [
-    "software-engineering",
-    "technical-product-design"
-  ],
-  "excluded_domains": [
-    "artistic-production",
-    "abstract-aesthetic-assessment"
-  ],
+  "next_milestone": {
+    "series": "0.9.x",
+    "purpose": "real-task-validation-and-optimization",
+    "preset_completion_gate_met": false
+  },
+  "active_templates": ["software-delivery", "product-design"],
+  "deferred_templates": ["education-production"],
+  "domains": ["software-engineering", "technical-product-design"],
+  "excluded_domains": ["artistic-production", "abstract-aesthetic-assessment"],
   "staff_policy": "staff/policy.json",
   "staff_coordinator": {
     "responsibility": "Fill structured peer observations through the standalone evaluator recorder. No extra grading model or polling process is required by default.",

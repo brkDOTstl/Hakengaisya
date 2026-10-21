@@ -2,7 +2,7 @@
   "name": "hakengaisya-evaluator",
   "version": "0.2.1",
   "description": "Record observed peer AI skill evaluations using one small local recorder tool.",
-  "author": {"name": "brkDOTstl"},
+  "author": { "name": "brkDOTstl" },
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {

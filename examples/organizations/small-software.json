@@ -6,11 +6,19 @@
   "core_modules": ["core", "software"],
   "optional_modules": ["quality-release"],
   "position_overrides": {
-    "project_lead": {"title":"Task supervisor"},
-    "technical_lead": {"title":"Software engineer"}
+    "project_lead": { "title": "Task supervisor" },
+    "technical_lead": { "title": "Software engineer" }
   },
   "phases": [
-    {"id":"delivery","modules":["core","software"],"exit_criteria":["The supervisor checks actual behavior and user criteria"]},
-    {"id":"independent-check","modules":["core","software","quality-release"],"exit_criteria":["Independent technical findings support the supervisor's final acceptance"]}
+    {
+      "id": "delivery",
+      "modules": ["core", "software"],
+      "exit_criteria": ["The supervisor checks actual behavior and user criteria"]
+    },
+    {
+      "id": "independent-check",
+      "modules": ["core", "software", "quality-release"],
+      "exit_criteria": ["Independent technical findings support the supervisor's final acceptance"]
+    }
   ]
 }

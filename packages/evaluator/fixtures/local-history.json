@@ -12,10 +12,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "verification",
-          "code-review"
-        ]
+        "skills": ["verification", "code-review"]
       },
       "ratings": {
         "D1": 10,
@@ -38,10 +35,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "diagnosis",
-          "reverse-engineering"
-        ]
+        "skills": ["diagnosis", "reverse-engineering"]
       },
       "ratings": {
         "D1": 9,
@@ -64,9 +58,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "technical-planning"
-        ]
+        "skills": ["technical-planning"]
       },
       "ratings": {
         "D1": null,
@@ -89,10 +81,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "routine-scripting",
-          "code-review"
-        ]
+        "skills": ["routine-scripting", "code-review"]
       },
       "ratings": {
         "D1": 8,
@@ -115,10 +104,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "verification",
-          "routine-scripting"
-        ]
+        "skills": ["verification", "routine-scripting"]
       },
       "ratings": {
         "D1": 8,
@@ -141,9 +127,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "implementation"
-        ]
+        "skills": ["implementation"]
       },
       "ratings": {
         "D1": null,
@@ -166,9 +150,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "implementation"
-        ]
+        "skills": ["implementation"]
       },
       "ratings": {
         "D1": 7,
@@ -191,9 +173,7 @@
         "domain": "software-engineering",
         "type": "mixed-technical-work",
         "difficulty": "standard",
-        "skills": [
-          "routine-scripting"
-        ]
+        "skills": ["routine-scripting"]
       },
       "ratings": {
         "D1": null,

@@ -4,10 +4,7 @@
   "name": "Product design company",
   "status": "draft",
   "purpose": "Develop a technical product concept through practical user needs, feasibility evidence, and prototype evaluation.",
-  "reference_ids": [
-    "ideo",
-    "svpg"
-  ],
+  "reference_ids": ["ideo", "svpg"],
   "root": "product_lead",
   "roles": [
     {
@@ -21,10 +18,7 @@
         "Prioritize concepts using evidence",
         "Resolve competing outcome constraints"
       ],
-      "deliverables": [
-        "Opportunity brief",
-        "Product decisions"
-      ],
+      "deliverables": ["Opportunity brief", "Product decisions"],
       "model_binding": null
     },
     {
@@ -37,10 +31,7 @@
         "Choose research questions and evidence methods",
         "Flag unsupported user claims"
       ],
-      "deliverables": [
-        "Research findings",
-        "Evidence provenance"
-      ],
+      "deliverables": ["Research findings", "Evidence provenance"],
       "model_binding": null
     },
     {
@@ -53,10 +44,7 @@
         "Choose technical product alternatives with product and engineering input",
         "Define functional behavior and interaction contracts"
       ],
-      "deliverables": [
-        "Concept plan",
-        "Design handover"
-      ],
+      "deliverables": ["Concept plan", "Design handover"],
       "model_binding": null
     },
     {
@@ -69,10 +57,7 @@
         "Identify feasibility risks",
         "Recommend prototype fidelity and technical approaches"
       ],
-      "deliverables": [
-        "Feasibility note",
-        "Technical prototype guidance"
-      ],
+      "deliverables": ["Feasibility note", "Technical prototype guidance"],
       "model_binding": null
     },
     {
@@ -81,13 +66,8 @@
       "kind": "team",
       "optional": false,
       "purpose": "Build the smallest artifact that can test the concept's important assumptions.",
-      "decisions": [
-        "Choose production details within the concept and test protocol"
-      ],
-      "deliverables": [
-        "Prototype",
-        "Test protocol"
-      ],
+      "decisions": ["Choose production details within the concept and test protocol"],
+      "deliverables": ["Prototype", "Test protocol"],
       "model_binding": null
     },
     {
@@ -100,10 +80,7 @@
         "Reject unsupported findings",
         "Identify what the prototype did and did not establish"
       ],
-      "deliverables": [
-        "Prototype evaluation",
-        "Rework findings"
-      ],
+      "deliverables": ["Prototype evaluation", "Rework findings"],
       "model_binding": null
     },
     {
@@ -117,10 +94,7 @@
         "Preserve uncertainty and de-identify examples before optional upload",
         "Read contextual capability advice from the independent evaluator when available"
       ],
-      "deliverables": [
-        "Optional peer observation records",
-        "Referenced evaluator advice"
-      ],
+      "deliverables": ["Optional peer observation records", "Referenced evaluator advice"],
       "model_binding": null
     }
   ],
@@ -219,11 +193,7 @@
     }
   ],
   "workflow": {
-    "external_inputs": [
-      "task_brief",
-      "constraints",
-      "existing_assets"
-    ],
+    "external_inputs": ["task_brief", "constraints", "existing_assets"],
     "on_rejection": "Record a finding, reopen the named rework stage as a new attempt, and invalidate affected downstream artifacts.",
     "stages": [
       {
@@ -231,13 +201,8 @@
         "owner": "product_lead",
         "contributors": [],
         "depends_on": [],
-        "inputs": [
-          "task_brief",
-          "constraints"
-        ],
-        "outputs": [
-          "opportunity_brief"
-        ],
+        "inputs": ["task_brief", "constraints"],
+        "outputs": ["opportunity_brief"],
         "gate": {
           "reviewer": "research_team",
           "checks": [
@@ -251,16 +216,9 @@
         "id": "research",
         "owner": "research_team",
         "contributors": [],
-        "depends_on": [
-          "framing"
-        ],
-        "inputs": [
-          "opportunity_brief",
-          "existing_assets"
-        ],
-        "outputs": [
-          "research_findings"
-        ],
+        "depends_on": ["framing"],
+        "inputs": ["opportunity_brief", "existing_assets"],
+        "outputs": ["research_findings"],
         "gate": {
           "reviewer": "evaluation_team",
           "checks": [
@@ -275,17 +233,9 @@
         "id": "feasibility",
         "owner": "engineering_lead",
         "contributors": [],
-        "depends_on": [
-          "framing"
-        ],
-        "inputs": [
-          "opportunity_brief",
-          "constraints",
-          "existing_assets"
-        ],
-        "outputs": [
-          "feasibility_note"
-        ],
+        "depends_on": ["framing"],
+        "inputs": ["opportunity_brief", "constraints", "existing_assets"],
+        "outputs": ["feasibility_note"],
         "gate": {
           "reviewer": "evaluation_team",
           "checks": [
@@ -298,22 +248,10 @@
       {
         "id": "concept",
         "owner": "design_lead",
-        "contributors": [
-          "research_team",
-          "engineering_lead"
-        ],
-        "depends_on": [
-          "research",
-          "feasibility"
-        ],
-        "inputs": [
-          "research_findings",
-          "feasibility_note",
-          "opportunity_brief"
-        ],
-        "outputs": [
-          "concept_plan"
-        ],
+        "contributors": ["research_team", "engineering_lead"],
+        "depends_on": ["research", "feasibility"],
+        "inputs": ["research_findings", "feasibility_note", "opportunity_brief"],
+        "outputs": ["concept_plan"],
         "gate": {
           "reviewer": "product_lead",
           "checks": [
@@ -327,21 +265,10 @@
       {
         "id": "prototype",
         "owner": "prototype_team",
-        "contributors": [
-          "engineering_lead"
-        ],
-        "depends_on": [
-          "concept"
-        ],
-        "inputs": [
-          "concept_plan",
-          "feasibility_note",
-          "constraints"
-        ],
-        "outputs": [
-          "prototype",
-          "test_protocol"
-        ],
+        "contributors": ["engineering_lead"],
+        "depends_on": ["concept"],
+        "inputs": ["concept_plan", "feasibility_note", "constraints"],
+        "outputs": ["prototype", "test_protocol"],
         "gate": {
           "reviewer": "design_lead",
           "checks": [
@@ -355,18 +282,9 @@
         "id": "evaluation",
         "owner": "evaluation_team",
         "contributors": [],
-        "depends_on": [
-          "prototype"
-        ],
-        "inputs": [
-          "prototype",
-          "test_protocol",
-          "research_findings",
-          "opportunity_brief"
-        ],
-        "outputs": [
-          "prototype_evaluation"
-        ],
+        "depends_on": ["prototype"],
+        "inputs": ["prototype", "test_protocol", "research_findings", "opportunity_brief"],
+        "outputs": ["prototype_evaluation"],
         "gate": {
           "reviewer": "product_lead",
           "checks": [
@@ -380,21 +298,10 @@
       {
         "id": "handover",
         "owner": "design_lead",
-        "contributors": [
-          "engineering_lead"
-        ],
-        "depends_on": [
-          "evaluation"
-        ],
-        "inputs": [
-          "concept_plan",
-          "prototype",
-          "prototype_evaluation",
-          "feasibility_note"
-        ],
-        "outputs": [
-          "product_design_handover"
-        ],
+        "contributors": ["engineering_lead"],
+        "depends_on": ["evaluation"],
+        "inputs": ["concept_plan", "prototype", "prototype_evaluation", "feasibility_note"],
+        "outputs": ["product_design_handover"],
         "gate": {
           "reviewer": "product_lead",
           "checks": [
@@ -409,18 +316,9 @@
   "domain": "technical-product-design",
   "staff_feedback": {
     "coordinator_role": "staff_coordinator",
-    "observer_roles": [
-      "design_lead",
-      "engineering_lead",
-      "prototype_team",
-      "evaluation_team"
-    ],
+    "observer_roles": ["design_lead", "engineering_lead", "prototype_team", "evaluation_team"],
     "policy": "staff/policy.json",
-    "events": [
-      "peer_comment",
-      "peer_review_completed",
-      "task_completed"
-    ],
+    "events": ["peer_comment", "peer_review_completed", "task_completed"],
     "effect": "advisory",
     "adapter": "lib/staff.mjs",
     "runtime_status": "contract-only",

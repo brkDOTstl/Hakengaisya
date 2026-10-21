@@ -1,11 +1,11 @@
 {
   "name": "hakengaisya",
-  "interface": {"displayName": "Hakengaisya Suite"},
+  "interface": { "displayName": "Hakengaisya Suite" },
   "plugins": [
     {
       "name": "hakengaisya-evaluator",
-      "source": {"source": "local", "path": "./plugins/hakengaisya-evaluator"},
-      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "source": { "source": "local", "path": "./plugins/hakengaisya-evaluator" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
       "category": "Productivity"
     }
   ]

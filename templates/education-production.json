@@ -8,94 +8,249 @@
   "root": "learning_lead",
   "roles": [
     {
-      "id": "learning_lead", "name": "Learning lead", "kind": "lead", "optional": false,
+      "id": "learning_lead",
+      "name": "Learning lead",
+      "kind": "lead",
+      "optional": false,
       "purpose": "Own the learning goal, audience, constraints, and delivery coordination.",
-      "decisions": ["Define target learner performance", "Prioritize revisions using evidence", "Resolve scope and audience conflicts"],
-      "deliverables": ["Performance brief", "Education handover"], "model_binding": null
+      "decisions": [
+        "Define target learner performance",
+        "Prioritize revisions using evidence",
+        "Resolve scope and audience conflicts"
+      ],
+      "deliverables": ["Performance brief", "Education handover"],
+      "model_binding": null
     },
     {
-      "id": "learning_designer", "name": "Learning designer", "kind": "lead", "optional": false,
+      "id": "learning_designer",
+      "name": "Learning designer",
+      "kind": "lead",
+      "optional": false,
       "purpose": "Design the conceptual sequence, prerequisites, practice, and assessment.",
-      "decisions": ["Choose an instructional sequence for the audience", "Align activities and assessments with objectives"],
-      "deliverables": ["Learning blueprint", "Assessment plan"], "model_binding": null
+      "decisions": [
+        "Choose an instructional sequence for the audience",
+        "Align activities and assessments with objectives"
+      ],
+      "deliverables": ["Learning blueprint", "Assessment plan"],
+      "model_binding": null
     },
     {
-      "id": "subject_expert", "name": "Subject expert", "kind": "specialist", "optional": false,
+      "id": "subject_expert",
+      "name": "Subject expert",
+      "kind": "specialist",
+      "optional": false,
       "purpose": "Check domain correctness and provide traceable technical or subject evidence.",
       "decisions": ["Reject factual errors", "Identify misleading simplifications"],
-      "deliverables": ["Accuracy findings", "Source guidance"], "model_binding": null
+      "deliverables": ["Accuracy findings", "Source guidance"],
+      "model_binding": null
     },
     {
-      "id": "learning_production", "name": "Learning production team", "kind": "team", "optional": false,
+      "id": "learning_production",
+      "name": "Learning production team",
+      "kind": "team",
+      "optional": false,
       "purpose": "Create lessons, examples, exercises, and media from the approved learning design.",
       "decisions": ["Choose production details consistent with the learning blueprint"],
-      "deliverables": ["Sample lesson", "Course package"], "model_binding": null
+      "deliverables": ["Sample lesson", "Course package"],
+      "model_binding": null
     },
     {
-      "id": "pilot_coordinator", "name": "Pilot coordinator", "kind": "specialist", "optional": false,
+      "id": "pilot_coordinator",
+      "name": "Pilot coordinator",
+      "kind": "specialist",
+      "optional": false,
       "purpose": "Coordinate authorized learner trials and preserve observation and work-sample provenance.",
-      "decisions": ["Organize a trial within the approved participant and data scope", "Flag missing learner evidence"],
-      "deliverables": ["Learner observations", "Learner work samples"], "model_binding": null
+      "decisions": [
+        "Organize a trial within the approved participant and data scope",
+        "Flag missing learner evidence"
+      ],
+      "deliverables": ["Learner observations", "Learner work samples"],
+      "model_binding": null
     },
     {
-      "id": "learning_evaluator", "name": "Learning evaluator", "kind": "team", "optional": false,
+      "id": "learning_evaluator",
+      "name": "Learning evaluator",
+      "kind": "team",
+      "optional": false,
       "purpose": "Evaluate learning alignment, comprehension barriers, and observable performance.",
-      "decisions": ["Reject unsupported mastery claims", "Recommend revisions based on learner evidence"],
-      "deliverables": ["Learning evaluation", "Revision findings"], "model_binding": null
+      "decisions": [
+        "Reject unsupported mastery claims",
+        "Recommend revisions based on learner evidence"
+      ],
+      "deliverables": ["Learning evaluation", "Revision findings"],
+      "model_binding": null
     }
   ],
   "authority": [
-    {"from": "learning_lead", "to": "learning_designer"},
-    {"from": "learning_lead", "to": "subject_expert"},
-    {"from": "learning_designer", "to": "learning_production"},
-    {"from": "learning_lead", "to": "pilot_coordinator"},
-    {"from": "learning_lead", "to": "learning_evaluator"}
+    { "from": "learning_lead", "to": "learning_designer" },
+    { "from": "learning_lead", "to": "subject_expert" },
+    { "from": "learning_designer", "to": "learning_production" },
+    { "from": "learning_lead", "to": "pilot_coordinator" },
+    { "from": "learning_lead", "to": "learning_evaluator" }
   ],
   "interactions": [
-    {"from": "subject_expert", "to": "learning_designer", "type": "collaboration", "contract": "Build a correct conceptual sequence with explicit prerequisites."},
-    {"from": "subject_expert", "to": "learning_production", "type": "review", "contract": "Check facts, sources, and potentially misleading simplifications."},
-    {"from": "learning_evaluator", "to": "learning_designer", "type": "review", "contract": "Check objective, instruction, practice, and assessment alignment."},
-    {"from": "pilot_coordinator", "to": "learning_evaluator", "type": "service", "contract": "Supply authorized real learner observations with provenance."},
-    {"from": "learning_evaluator", "to": "learning_production", "type": "review", "contract": "Evaluate comprehension and performance; return actionable revision findings."}
+    {
+      "from": "subject_expert",
+      "to": "learning_designer",
+      "type": "collaboration",
+      "contract": "Build a correct conceptual sequence with explicit prerequisites."
+    },
+    {
+      "from": "subject_expert",
+      "to": "learning_production",
+      "type": "review",
+      "contract": "Check facts, sources, and potentially misleading simplifications."
+    },
+    {
+      "from": "learning_evaluator",
+      "to": "learning_designer",
+      "type": "review",
+      "contract": "Check objective, instruction, practice, and assessment alignment."
+    },
+    {
+      "from": "pilot_coordinator",
+      "to": "learning_evaluator",
+      "type": "service",
+      "contract": "Supply authorized real learner observations with provenance."
+    },
+    {
+      "from": "learning_evaluator",
+      "to": "learning_production",
+      "type": "review",
+      "contract": "Evaluate comprehension and performance; return actionable revision findings."
+    }
   ],
   "workflow": {
     "external_inputs": ["task_brief", "constraints", "learner_context", "subject_sources"],
     "on_rejection": "Record a finding, reopen the named rework stage as a new attempt, and invalidate affected downstream artifacts.",
     "stages": [
       {
-        "id": "performance_brief", "owner": "learning_lead", "contributors": [], "depends_on": [],
-        "inputs": ["task_brief", "constraints", "learner_context"], "outputs": ["target_performance", "learner_profile"],
-        "gate": {"reviewer": "learning_designer", "checks": ["Audience and prerequisite knowledge are explicit", "Success describes observable learner performance", "Audience assumptions have provenance or a recorded evidence gap"], "rework_to": "performance_brief"}
+        "id": "performance_brief",
+        "owner": "learning_lead",
+        "contributors": [],
+        "depends_on": [],
+        "inputs": ["task_brief", "constraints", "learner_context"],
+        "outputs": ["target_performance", "learner_profile"],
+        "gate": {
+          "reviewer": "learning_designer",
+          "checks": [
+            "Audience and prerequisite knowledge are explicit",
+            "Success describes observable learner performance",
+            "Audience assumptions have provenance or a recorded evidence gap"
+          ],
+          "rework_to": "performance_brief"
+        }
       },
       {
-        "id": "learning_design", "owner": "learning_designer", "contributors": ["subject_expert"], "depends_on": ["performance_brief"],
-        "inputs": ["target_performance", "learner_profile", "subject_sources"], "outputs": ["learning_blueprint", "assessment_plan"],
-        "gate": {"reviewer": "learning_evaluator", "checks": ["Concepts form a coherent path appropriate to the learner", "Practice and assessment address the target performance", "Explanatory detail advances understanding rather than fragmenting it"], "rework_to": "learning_design"}
+        "id": "learning_design",
+        "owner": "learning_designer",
+        "contributors": ["subject_expert"],
+        "depends_on": ["performance_brief"],
+        "inputs": ["target_performance", "learner_profile", "subject_sources"],
+        "outputs": ["learning_blueprint", "assessment_plan"],
+        "gate": {
+          "reviewer": "learning_evaluator",
+          "checks": [
+            "Concepts form a coherent path appropriate to the learner",
+            "Practice and assessment address the target performance",
+            "Explanatory detail advances understanding rather than fragmenting it"
+          ],
+          "rework_to": "learning_design"
+        }
       },
       {
-        "id": "sample_lesson", "owner": "learning_production", "contributors": ["learning_designer"], "depends_on": ["learning_design"],
-        "inputs": ["learning_blueprint", "assessment_plan", "subject_sources"], "outputs": ["lesson_prototype", "practice_prototype"],
-        "gate": {"reviewer": "subject_expert", "checks": ["Content and examples are factually supported", "Simplifications preserve the relationships being taught"], "rework_to": "sample_lesson"}
+        "id": "sample_lesson",
+        "owner": "learning_production",
+        "contributors": ["learning_designer"],
+        "depends_on": ["learning_design"],
+        "inputs": ["learning_blueprint", "assessment_plan", "subject_sources"],
+        "outputs": ["lesson_prototype", "practice_prototype"],
+        "gate": {
+          "reviewer": "subject_expert",
+          "checks": [
+            "Content and examples are factually supported",
+            "Simplifications preserve the relationships being taught"
+          ],
+          "rework_to": "sample_lesson"
+        }
       },
       {
-        "id": "pilot_review", "owner": "learning_evaluator", "contributors": ["pilot_coordinator"], "depends_on": ["sample_lesson"],
-        "inputs": ["lesson_prototype", "practice_prototype", "assessment_plan", "learner_profile"], "outputs": ["pilot_evidence", "pilot_review_report"],
-        "gate": {"reviewer": "learning_lead", "checks": ["Evidence requiring learners comes from an authorized real trial or supplied real records", "Simulated feedback is labeled and cannot replace required learner evidence", "Confusion and performance gaps result in explicit revisions", "Missing required learner evidence prevents an effectiveness pass"], "rework_to": "learning_design"}
+        "id": "pilot_review",
+        "owner": "learning_evaluator",
+        "contributors": ["pilot_coordinator"],
+        "depends_on": ["sample_lesson"],
+        "inputs": ["lesson_prototype", "practice_prototype", "assessment_plan", "learner_profile"],
+        "outputs": ["pilot_evidence", "pilot_review_report"],
+        "gate": {
+          "reviewer": "learning_lead",
+          "checks": [
+            "Evidence requiring learners comes from an authorized real trial or supplied real records",
+            "Simulated feedback is labeled and cannot replace required learner evidence",
+            "Confusion and performance gaps result in explicit revisions",
+            "Missing required learner evidence prevents an effectiveness pass"
+          ],
+          "rework_to": "learning_design"
+        }
       },
       {
-        "id": "course_production", "owner": "learning_production", "contributors": ["learning_designer"], "depends_on": ["pilot_review"],
-        "inputs": ["learning_blueprint", "assessment_plan", "pilot_review_report", "subject_sources"], "outputs": ["course_package"],
-        "gate": {"reviewer": "subject_expert", "checks": ["Full content is accurate and source-supported", "Approved revisions are reflected in lessons and practice"], "rework_to": "course_production"}
+        "id": "course_production",
+        "owner": "learning_production",
+        "contributors": ["learning_designer"],
+        "depends_on": ["pilot_review"],
+        "inputs": [
+          "learning_blueprint",
+          "assessment_plan",
+          "pilot_review_report",
+          "subject_sources"
+        ],
+        "outputs": ["course_package"],
+        "gate": {
+          "reviewer": "subject_expert",
+          "checks": [
+            "Full content is accurate and source-supported",
+            "Approved revisions are reflected in lessons and practice"
+          ],
+          "rework_to": "course_production"
+        }
       },
       {
-        "id": "final_validation", "owner": "learning_evaluator", "contributors": ["pilot_coordinator"], "depends_on": ["course_production"],
-        "inputs": ["course_package", "assessment_plan", "target_performance", "pilot_evidence"], "outputs": ["final_learner_evidence", "learning_effectiveness_report"],
-        "gate": {"reviewer": "learning_lead", "checks": ["Evidence covers the current course version and target performance", "Prototype-only results are not treated as proof for an expanded course", "Completion of lessons is not proof of mastery", "Remaining limitations and learner performance gaps are explicit"], "rework_to": "course_production"}
+        "id": "final_validation",
+        "owner": "learning_evaluator",
+        "contributors": ["pilot_coordinator"],
+        "depends_on": ["course_production"],
+        "inputs": ["course_package", "assessment_plan", "target_performance", "pilot_evidence"],
+        "outputs": ["final_learner_evidence", "learning_effectiveness_report"],
+        "gate": {
+          "reviewer": "learning_lead",
+          "checks": [
+            "Evidence covers the current course version and target performance",
+            "Prototype-only results are not treated as proof for an expanded course",
+            "Completion of lessons is not proof of mastery",
+            "Remaining limitations and learner performance gaps are explicit"
+          ],
+          "rework_to": "course_production"
+        }
       },
       {
-        "id": "handover", "owner": "learning_lead", "contributors": [], "depends_on": ["final_validation"],
-        "inputs": ["course_package", "learning_effectiveness_report", "final_learner_evidence", "assessment_plan"], "outputs": ["education_handover"],
-        "gate": {"reviewer": "learning_evaluator", "checks": ["Handover includes the course, teaching guidance, assessment, and evidence limitations", "Learning claims agree with observed performance"], "rework_to": "handover"}
+        "id": "handover",
+        "owner": "learning_lead",
+        "contributors": [],
+        "depends_on": ["final_validation"],
+        "inputs": [
+          "course_package",
+          "learning_effectiveness_report",
+          "final_learner_evidence",
+          "assessment_plan"
+        ],
+        "outputs": ["education_handover"],
+        "gate": {
+          "reviewer": "learning_evaluator",
+          "checks": [
+            "Handover includes the course, teaching guidance, assessment, and evidence limitations",
+            "Learning claims agree with observed performance"
+          ],
+          "rework_to": "handover"
+        }
       }
     ]
   }

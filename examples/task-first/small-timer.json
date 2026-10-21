@@ -4,12 +4,8 @@
   "domain": "software-engineering",
   "evidence_kind": "simulation",
   "lead_context": "fixture-host",
-  "acceptance": [
-    "The integrated requested result passes review."
-  ],
-  "constraints": [
-    "All route prices and durations here are synthetic."
-  ],
+  "acceptance": ["The integrated requested result passes review."],
+  "constraints": ["All route prices and durations here are synthetic."],
   "planning_limits": {
     "max_parallel": 3,
     "max_workers": 3,
@@ -26,22 +22,12 @@
       "objective": "Implement a small timer and its relevant developer checks.",
       "task_type": "implementation",
       "difficulty": "routine",
-      "skills": [
-        "implementation"
-      ],
+      "skills": ["implementation"],
       "depends_on": [],
-      "inputs": [
-        "task_brief"
-      ],
-      "writes": [
-        "app"
-      ],
-      "outputs": [
-        "timer_artifact"
-      ],
-      "acceptance": [
-        "The specified result has checkable evidence."
-      ]
+      "inputs": ["task_brief"],
+      "writes": ["app"],
+      "outputs": ["timer_artifact"],
+      "acceptance": ["The specified result has checkable evidence."]
     }
   ]
 }

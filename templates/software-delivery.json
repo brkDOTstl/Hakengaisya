@@ -4,10 +4,7 @@
   "name": "Software delivery company",
   "status": "draft",
   "purpose": "Deliver a software change with explicit ownership and reproducible verification evidence.",
-  "reference_ids": [
-    "team-topologies",
-    "capra-consulting"
-  ],
+  "reference_ids": ["team-topologies", "capra-consulting"],
   "root": "delivery_lead",
   "roles": [
     {
@@ -21,10 +18,7 @@
         "Resolve blocked handoffs",
         "Accept evidence-backed internal milestones"
       ],
-      "deliverables": [
-        "Delivery plan",
-        "Final handover"
-      ],
+      "deliverables": ["Delivery plan", "Final handover"],
       "model_binding": null
     },
     {
@@ -37,9 +31,7 @@
         "Identify ambiguities requiring escalation",
         "Specify observable acceptance criteria"
       ],
-      "deliverables": [
-        "Accepted scope"
-      ],
+      "deliverables": ["Accepted scope"],
       "model_binding": null
     },
     {
@@ -48,14 +40,8 @@
       "kind": "lead",
       "optional": false,
       "purpose": "Own technical design and coordinate implementation work.",
-      "decisions": [
-        "Choose technical boundaries within scope",
-        "Decompose implementation tasks"
-      ],
-      "deliverables": [
-        "Architecture proposal",
-        "Verification plan"
-      ],
+      "decisions": ["Choose technical boundaries within scope", "Decompose implementation tasks"],
+      "deliverables": ["Architecture proposal", "Verification plan"],
       "model_binding": null
     },
     {
@@ -68,11 +54,7 @@
         "Choose local implementation details",
         "Report blockers and implementation findings"
       ],
-      "deliverables": [
-        "Implementation",
-        "Change notes",
-        "Developer check evidence"
-      ],
+      "deliverables": ["Implementation", "Change notes", "Developer check evidence"],
       "model_binding": null
     },
     {
@@ -81,12 +63,8 @@
       "kind": "team",
       "optional": true,
       "purpose": "Provide reusable environment, build, and execution services when needed.",
-      "decisions": [
-        "Define shared service interfaces within task constraints"
-      ],
-      "deliverables": [
-        "Environment readiness evidence"
-      ],
+      "decisions": ["Define shared service interfaces within task constraints"],
+      "deliverables": ["Environment readiness evidence"],
       "model_binding": null
     },
     {
@@ -99,10 +77,7 @@
         "Reject unsupported acceptance claims",
         "Identify required rework with evidence"
       ],
-      "deliverables": [
-        "Review findings",
-        "Verification report"
-      ],
+      "deliverables": ["Review findings", "Verification report"],
       "model_binding": null
     },
     {
@@ -111,13 +86,8 @@
       "kind": "team",
       "optional": true,
       "purpose": "Resolve a specific capability gap without taking over delivery ownership.",
-      "decisions": [
-        "Recommend a bounded assistance plan"
-      ],
-      "deliverables": [
-        "Specialist guidance",
-        "Capability handoff"
-      ],
+      "decisions": ["Recommend a bounded assistance plan"],
+      "deliverables": ["Specialist guidance", "Capability handoff"],
       "model_binding": null
     },
     {
@@ -131,10 +101,7 @@
         "Preserve uncertainty and de-identify examples before optional upload",
         "Read contextual capability advice from the independent evaluator when available"
       ],
-      "deliverables": [
-        "Optional peer observation records",
-        "Referenced evaluator advice"
-      ],
+      "deliverables": ["Optional peer observation records", "Referenced evaluator advice"],
       "model_binding": null
     }
   ],
@@ -225,11 +192,7 @@
     }
   ],
   "workflow": {
-    "external_inputs": [
-      "task_brief",
-      "constraints",
-      "existing_assets"
-    ],
+    "external_inputs": ["task_brief", "constraints", "existing_assets"],
     "on_rejection": "Record a finding, reopen the named rework stage as a new attempt, and invalidate affected downstream artifacts.",
     "stages": [
       {
@@ -237,14 +200,8 @@
         "owner": "requirements_analyst",
         "contributors": [],
         "depends_on": [],
-        "inputs": [
-          "task_brief",
-          "constraints",
-          "existing_assets"
-        ],
-        "outputs": [
-          "accepted_scope"
-        ],
+        "inputs": ["task_brief", "constraints", "existing_assets"],
+        "outputs": ["accepted_scope"],
         "gate": {
           "reviewer": "delivery_lead",
           "checks": [
@@ -259,17 +216,9 @@
         "id": "design",
         "owner": "technical_lead",
         "contributors": [],
-        "depends_on": [
-          "scope"
-        ],
-        "inputs": [
-          "accepted_scope",
-          "existing_assets"
-        ],
-        "outputs": [
-          "architecture_proposal",
-          "verification_plan"
-        ],
+        "depends_on": ["scope"],
+        "inputs": ["accepted_scope", "existing_assets"],
+        "outputs": ["architecture_proposal", "verification_plan"],
         "gate": {
           "reviewer": "assurance_team",
           "checks": [
@@ -284,17 +233,9 @@
         "id": "environment",
         "owner": "platform_team",
         "contributors": [],
-        "depends_on": [
-          "scope"
-        ],
-        "inputs": [
-          "accepted_scope",
-          "constraints",
-          "existing_assets"
-        ],
-        "outputs": [
-          "environment_readiness"
-        ],
+        "depends_on": ["scope"],
+        "inputs": ["accepted_scope", "constraints", "existing_assets"],
+        "outputs": ["environment_readiness"],
         "gate": {
           "reviewer": "technical_lead",
           "checks": [
@@ -307,24 +248,15 @@
       {
         "id": "implementation",
         "owner": "delivery_team",
-        "contributors": [
-          "technical_lead"
-        ],
-        "depends_on": [
-          "design",
-          "environment"
-        ],
+        "contributors": ["technical_lead"],
+        "depends_on": ["design", "environment"],
         "inputs": [
           "architecture_proposal",
           "verification_plan",
           "environment_readiness",
           "existing_assets"
         ],
-        "outputs": [
-          "implementation",
-          "change_notes",
-          "developer_evidence"
-        ],
+        "outputs": ["implementation", "change_notes", "developer_evidence"],
         "gate": {
           "reviewer": "assurance_team",
           "checks": [
@@ -339,18 +271,9 @@
         "id": "verification",
         "owner": "assurance_team",
         "contributors": [],
-        "depends_on": [
-          "implementation"
-        ],
-        "inputs": [
-          "implementation",
-          "developer_evidence",
-          "verification_plan",
-          "accepted_scope"
-        ],
-        "outputs": [
-          "verification_report"
-        ],
+        "depends_on": ["implementation"],
+        "inputs": ["implementation", "developer_evidence", "verification_plan", "accepted_scope"],
+        "outputs": ["verification_report"],
         "gate": {
           "reviewer": "delivery_lead",
           "checks": [
@@ -365,18 +288,9 @@
         "id": "handover",
         "owner": "delivery_lead",
         "contributors": [],
-        "depends_on": [
-          "verification"
-        ],
-        "inputs": [
-          "implementation",
-          "change_notes",
-          "verification_report",
-          "accepted_scope"
-        ],
-        "outputs": [
-          "software_handover"
-        ],
+        "depends_on": ["verification"],
+        "inputs": ["implementation", "change_notes", "verification_report", "accepted_scope"],
+        "outputs": ["software_handover"],
         "gate": {
           "reviewer": "assurance_team",
           "checks": [
@@ -391,17 +305,9 @@
   "domain": "software-engineering",
   "staff_feedback": {
     "coordinator_role": "staff_coordinator",
-    "observer_roles": [
-      "technical_lead",
-      "delivery_team",
-      "assurance_team"
-    ],
+    "observer_roles": ["technical_lead", "delivery_team", "assurance_team"],
     "policy": "staff/policy.json",
-    "events": [
-      "peer_comment",
-      "peer_review_completed",
-      "task_completed"
-    ],
+    "events": ["peer_comment", "peer_review_completed", "task_completed"],
     "effect": "advisory",
     "adapter": "lib/staff.mjs",
     "runtime_status": "contract-only",

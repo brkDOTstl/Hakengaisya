@@ -10,9 +10,21 @@
       "source_url": "https://openai.com/index/gpt-6-astra/",
       "source_type": "vendor-published",
       "benchmarks": [
-        {"name": "Terminal-Bench 4.0", "value": "57.9%", "conditions": "OpenAI published evaluation setup; see source footnotes."},
-        {"name": "DeepSWE v1.1", "value": "74.1%", "conditions": "OpenAI published evaluation setup."},
-        {"name": "SRE-Bench", "value": "88.0%", "conditions": "OpenAI published evaluation setup."}
+        {
+          "name": "Terminal-Bench 4.0",
+          "value": "57.9%",
+          "conditions": "OpenAI published evaluation setup; see source footnotes."
+        },
+        {
+          "name": "DeepSWE v1.1",
+          "value": "74.1%",
+          "conditions": "OpenAI published evaluation setup."
+        },
+        {
+          "name": "SRE-Bench",
+          "value": "88.0%",
+          "conditions": "OpenAI published evaluation setup."
+        }
       ]
     },
     {
@@ -22,9 +34,21 @@
       "source_url": "https://www.anthropic.com/claude-sonnet-5-5",
       "source_type": "vendor-published-comparison",
       "benchmarks": [
-        {"name": "Terminal-Bench 4.0", "value": "66.4%", "conditions": "Opus 5.5 at Xhigh effort, per footnote 1."},
-        {"name": "CursorBench 4.0", "value": "57.8%", "conditions": "Anthropic comparison table; settings are benchmark-specific."},
-        {"name": "GDPval-AA v2.1", "value": "1846", "conditions": "Published knowledge-work rating; not a percentage."}
+        {
+          "name": "Terminal-Bench 4.0",
+          "value": "66.4%",
+          "conditions": "Opus 5.5 at Xhigh effort, per footnote 1."
+        },
+        {
+          "name": "CursorBench 4.0",
+          "value": "57.8%",
+          "conditions": "Anthropic comparison table; settings are benchmark-specific."
+        },
+        {
+          "name": "GDPval-AA v2.1",
+          "value": "1846",
+          "conditions": "Published knowledge-work rating; not a percentage."
+        }
       ]
     },
     {
@@ -34,9 +58,21 @@
       "source_url": "https://www.anthropic.com/claude-sonnet-5-5",
       "source_type": "vendor-published",
       "benchmarks": [
-        {"name": "Terminal-Bench 4.0", "value": "70.6%", "conditions": "Published headline result; effort and harness affect comparison."},
-        {"name": "FrontierCode 1.1 Main", "value": "52.1%", "conditions": "Xhigh effort; Max result is 46.2%, not interchangeable."},
-        {"name": "CursorBench 4.0", "value": "55.5%", "conditions": "Anthropic published evaluation setup."}
+        {
+          "name": "Terminal-Bench 4.0",
+          "value": "70.6%",
+          "conditions": "Published headline result; effort and harness affect comparison."
+        },
+        {
+          "name": "FrontierCode 1.1 Main",
+          "value": "52.1%",
+          "conditions": "Xhigh effort; Max result is 46.2%, not interchangeable."
+        },
+        {
+          "name": "CursorBench 4.0",
+          "value": "55.5%",
+          "conditions": "Anthropic published evaluation setup."
+        }
       ]
     },
     {
@@ -46,9 +82,21 @@
       "source_url": "https://www.anthropic.com/claude-fable-and-mythos-5-1",
       "source_type": "vendor-published",
       "benchmarks": [
-        {"name": "Terminal-Bench 4.0", "value": "55.8%", "conditions": "Fable 5.1 with production safeguards; not the Mythos variant."},
-        {"name": "Terminal-Bench-Science 0.1", "value": "52.6%", "conditions": "Scientific-workflow evaluation; distinct from Terminal-Bench 4.0."},
-        {"name": "CursorBench 3.2.0", "value": "73.4%", "conditions": "Version 3.2.0; do not compare directly with CursorBench 4.0."}
+        {
+          "name": "Terminal-Bench 4.0",
+          "value": "55.8%",
+          "conditions": "Fable 5.1 with production safeguards; not the Mythos variant."
+        },
+        {
+          "name": "Terminal-Bench-Science 0.1",
+          "value": "52.6%",
+          "conditions": "Scientific-workflow evaluation; distinct from Terminal-Bench 4.0."
+        },
+        {
+          "name": "CursorBench 3.2.0",
+          "value": "73.4%",
+          "conditions": "Version 3.2.0; do not compare directly with CursorBench 4.0."
+        }
       ]
     },
     {
@@ -58,9 +106,21 @@
       "source_url": "https://www.anthropic.com/claude-haiku-5-5",
       "source_type": "vendor-published",
       "benchmarks": [
-        {"name": "Terminal-Bench 4.0", "value": "39.2%", "conditions": "Anthropic published evaluation setup."},
-        {"name": "FrontierCode 1.1 Main", "value": "46.4%", "conditions": "Anthropic published evaluation setup."},
-        {"name": "OSWorld 2.1", "value": "72.4%", "conditions": "Offline subset; not the full benchmark."}
+        {
+          "name": "Terminal-Bench 4.0",
+          "value": "39.2%",
+          "conditions": "Anthropic published evaluation setup."
+        },
+        {
+          "name": "FrontierCode 1.1 Main",
+          "value": "46.4%",
+          "conditions": "Anthropic published evaluation setup."
+        },
+        {
+          "name": "OSWorld 2.1",
+          "value": "72.4%",
+          "conditions": "Offline subset; not the full benchmark."
+        }
       ]
     },
     {
@@ -70,9 +130,21 @@
       "source_url": "https://x.ai/news/grok-4-7",
       "source_type": "vendor-published",
       "benchmarks": [
-        {"name": "Terminal-Bench 4.0", "value": "37.6%", "conditions": "Grok 4.7 xHigh in the vendor table."},
-        {"name": "CursorBench 4.0", "value": "46.3%", "conditions": "Grok 4.7 xHigh in the vendor table."},
-        {"name": "DeepSWE v1.1", "value": "71.0%", "conditions": "High effort, marked separately from xHigh by the vendor."}
+        {
+          "name": "Terminal-Bench 4.0",
+          "value": "37.6%",
+          "conditions": "Grok 4.7 xHigh in the vendor table."
+        },
+        {
+          "name": "CursorBench 4.0",
+          "value": "46.3%",
+          "conditions": "Grok 4.7 xHigh in the vendor table."
+        },
+        {
+          "name": "DeepSWE v1.1",
+          "value": "71.0%",
+          "conditions": "High effort, marked separately from xHigh by the vendor."
+        }
       ]
     },
     {
@@ -82,9 +154,17 @@
       "source_url": "https://dev.meta.ai/models/muse-spark",
       "source_type": "vendor-published",
       "benchmarks": [
-        {"name": "Terminal-Bench 2.1", "value": "88.8", "conditions": "Max reasoning; version 2.1 is not directly comparable to version 4.0."},
-        {"name": "DeepSWE v1.1", "value": "75.4", "conditions": "Max reasoning in Meta's table."},
-        {"name": "SWEAtlas CodeBase QnA", "value": "59.4", "conditions": "Max reasoning; codebase understanding task."}
+        {
+          "name": "Terminal-Bench 2.1",
+          "value": "88.8",
+          "conditions": "Max reasoning; version 2.1 is not directly comparable to version 4.0."
+        },
+        { "name": "DeepSWE v1.1", "value": "75.4", "conditions": "Max reasoning in Meta's table." },
+        {
+          "name": "SWEAtlas CodeBase QnA",
+          "value": "59.4",
+          "conditions": "Max reasoning; codebase understanding task."
+        }
       ]
     }
   ]

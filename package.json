@@ -2,7 +2,10 @@
   "name": "hakengaisya",
   "version": "0.8.4",
   "license": "MIT",
-  "repository": {"type": "git", "url": "https://github.com/brkDOTstl/Hakengaisya.git"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brkDOTstl/Hakengaisya.git"
+  },
   "private": true,
   "description": "Company topology templates for task orchestration",
   "type": "module",
@@ -15,9 +18,14 @@
     "test": "node scripts/check-suite.mjs",
     "test:workflow": "node --test tests/*.test.mjs",
     "test:evaluator": "npm --prefix packages/evaluator test",
-    "audit": "node scripts/release-audit.mjs"
+    "audit": "node scripts/release-audit.mjs",
+    "format": "biome check --write .",
+    "lint": "biome ci ."
   },
   "engines": {
     "node": ">=24.13.0 <25"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15"
   }
 }
