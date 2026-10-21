@@ -1,8 +1,6 @@
 import { createHash } from 'node:crypto';
+import { check } from './validate.mjs';
 
-const check = (ok, message) => {
-  if (!ok) throw new Error(message);
-};
 const choice = (instructions, criteria) => ({ type: 'choice', instructions, criteria });
 export const TRIAGE_QUESTIONS = {
   domain: choice('Which domain owns the requested result?', {

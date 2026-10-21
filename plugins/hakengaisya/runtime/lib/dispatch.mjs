@@ -1,10 +1,8 @@
 import { agentReview } from './participation.mjs';
 import { assertSupervisedReview } from './supervision.mjs';
+import { check } from './validate.mjs';
 import { assertStartable } from './workflow.mjs';
 
-const check = (ok, message) => {
-  if (!ok) throw new Error(message);
-};
 function envelope(run, packet) {
   return {
     run_id: run.run_id,

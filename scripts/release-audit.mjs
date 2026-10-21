@@ -1,9 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { root, runtimeFiles, runtimeRoot, stagedFiles } from './runtime-files.mjs';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
 const files = execFileSync('git', ['ls-files', '--cached', '-z'], { cwd: root, encoding: 'utf8' })
   .split('\0')
   .filter(Boolean);
@@ -30,26 +29,15 @@ for (const relative of files) {
   )
     throw new Error(`Possible credential in publication set: ${relative}`);
 }
-for (const file of [
-  'lib/workflow.mjs',
-  'lib/planning.mjs',
-  'lib/dispatch.mjs',
-  'lib/supervision.mjs',
-  'lib/triage.mjs',
-  'lib/organization.mjs',
-  'lib/federation.mjs',
-  'lib/participation.mjs',
-  'lib/store.mjs',
-  'lib/commands.mjs',
-  'config/organization-modules.json',
-  'scripts/workflow.mjs',
-]) {
-  if (
-    !readFileSync(path.join(root, file)).equals(
-      readFileSync(path.join(root, 'plugins/hakengaisya/runtime', file)),
-    )
-  )
-    throw new Error(`Packaged workflow runtime differs: ${file}`);
+const expected = runtimeFiles();
+for (const file of expected) {
+  const source = readFileSync(path.join(root, file));
+  const staged = readFileSync(path.join(runtimeRoot, file));
+  if (!source.equals(staged)) throw new Error(`Packaged workflow runtime differs: ${file}`);
+}
+const unexpected = stagedFiles().filter((file) => !expected.includes(file));
+if (unexpected.length) {
+  throw new Error(`Packaged workflow runtime has stale files: ${unexpected.join(', ')}`);
 }
 console.log(
   'Release audit PASS: ' +

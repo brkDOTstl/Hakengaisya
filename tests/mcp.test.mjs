@@ -6,6 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { commands } from '../lib/commands.mjs';
+import { runtimeFiles, stagedFiles } from '../scripts/runtime-files.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const plugin = path.join(root, 'plugins/hakengaisya');
@@ -57,8 +58,7 @@ function server(t, env) {
   });
   child.stdout.on('data', (data) => {
     buffer += data.toString();
-    let newline;
-    while ((newline = buffer.indexOf('\n')) >= 0) {
+    for (let newline = buffer.indexOf('\n'); newline >= 0; newline = buffer.indexOf('\n')) {
       const line = buffer.slice(0, newline);
       buffer = buffer.slice(newline + 1);
       const message = JSON.parse(line);
@@ -218,14 +218,13 @@ test('plugin manifest registers the workflow server and the staged runtime match
   );
   const servers = JSON.parse(await readFile(path.join(plugin, '.mcp.json'), 'utf8'));
   assert.deepEqual(servers.mcpServers.workflow, { command: 'node', args: ['./mcp.mjs'] });
-  for (const file of [
-    'lib/commands.mjs',
-    'lib/store.mjs',
-    'lib/workflow.mjs',
-    'scripts/workflow.mjs',
-  ])
+  const expected = runtimeFiles();
+  assert.ok(expected.includes('lib/validate.mjs') && !expected.includes('lib/staff.mjs'));
+  assert.deepEqual(stagedFiles().sort(), [...expected].sort());
+  for (const file of expected) {
     assert.equal(
       await readFile(path.join(root, file), 'utf8'),
       await readFile(path.join(plugin, 'runtime', file), 'utf8'),
     );
+  }
 });

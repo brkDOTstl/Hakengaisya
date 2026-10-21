@@ -272,6 +272,7 @@
         "owner": "assurance_team",
         "contributors": [],
         "depends_on": ["implementation"],
+        "audits": ["implementation"],
         "inputs": ["implementation", "developer_evidence", "verification_plan", "accepted_scope"],
         "outputs": ["verification_report"],
         "gate": {

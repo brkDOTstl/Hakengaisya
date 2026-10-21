@@ -69,6 +69,8 @@ Rejection may reopen an earlier responsible packet and every descendant instead 
 - A single-writer lock and revision check prevent silent concurrent snapshot replacement. The lock records the writer's pid and start time; a crash may leave a lock requiring inspection, and the helper does not guess that it is stale.
 - An event batch is applied in order inside one lock and persisted only if every event is valid. Journal entries carry the controller clock, which measures recording and waiting time, not model execution.
 - The CLI helper and the plugin's MCP tools share one command table, so a host using either transport meets the same checks.
+- Run snapshots are immutable. An event works on a draft that shares untouched packets with the previous snapshot and deep-copies only the packets it changes; a failed event leaves the previous snapshot as it was.
+- Independent-audit pairs come from data: task-first work declares `audit_sources`, and reference-template stages declare `audits`. Runs persisted before 0.8.5 without `audit_sources` keep the historical pairs (verification audits implementation, evaluation audits prototype).
 
 ## Current proof and limits
 

@@ -77,7 +77,7 @@ function harness({ conflicts = false, cap = 2 } = {}) {
   const review = (id, decision = 'accepted') =>
     event(id, 'review', {
       decision,
-      checks: run.packets[id].checks.map((text, index) => ({
+      checks: run.packets[id].checks.map((_text, index) => ({
         index,
         result: decision === 'accepted' ? 'pass' : 'fail',
         evidence_reference: 'fixture:check',

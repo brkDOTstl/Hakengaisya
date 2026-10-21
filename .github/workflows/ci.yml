@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - run: npm ci
+      - run: npm run lint
       - run: npm run plugin:build
       - run: npm test
       - run: npm run inspect

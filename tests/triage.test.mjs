@@ -219,8 +219,8 @@ test('Jev timeout aborts one request and returns the native fallback', async () 
   const result = await triageWithJev(
     intake,
     { ...enabled, timeout_ms: 15 },
-    async (url, options) =>
-      new Promise((resolve, reject) => {
+    async (_url, options) =>
+      new Promise((_resolve, reject) => {
         options.signal.addEventListener('abort', () => reject(new Error('aborted')), {
           once: true,
         });

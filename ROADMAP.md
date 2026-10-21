@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-21. Current suite version: **0.8.4**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
+Updated: 2026-10-21. Current suite version: **0.8.5**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -46,6 +46,7 @@ The earlier Pomodoro trial was real and exposed excessive coordination overhead.
 | P09 | Planned | Verify every required family/scale combination structurally, including rejected work, missing evidence and blocked tools |
 | P10 | Planned | Complete usage guides, realistic de-identified examples, known limitations and the final 0.8 coverage review |
 | D01 | Implemented in 0.8.3 - structural/synthetic checks | [Optional DEI participation and family-neutral route review](docs/model-participation.md); keep ordinary cost/ability planning as the default |
+| H02 | Implemented in 0.8.5 - synthetic benchmark and regression tests | Copy-on-write events, single-pass route preparation, unified write-scope normalization, template-declared audits, Biome formatting and lint in CI; controller speed is measured on synthetic graphs only, not on real model runs |
 | H01 | Implemented in 0.8.4 - stdio round-trip tests | [MCP workflow tools, atomic event batches and lock metadata](plugins/hakengaisya/skills/company-workflow/references/run-commands.md) to cut per-transition host overhead; invocation in a fresh installed host remains unverified |
 
 The user added same-host multi-client agency coordination to the 0.8 scope. Track it alongside the preset contract and research without dropping the existing required families. Each finished increment updates this table and links its actual artifact/check evidence.

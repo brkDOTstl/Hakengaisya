@@ -129,8 +129,7 @@ test('Codex-compatible stdio exposes one recorder tool and completes a real tool
   });
   child.stdout.on('data', (data) => {
     buffer += data.toString();
-    let newline;
-    while ((newline = buffer.indexOf('\n')) >= 0) {
+    for (let newline = buffer.indexOf('\n'); newline >= 0; newline = buffer.indexOf('\n')) {
       const line = buffer.slice(0, newline);
       buffer = buffer.slice(newline + 1);
       const message = JSON.parse(line);

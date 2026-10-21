@@ -1,32 +1,21 @@
 import { spawnSync } from 'node:child_process';
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, unlink } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { root, runtimeFiles, runtimeRoot, stagedFiles } from './runtime-files.mjs';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-const files = [
-  'lib/workflow.mjs',
-  'lib/planning.mjs',
-  'lib/triage.mjs',
-  'lib/dispatch.mjs',
-  'lib/supervision.mjs',
-  'lib/organization.mjs',
-  'lib/federation.mjs',
-  'lib/participation.mjs',
-  'lib/store.mjs',
-  'lib/commands.mjs',
-  'config/organization-modules.json',
-  'scripts/workflow.mjs',
-  'templates/software-delivery.json',
-  'templates/product-design.json',
-];
-for (const file of files) {
-  const target = path.join(root, 'plugins/hakengaisya/runtime', file);
+const expected = runtimeFiles();
+for (const file of expected) {
+  const target = path.join(runtimeRoot, file);
   await mkdir(path.dirname(target), { recursive: true });
   await copyFile(path.join(root, file), target);
 }
+// Remove copies of modules that no longer exist, so the plugin never ships stale code.
+const keep = new Set(expected);
+for (const file of stagedFiles()) {
+  if (!keep.has(file)) await unlink(path.join(runtimeRoot, file));
+}
 console.log(
-  'Hakengaisya runtime staged with optional Jev intake; no provider or evaluator credentials bundled.',
+  `Hakengaisya runtime staged (${expected.length} files) with optional Jev intake; no provider or evaluator credentials bundled.`,
 );
 const evaluator = path.join(root, 'packages/evaluator');
 const result = spawnSync(process.execPath, [path.join(evaluator, 'scripts/build-plugin.mjs')], {

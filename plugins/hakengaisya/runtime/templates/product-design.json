@@ -283,6 +283,7 @@
         "owner": "evaluation_team",
         "contributors": [],
         "depends_on": ["prototype"],
+        "audits": ["prototype"],
         "inputs": ["prototype", "test_protocol", "research_findings", "opportunity_brief"],
         "outputs": ["prototype_evaluation"],
         "gate": {

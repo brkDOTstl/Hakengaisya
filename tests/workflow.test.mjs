@@ -81,14 +81,14 @@ function harness(overrides = {}, template = software) {
       decision,
       task_checks:
         id === 'handover'
-          ? run.acceptance.map((check, index) => ({
+          ? run.acceptance.map((_check, index) => ({
               index,
               result: 'pass',
               evidence_reference: 'fixture:user-check',
               note: 'Synthetic user acceptance.',
             }))
           : [],
-      checks: run.packets[id].checks.map((check, index) => ({
+      checks: run.packets[id].checks.map((_check, index) => ({
         index,
         result: decision === 'accepted' ? 'pass' : index === 0 ? 'fail' : 'pass',
         evidence_reference: 'fixture:check',
@@ -228,7 +228,7 @@ test('submission requires complete outputs and an independent evidence-backed ga
       }),
     /reviewer/,
   );
-  const checks = h.run.packets.scope.checks.map((check, index) => ({
+  const checks = h.run.packets.scope.checks.map((_check, index) => ({
     index,
     result: 'unverified',
     evidence_reference: 'fixture:gap',
@@ -299,7 +299,7 @@ test('passing generic handover checks alone cannot establish user acceptance', (
   h.assign('handover');
   h.event('handover', 'start', { actor_context: 'worker-handover' });
   h.submit('handover');
-  const checks = h.run.packets.handover.checks.map((check, index) => ({
+  const checks = h.run.packets.handover.checks.map((_check, index) => ({
     index,
     result: 'pass',
     evidence_reference: 'fixture:handover',

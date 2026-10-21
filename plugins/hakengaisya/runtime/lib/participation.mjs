@@ -1,6 +1,4 @@
-const check = (ok, message) => {
-  if (!ok) throw new Error(message);
-};
+import { check } from './validate.mjs';
 
 export function normalizeDei(value) {
   if (value === undefined) return { enabled: false, model_ids: [] };

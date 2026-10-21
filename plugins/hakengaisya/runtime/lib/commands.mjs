@@ -4,11 +4,9 @@ import { agentReview } from './participation.mjs';
 import { planWork } from './planning.mjs';
 import { createRunFile, readJson, readRun, resolveRunFile, updateRun } from './store.mjs';
 import { finishTriage, prepareTriage } from './triage.mjs';
+import { check } from './validate.mjs';
 import { applyEvents, chooseStructure, createRun, nextActions } from './workflow.mjs';
 
-const check = (ok, message) => {
-  if (!ok) throw new Error(message);
-};
 const object = (description) => ({ type: 'object', description });
 const schema = (required, properties) => ({
   type: 'object',

@@ -225,6 +225,9 @@ function validate(template) {
       stage.gate.rework_to === id || priorStages.has(stage.gate.rework_to),
       `${id} reworks an unrelated or later stage`,
     );
+    for (const audited of uniqueStrings(stage.audits ?? [], `${id} audits`)) {
+      requireCondition(priorStages.has(audited), `${id} audits a stage it does not depend on`);
+    }
   }
   const dependedOn = new Set(dependencyEdges.map((edge) => edge.from));
   const terminalStages = [...stages.keys()].filter((id) => !dependedOn.has(id));

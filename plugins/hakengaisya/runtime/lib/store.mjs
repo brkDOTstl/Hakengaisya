@@ -1,17 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, open, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-
-const check = (ok, message) => {
-  if (!ok) throw new Error(message);
-};
+import { check, isText } from './validate.mjs';
 
 export async function readJson(filename) {
   return JSON.parse(await readFile(filename, 'utf8'));
 }
 
 export function resolveRunFile(filename, base) {
-  check(typeof filename === 'string' && filename.trim(), 'Supply the run file path');
+  check(isText(filename), 'Supply the run file path');
   check(
     base || path.isAbsolute(filename),
     'Use an absolute run_file path inside the task workspace, or configure the workspace base directory',
@@ -48,38 +45,50 @@ export async function createRunFile(filename, run) {
   }
 }
 
-export async function updateRun(filename, update) {
-  const lock = `${filename}.lock`;
+async function lockHolder(lock) {
+  try {
+    const holder = JSON.parse(await readFile(lock, 'utf8'));
+    return Number.isInteger(holder?.pid)
+      ? ` (held by pid ${holder.pid} since ${holder.started_at})`
+      : '';
+  } catch {
+    // An unreadable or half-written lock is still a lock; report it without metadata.
+    return '';
+  }
+}
+
+// The lock file records its writer so a crash leaves something to inspect. A stale lock is
+// never removed automatically: the helper cannot tell a crashed writer from a slow one.
+async function acquireLock(lock, filename) {
   let handle;
   try {
     handle = await open(lock, 'wx');
   } catch (error) {
     if (error.code !== 'EEXIST') throw error;
-    let holder = null;
-    try {
-      holder = JSON.parse(await readFile(lock, 'utf8'));
-    } catch {
-      /* An unreadable lock is still a lock; report it without metadata. */
-    }
-    const detail =
-      holder && Number.isInteger(holder.pid)
-        ? ` (held by pid ${holder.pid} since ${holder.started_at})`
-        : '';
     throw new Error(
-      'Another writer holds the run lock' +
-        detail +
-        '; retry after it finishes. Inspect a crash before removing a stale lock.',
+      `Another writer holds the run lock${await lockHolder(lock)}; retry after it finishes. Inspect a crash before removing a stale lock.`,
     );
   }
+  const holder = { pid: process.pid, started_at: new Date().toISOString(), run_file: filename };
+  await handle.writeFile(`${JSON.stringify(holder)}\n`);
+  return handle;
+}
+
+async function removeIfPresent(filename) {
+  try {
+    await unlink(filename);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+}
+
+// Read, transform and atomically replace a run under the single-writer lock. If update throws,
+// the persisted file is untouched and the lock is released.
+export async function updateRun(filename, update) {
+  const lock = `${filename}.lock`;
+  const handle = await acquireLock(lock, filename);
   const temporary = `${filename}.${randomUUID()}.tmp`;
   try {
-    await handle.writeFile(
-      `${JSON.stringify({
-        pid: process.pid,
-        started_at: new Date().toISOString(),
-        run_file: filename,
-      })}\n`,
-    );
     const updated = await update(await readRun(filename));
     await writeFile(temporary, `${JSON.stringify(updated, null, 2)}\n`, { flag: 'wx' });
     await rename(temporary, filename);
@@ -87,10 +96,6 @@ export async function updateRun(filename, update) {
   } finally {
     await handle.close();
     await unlink(lock);
-    try {
-      await unlink(temporary);
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-    }
+    await removeIfPresent(temporary);
   }
 }

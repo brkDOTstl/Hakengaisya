@@ -70,15 +70,16 @@ export function redactText(value) {
     value,
   );
 }
+// Tab, line feed and carriage return stay allowed; every other C0 control character is refused.
+// biome-ignore lint/suspicious/noControlCharactersInRegex: matching control characters is the purpose.
+const CONTROL_CHARACTERS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
+
 export function safeText(value, max = 1200) {
   assert(
     typeof value === 'string' && value.trim().length > 0 && value.length <= max,
     'Invalid summary text',
   );
-  assert(
-    !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value),
-    'Control characters are not accepted',
-  );
+  assert(!CONTROL_CHARACTERS.test(value), 'Control characters are not accepted');
   assert(redactText(value) === value, 'Possible private content: redact locally before submitting');
 }
 
