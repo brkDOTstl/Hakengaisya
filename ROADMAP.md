@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-21. Current suite version: **0.8.6**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
+Updated: 2026-10-23. Current suite version: **0.8.6**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -49,6 +49,7 @@ The earlier Pomodoro trial was real and exposed excessive coordination overhead.
 | H03 | Implemented in 0.8.6 - strict typecheck, regression and trial tests | Strict TypeScript across the suite and evaluator (browser leaderboard excluded) run directly by Node 24; latent malformed-input crashes fixed; opt-in trial routes for the evidence cold start; journal growth measured (1.3 MB, about 7 ms per locked update at 300 items) and kept intact. Trial routes are synthetic-tested only; no real model run has used them yet |
 | H02 | Implemented in 0.8.5 - synthetic benchmark and regression tests | Copy-on-write events, single-pass route preparation, unified write-scope normalization, template-declared audits, Biome formatting and lint in CI; controller speed is measured on synthetic graphs only, not on real model runs |
 | H01 | Implemented in 0.8.4 - stdio round-trip tests | [MCP workflow tools, atomic event batches and lock metadata](plugins/hakengaisya/skills/company-workflow/references/run-commands.md) to cut per-transition host overhead; invocation in a fresh installed host remains unverified |
+| O01-O08 | Planned - integration architecture approved; implementation pending | [Harness2 optimization workstream](#harness2-integration-workstream): native MCP integration, optional optimization worker, versioned execution profiles, controlled experiments and evidence-based promotion |
 
 The user added same-host multi-client agency coordination to the 0.8 scope. Track it alongside the preset contract and research without dropping the existing required families. Each finished increment updates this table and links its actual artifact/check evidence.
 
@@ -63,6 +64,65 @@ The user added same-host multi-client agency coordination to the 0.8 scope. Trac
 | F05 | Pending | Complete supported Desktop/Desktop, CLI/CLI and both mixed-direction contracts, recovery and documentation; preserve the direct router path |
 
 The first target is several clients on one computer. Cross-machine coordination is deferred. No scheduler, GUI automation, other conversation or external model is started just by declaring this feature. A router-capable agency can keep ordinary model calls internal and outsource only when the project warrants it.
+
+## Harness2 integration workstream
+
+**Architecture approved on 2026-10-23; implementation planned.** Integrate [Google Research Harness²](https://github.com/google-research/harness2) as an optional optimization engine behind the existing Hakengaisya workflow/MCP plugin. Reuse its Propose-Probe-Compose method through a thin adapter, while Hakengaisya retains dispatch, supervision and delivery acceptance. The independent evaluator continues to supply contextual model observations.
+
+The objective is to improve delivery quality and cost efficiency by learning which execution profile works for a particular model and task context. Expensive optimization should produce reusable profiles for later tasks. Capability gains and savings will be measured in the 0.9 real-task comparisons.
+
+### Architecture and integration points
+
+The intended loop is:
+
+```text
+Hakengaisya task planning and dispatch
+  -> worker execution and direct-supervisor review
+  -> local execution evidence and optimization trigger
+  -> Harness2 Propose-Probe-Compose in isolated trials
+  -> baseline comparison, independent review and validation
+  -> versioned profile promotion or retention of the current profile
+  -> profile selection for subsequent matching tasks
+```
+
+Add `packages/optimizer/` for the adapter, experiment state and local profile/experience store. Keep the upstream Python core as an optional worker, with a pinned upstream revision and preserved license/provenance records. The initial Windows integration can run that worker through WSL2; the existing Node.js workflow remains usable without it. Reuse existing authorized host/model connections for execution and advanced-agent review.
+
+| Integration point | Planned change |
+| --- | --- |
+| `lib/types.ts` and `lib/workflow.ts` | Associate attempts and journal events with an immutable profile version, execution snapshot and optimization job |
+| `lib/dispatch.ts` | Select a compatible promoted profile and include its materialized instructions in the dispatch envelope; pin the profile for that attempt |
+| `lib/commands.ts` and the existing MCP plugin | Add short job-start/status/cancel and profile-management commands; keep long experiments outside the run-file lock and MCP request handler |
+| `packages/optimizer/` | Implement `HakengaisyaTaskAdapter`, the Python-worker bridge, local evidence capture, isolated trials, promotion policy and rollback |
+| `packages/evaluator/` | Preserve the current scoring/recording contract initially; keep model-plus-profile performance in a separate local optimization record |
+
+Initial editable surfaces are execution prompts, skills, memory and tool guidance. Apply them as versioned per-attempt overlays. Keep task acceptance criteria, evaluator weighting, supervisory authority, core controller logic, permissions and credentials outside the optimizer's editable surface. Script, hook and plugin generation can follow after the initial profile path is validated.
+
+### Tracked implementation sequence
+
+All items below are **planned**. The target column expresses sequencing, not a completed release commitment.
+
+| ID | Target | Deliverable and completion evidence |
+| --- | --- | --- |
+| O01 | 0.8.x foundations | Define execution-evidence, optimization-job and profile schemas. Bind `run_id`, `packet_id`, `attempt`, source/input snapshot, model/route/effort, environment, profile version, usage and review references. Distinguish live delivery, replay/probe and synthetic records; cover incomplete telemetry and stale evidence in contract tests. |
+| O02 | 0.8.x foundations | Implement immutable local profile versions, compatibility matching and dispatch integration. Record the effective profile hash per attempt and preserve the base configuration when no compatible promoted profile exists. Test reproducible materialization and version pinning. |
+| O03 | 0.8.x scaffold; 0.9 live validation | Build the optional Python-worker bridge and shared CLI/MCP job commands. Pin the upstream revision, record local adaptations, and verify start/status/cancel, restart recovery and optional-worker-unavailable behavior. Real model execution depends on a connected host adapter. |
+| O04 | 0.9 real-task integration | Implement `HakengaisyaTaskAdapter` against the upstream task/execution/trajectory interface, starting with one supported Codex execution path. Capture actual artifacts, tool outcomes, test logs and usage. Run baseline/candidate trials from the same source snapshot in separate worktrees with separate build/output state and explicit process, network and credential controls. |
+| O05 | 0.9 controlled experiments | Run a bounded Propose-Probe-Compose cycle on real tasks. Compare the original profile with candidate and composed profiles using the same task, worker model/effort, environment and declared execution limits. Reuse a prior baseline only when its snapshot and execution contract match. Record all proposal, execution, composition, selection, reflection and retry costs. |
+| O06 | 0.9 promotion and rollback | Add independent advanced-agent comparison, fixed technical checks and held-out similar tasks. Always include the current profile as an eligible outcome. Promote a scoped version only when it meets the declared quality/cost criteria; preserve the incumbent otherwise. Demonstrate regression detection, rollback and unchanged in-flight version bindings. |
+| O07 | 0.9 experience and routing | Store evidence-backed lessons, failed approaches and profile performance by model/version, project, task type and difficulty. Retrieve relevant experience and promoted profiles during later dispatch. Keep these results separate from model capability ratings and the evaluator's de-identified upload contract. Verify profile/model changes trigger appropriate revalidation. |
+| O08 | After the first validated 0.9 path | Enable bounded automatic triggers and broader host support. Start from repeated attributable failures, an explicit supervisor improvement request or deliberate optimization runs; expose configurable budgets, concurrency, cooldowns and stop conditions. Add OpenCode and further executors after the first path has reproducible live evidence. |
+
+O01-O03 can progress alongside the existing 0.8 preset and same-host work. The P01-P10 and F01-F05 requirements retain their current priority and exit conditions. O04-O08 depend on actual host execution and belong to the 0.9 validation track; recording this plan does not advance the suite version.
+
+### Promotion and measurement contract
+
+A profile moves through candidate, tested and promoted states, with rejection and rollback history retained. Promotion applies to an explicit model/task/project scope. Each task still follows its normal direct-supervisor acceptance contract.
+
+Use the existing advanced-agent review capability in a separate review context. Compare anonymized baseline/candidate artifacts and observed technical evidence against fixed criteria; retain the baseline when evidence is insufficient or the candidate regresses. The initial technical path should exercise compilation, targeted tests and regression checks. Evaluate transfer on similar tasks held out from profile development before making the profile a reusable default. Keep final holdout outcomes outside iterative optimization inputs and refresh that holdout when it becomes development evidence.
+
+Track three primary configurations on the same task set: an ordinary model with the current Hakengaisya workflow and advanced review; the same setup plus Harness2 optimization; and a frontier-model reference. Report acceptance/pass rates, regressions, human rework, wall time, model calls/tokens and total measured cost, including advanced review and all optimization attempts. State the reference workflow and budget explicitly. Account separately for one-time profile development cost and later reuse cost; use repeated matched runs to distinguish improvement from execution variability.
+
+Store source, patches, trajectories and detailed evidence locally. Send the independent evaluator only its existing permitted de-identified fields. Automatic triggers must have a task-level and run-level budget, avoid duplicate optimization of the same evidence, and leave ordinary task delivery usable when optimization is unavailable.
 
 ## Required preset baseline for 0.8
 
@@ -90,7 +150,7 @@ Education and standalone artistic production remain deferred. A game preset may 
 | Multi-stream / medium | Several delivery cells with bounded superior scopes and explicit integration ownership | Inter-cell interfaces, shared services, reviewer capacity and phase transitions |
 | Large / multi-team | Additional scoped subteams only when independent streams and review load justify them | Hierarchy, integration gates, cross-team contracts and evidence that the design is structurally coherent |
 
-These are work patterns, not fixed headcount promises. Each family needs all applicable variants, or a documented reason why a variant is outside its supported scope. Logical positions, real model contexts and concurrent agent calls remain separate. Large structural simulations are not evidence that a large live organization is ready.
+These are work patterns, not fixed headcount promises. Each family needs all applicable variants, or an explicitly recorded scope decision. Logical positions, real model contexts and concurrent agent calls remain separate. Large structural simulations are not evidence that a large live organization is ready.
 
 ## Definition of a complete 0.8 preset
 
@@ -128,6 +188,9 @@ These boxes define each preset's contract. They do not state that the whole libr
 - [ ] Trace complete task delivery, supervisor rejection/correction, missing capability, interruption/recovery and final acceptance.
 - [ ] Compare suitable direct/smaller-team baselines with the same acceptance criteria; record observed cost, latency, startup, waits, handoff and rework. Preserve unknown measurements.
 - [ ] Establish de-identified evaluator recording, deduplication, queue/retry and useful contextual feedback without polluting live evidence with simulations.
+- [ ] Validate the first [Harness2 integration path](#harness2-integration-workstream) on real tasks: execution capture, isolated baseline/candidate trials, advanced-agent review, held-out transfer, scoped profile promotion and rollback (O01-O07).
+- [ ] Compare the current and optimized ordinary-model workflows with a declared frontier-model reference; report total optimization/review cost, task quality, rework and latency, separating profile-development cost from reuse.
+- [ ] Enable bounded automatic optimization and additional executors only after the first path is validated; record unavailable adapters and the tested support scope (O08).
 - [ ] Revise presets and routing from observed outcomes, repeat the affected checks and preserve failed attempts.
 - [ ] Document coverage, reproducibility and unresolved limitations; passing a synthetic test is not a completed real-task case.
 
@@ -138,6 +201,7 @@ These boxes define each preset's contract. They do not state that the whole libr
 - [ ] Efficiency/cost claims are backed by comparable measurements and do not hide quality or rework costs.
 - [ ] Installation, first-use setup, examples and error guidance work in the declared supported host/version scope.
 - [ ] Model/tool limitations, privacy requirements, evidence semantics and operational controls are clear.
+- [ ] Any optimizer/profile features included in the supported release scope have reproducible baseline comparisons, promotion/rollback evidence and a working optimizer-disabled path; experimental integrations remain explicitly labelled.
 - [ ] Code, presets, documentation and release checks are consistent and reproducible.
 
 No fixed date or patch count advances a milestone. Optional hosted-evaluator operation has a separate deployment track; a public source repository is not a hosted service, and hosting is not silently promised for 1.0.
