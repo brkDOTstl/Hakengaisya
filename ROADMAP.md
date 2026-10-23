@@ -150,7 +150,7 @@ Education and standalone artistic production remain deferred. A game preset may 
 | Multi-stream / medium | Several delivery cells with bounded superior scopes and explicit integration ownership | Inter-cell interfaces, shared services, reviewer capacity and phase transitions |
 | Large / multi-team | Additional scoped subteams only when independent streams and review load justify them | Hierarchy, integration gates, cross-team contracts and evidence that the design is structurally coherent |
 
-These are work patterns, not fixed headcount promises. Each family needs all applicable variants, or an explicitly recorded scope decision. Logical positions, real model contexts and concurrent agent calls remain separate. Large structural simulations are not evidence that a large live organization is ready.
+These are work patterns, not fixed headcount promises. Each family needs all applicable variants, or a documented reason why a variant is outside its supported scope. Logical positions, real model contexts and concurrent agent calls remain separate. Large structural simulations are not evidence that a large live organization is ready.
 
 ## Definition of a complete 0.8 preset
 
