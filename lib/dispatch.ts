@@ -53,6 +53,7 @@ export function prepareDispatch(run: Run, packetId: string) {
     inputs,
     route_qualification: packet.qualification ?? null,
     improvement: structuredClone(run.improvement ?? { enabled: false }),
+    preset: structuredClone(run.preset ?? null),
     model_binding: {
       worker_id: assignment.worker_id ?? null,
       model_id: assignment.model_id ?? null,

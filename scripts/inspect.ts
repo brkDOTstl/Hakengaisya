@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadPresets } from '../lib/commands.ts';
 
 const templateDirectory = fileURLToPath(new URL('../templates/', import.meta.url));
 const INTERACTION_TYPES = ['collaboration', 'service', 'facilitation', 'review'] as const;
@@ -355,6 +356,17 @@ for (const file of files) {
     }
   } catch (error) {
     console.error(`FAIL ${file}: ${(error as Error).message}`);
+    process.exitCode = 1;
+  }
+}
+if (!selectors.length && !showMermaid) {
+  try {
+    for (const preset of await loadPresets())
+      console.log(
+        `PASS preset ${preset.id}@${preset.revision}: ${preset.variants.length} declared variants, ${preset.exceptions.length} correction paths; structural contract only.`,
+      );
+  } catch (error) {
+    console.error(`FAIL presets: ${(error as Error).message}`);
     process.exitCode = 1;
   }
 }

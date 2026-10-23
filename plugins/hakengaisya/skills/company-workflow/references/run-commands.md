@@ -6,6 +6,11 @@ The self-contained helper is at `../../../runtime/scripts/workflow.ts` relative 
 
 ```text
 node HELPER select BRIEF.json
+node HELPER presets
+node HELPER preset-inspect PRESET_ID
+node HELPER preset-validate PRESET.json
+node HELPER preset-select REQUEST.json
+node HELPER preset-expand PRESET_ID REQUEST.json
 node HELPER create RUN.json BRIEF.json
 node HELPER next RUN.json
 node HELPER agent-review RUN.json
@@ -17,6 +22,8 @@ node HELPER event RUN.json EVENT.json
 `create` builds missing parent directories and refuses to overwrite a run. `event` takes a single-writer lock, requires the current revision and attempt, and atomically replaces the persisted state. The EVENT file may hold one event or an ordered array; an array is applied as one atomic batch whose first entry states `expected_revision` and whose later entries may omit it. If a crash leaves a lock, read `RUN.json.lock` for the writer's pid and start time and inspect that process before removing it. Each journal entry records `recorded_at`, the controller clock at recording time; it measures handoff and waiting, not model execution time. The snapshot embeds its reference organization, packets, artifact references, attempts, and event journal. It stays local.
 
 ## MCP tools
+
+The read-only preset tools are hakengaisya_presets_list, hakengaisya_preset_inspect, hakengaisya_preset_validate, hakengaisya_preset_select and hakengaisya_preset_expand. They return registry data or a draft; pass the expansion's brief member to create_run. See [preset forms and bounds](presets.md). They never launch a model or bypass ordinary acceptance.
 
 The plugin registers a stdio MCP server (`.mcp.json`, `mcp.ts`) with the same commands as inline-JSON tools: `hakengaisya_triage_request`, `hakengaisya_triage`, `hakengaisya_select`, `hakengaisya_plan`, `hakengaisya_organize`, `hakengaisya_create_run`, `hakengaisya_next`, `hakengaisya_dispatch`, `hakengaisya_review`, `hakengaisya_event` and `hakengaisya_agent_review`. Run-file tools take `run_file`; pass an absolute path inside the task workspace, because a relative path is only accepted when the server was started with `HAKENGAISYA_WORKSPACE`. `hakengaisya_event` takes `events`, an ordered array applied atomically, and returns the next-actions snapshot. Tool availability does not prove the host will invoke them; the same host permissions and evidence duties apply.
 

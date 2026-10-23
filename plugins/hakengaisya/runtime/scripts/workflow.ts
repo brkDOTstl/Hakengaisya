@@ -12,6 +12,11 @@ const json = async <T = unknown>(filename: string): Promise<T> =>
   JSON.parse(await readFile(filename, 'utf8'));
 const context = { base: process.cwd() };
 const usage = [
+  'presets',
+  'preset-inspect <preset-id>',
+  'preset-validate <preset.json>',
+  'preset-select <request.json>',
+  'preset-expand <preset-id> <request.json>',
   'harness2-job <run.json> <packet-id> [starting-harness.json]',
   'harness2-result <run.json> <job.json> <report.json>',
   'federation-plan <project.json>',
@@ -32,7 +37,16 @@ const usage = [
 ];
 try {
   let result: unknown;
-  if (command === 'harness2-job' && target && source)
+  if (command === 'presets' && !target) result = await commands.presets_list.run({});
+  else if (command === 'preset-inspect' && target && !source)
+    result = await commands.preset_inspect.run({ preset_id: target });
+  else if (command === 'preset-validate' && target && !source)
+    result = await commands.preset_validate.run({ preset: await json(target) });
+  else if (command === 'preset-select' && target && !source)
+    result = await commands.preset_select.run({ request: await json(target) });
+  else if (command === 'preset-expand' && target && source && !extra)
+    result = await commands.preset_expand.run({ preset_id: target, request: await json(source) });
+  else if (command === 'harness2-job' && target && source)
     result = await commands.optimizer_job.run(
       {
         run_file: target,

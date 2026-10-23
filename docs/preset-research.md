@@ -1,6 +1,6 @@
 # Preset research seeds
 
-Reviewed on 2026-10-19. Status: initial source/adaptation notes, not finished workflow presets. Source practice, the proposed Hakengaisya adaptation and executable validation are separate evidence levels.
+Updated on 2026-10-24. The bounded-software source record now supports one structurally validated preset; other entries remain research seeds. Source practice, the proposed Hakengaisya adaptation and executable validation are separate evidence levels.
 
 ## Software work at different scales
 
@@ -8,7 +8,7 @@ Reviewed on 2026-10-19. Status: initial source/adaptation notes, not finished wo
 
 Proposed adoption: a micro preset can combine compatible continuous work, while larger scale overlays separate actual streams and support capabilities. Define scope and stop conditions without imposing a fixed six-week cadence or reproducing Basecamp's hierarchy. Hakengaisya retains direct-supervisor acceptance even when source practices describe informal collaboration.
 
-Still missing: complete bounded-tool and service-delivery graphs, source-specific company examples for the other software families, per-scale interfaces and executable negative paths.
+Delivered in 0.8.8: the [bounded-software preset](../presets/bounded-software.json) and [its usage/verification record](bounded-software-preset.md). Its source review also covers finishable scopes, explicit stop conditions and evidence-based code review. Service delivery and the other software families still need their own source-specific workflows, scale interfaces and negative paths.
 
 ## Product discovery and delivery
 

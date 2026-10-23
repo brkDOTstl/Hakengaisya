@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-23. Current suite version: **0.8.7**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
+Updated: 2026-10-24. Current suite version: **0.8.8**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -23,7 +23,8 @@ Stay on 0.8.x until preset completion. Patch numbers identify delivered incremen
 | Intake triage | Bounded native-model contract and optional Jev adapter with fallback | Live Jev triage and reliable automatic host invocation are not established |
 | Organization composition | Capability modules, role hats, responsibility merges, phase activation and independent-QA constraints | Outputs are unbound organization proposals, not complete company workflow presets |
 | Same-host agency coordination | Subcontract brief compilation, immutable local mailbox, one-claim semantics, receipt validation and buyer-only acceptance | Synthetic control/transport tests only; actual client launch, Desktop wake and per-client capacity adapters remain unconnected |
-| Existing examples | Small-tool organization and indie-game organization; older software/product reference templates | No project family yet satisfies the complete preset contract across its scale variants |
+| Executable presets | [Bounded software](docs/bounded-software-preset.md) covers micro and small-parallel work with source records, generated graphs, a bounded pool, supervisor acceptance and failure/recovery paths | First declared bounded scope structurally/synthetically validated; broader project families, multi-team workflows and real-task validation remain incomplete |
+| Organization/reference examples | Small-tool and indie-game organization proposals; older software/product reference templates | These remain distinct from complete executable project presets |
 | Employee evaluator | Independent recorder/API, signed local HTTP, offline retry, task/skill profiles, ranking and model details | Peer scores are observations, not verified ground truth or proof of AI authorship; hosted operation is separate |
 | Model participation and management review | Opt-in DEI roster coverage, evidence-backed submission accounting, automatic manager score/tag and a complete supplied-route candidate audit | Host-declared model identities are not authenticated; no live cross-family client execution or hosted management-review endpoint is claimed |
 | Host transport | Shared command table behind the CLI and a stdio MCP server in the workflow plugin; atomic event batches, inspectable lock metadata and journal timestamps | Tool availability in an installed host is not automatic invocation; the server persists state and never launches models or inspects artifacts |
@@ -36,15 +37,15 @@ The earlier Pomodoro trial was real and exposed excessive coordination overhead.
 | ID | Status | Deliverable |
 | --- | --- | --- |
 | P01 | Done in 0.8.1 | Record the 0.8 / 0.9 / 1.0 sequence, current gaps and completion gates |
-| P02 | In progress - specification draft | Establish one complete [preset contract](docs/preset-contract.md); add executable validation next |
-| P03 | In progress - research seeds only | Build a source/adaptation record for each required project family; see [research notes](docs/preset-research.md) |
-| P04 | Next | Add a preset registry and list/inspect/expand path that produces a draft work graph and reporting plan |
-| P05 | Planned | Complete bounded software work and web/service delivery presets, including small and multi-stream variants |
+| P02 | Bounded v1 implemented in 0.8.8; broader schema coverage pending | [Executable contract validator](docs/preset-contract.md) covers source, applicability, scale, acceptance, resources and all six failure/recovery cases for bounded software |
+| P03 | Bounded-software source review complete; other families pending | Source-specific adoption and transfer limits are carried by the first preset; continue the [remaining research](docs/preset-research.md) |
+| P04 | Implemented for v1 in 0.8.8 | Registry plus list/inspect/validate/select/expand commands through shared MCP/CLI; output is a versioned draft graph with staffing and correction guidance |
+| P05 | Bounded software complete for its declared scope in 0.8.8; web/service pending | Micro and two-component small variants pass structural/simulated paths; web/service and multi-stream project workflows still need complete researched presets |
 | P06 | Planned | Complete technical-product and indie-game workflows beyond their current role/reference examples |
 | P07 | Planned | Complete desktop/client, data/database, AI integration and maintenance/investigation families |
 | P08 | Planned | Connect scale overlays, stage activation and handoff/rework rules without silently changing a running hierarchy |
-| P09 | Planned | Verify every required family/scale combination structurally, including rejected work, missing evidence and blocked tools |
-| P10 | Planned | Complete usage guides, realistic de-identified examples, known limitations and the final 0.8 coverage review |
+| P09 | Bounded variants checked in 0.8.8; other coverage pending | Positive paths, rejected work, missing capability/budget, interruption, scope change, retry limits, current-pool enforcement and packaged MCP/CLI are covered for the first preset |
+| P10 | First preset guide/examples complete; final coverage review pending | Packaged English request examples and [host usage](docs/bounded-software-preset.md) are available; remaining families still block the overall 0.8 gate |
 | D01 | Implemented in 0.8.3 - structural/synthetic checks | [Optional DEI participation and family-neutral route review](docs/model-participation.md); keep ordinary cost/ability planning as the default |
 | H03 | Implemented in 0.8.6 - strict typecheck, regression and trial tests | Strict TypeScript across the suite and evaluator (browser leaderboard excluded) run directly by Node 24; latent malformed-input crashes fixed; opt-in trial routes for the evidence cold start; journal growth measured (1.3 MB, about 7 ms per locked update at 300 items) and kept intact. Trial routes are synthetic-tested only; no real model run has used them yet |
 | H02 | Implemented in 0.8.5 - synthetic benchmark and regression tests | Copy-on-write events, single-pass route preparation, unified write-scope normalization, template-declared audits, Biome formatting and lint in CI; controller speed is measured on synthetic graphs only, not on real model runs |
@@ -130,7 +131,7 @@ This is the initial baseline within the suite's technical/product scope, not a c
 
 | Family | Representative work | Current material | Missing before preset completion |
 | --- | --- | --- | --- |
-| Bounded technical task | Small tool, script, localized implementation or defect correction | Small-software organization and task-graph controls | Complete compact workflow, correction/acceptance rules and explicit expansion triggers |
+| Bounded technical task | Small tool, script, localized implementation or defect correction | bounded-software revision 1.0.0: executable micro/small variants and explicit larger-scale exclusions | Declared bounded scope structurally validated; broader technical subtypes need reviewed extensions and actual model/tool acceptance remains a 0.9 activity |
 | Web application / backend service | Frontend/backend delivery and integrated release | Software-delivery reference and technical runtime | Source-backed project workflows, applicable scale overlays and integration/release evidence contracts |
 | Desktop / mobile client tool | Host integration, UI, packaging and target-device behavior | General technical controls only | Company/process research, platform/tool prerequisites, device checks and release/handoff workflow |
 | Technical product discovery / design | Problem framing, evidence, prototype and validated requirements | Product-design reference | Runnable preset contract, actual research/validation boundaries and scale-specific ownership |

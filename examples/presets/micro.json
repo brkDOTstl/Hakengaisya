@@ -1,0 +1,31 @@
+{
+  "run_id": "preset-micro-fixture",
+  "objective": "Implement a bounded text normalization helper with documented behavior.",
+  "family": "bounded-software",
+  "outcome": "small-tool",
+  "risk": "routine",
+  "lead_context": "fixture-supervisor",
+  "acceptance": [
+    "Leading and trailing spaces are removed while internal text is retained.",
+    "Empty input returns empty output without throwing."
+  ],
+  "constraints": ["Synthetic controller example only; no live model invocation or cost claim."],
+  "evidence_kind": "simulation",
+  "components": [
+    {
+      "id": "normalize",
+      "objective": "Implement the helper, check normal and empty inputs, and document its use.",
+      "task_type": "implementation",
+      "difficulty": "routine",
+      "skills": ["implementation"],
+      "inputs": ["task_brief"],
+      "writes": ["src/normalize.ts", "tests/normalize.test.ts"],
+      "outputs": ["normalization_delivery"],
+      "acceptance": [
+        "Normal and empty input behavior is checked against the task contract.",
+        "The exported helper can be used as documented."
+      ],
+      "required_tools": ["node-runtime"]
+    }
+  ]
+}

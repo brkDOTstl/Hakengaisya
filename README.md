@@ -1,5 +1,7 @@
 # Hakengaisya
 
+Version 0.8.8 adds the first [executable bounded-software preset](docs/bounded-software-preset.md): validated source/scale contracts, registry selection and graph expansion through MCP or CLI, one-owner and small parallel variants, direct-supervisor acceptance and six correction paths. The controller enforces the declared current execution pool and preserves unknown constrained budgets. This increment is structurally/synthetically validated; live model gains remain unmeasured.
+
 Version 0.8.7 adds an optional [Harness2 core adapter](docs/harness2-integration.md) under packages/optimizer, with shared MCP/CLI job forms, bounded native-host probes, direct-supervisor adoption and local experience. The deterministic example executes the real upstream method. Real model gains and promoted default profiles remain unverified.
 
 Hakengaisya is an experimental technical-agent suite with explicit reporting lines, delegated work and upward acceptance. It derives a task-sized organization from real deliverables and dependencies, then matches adequate workers by contextual ability, cost and useful parallelism. The workflow and employee evaluator can each be used independently.
