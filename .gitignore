@@ -14,6 +14,9 @@ wiki/
 **/.local/
 **/.hakengaisya-evaluator/
 **/.hakengaisya-exchange/
+**/.hakengaisya-learning/
+__pycache__/
+*.pyc
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm

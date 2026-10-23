@@ -16,5 +16,12 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["lib", "scripts", "tests", "plugins/hakengaisya/mcp.ts"]
+  "include": [
+    "lib",
+    "scripts",
+    "tests",
+    "packages/optimizer",
+    "examples/**/*.ts",
+    "plugins/hakengaisya/mcp.ts"
+  ]
 }

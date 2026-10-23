@@ -1,6 +1,6 @@
 {
   "name": "hakengaisya",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,6 +18,8 @@
     "test": "node scripts/check-suite.ts",
     "test:workflow": "node --test tests/*.test.ts",
     "test:evaluator": "npm --prefix packages/evaluator test",
+    "test:harness2": "python -m unittest discover -s tests/harness2 -p test_*.py -v",
+    "example:harness2": "node examples/harness2/local-demo.ts",
     "audit": "node scripts/release-audit.ts",
     "format": "biome check --write .",
     "lint": "biome ci .",

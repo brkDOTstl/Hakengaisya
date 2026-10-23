@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { link, lstat, mkdir, open, realpath, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import type { ImprovementInput } from '../packages/optimizer/src/contract.ts';
 import { prepareDispatch } from './dispatch.ts';
+import { normalizeImprovement } from './learning.ts';
 import { normalizeDei } from './participation.ts';
 import { validateWorkGraph } from './planning.ts';
 import type {
@@ -53,6 +55,7 @@ export interface FederationProject {
   acceptance: string[];
   constraints: string[];
   dei?: DeiInput;
+  improvement?: ImprovementInput;
   evidence_kind?: string;
   max_parallel?: number;
 }
@@ -187,6 +190,7 @@ export function compileFederation(project: FederationProject) {
     domain: project.domain,
     lead_context: project.buyer.lead_context,
     dei: normalizeDei(project.dei),
+    improvement: normalizeImprovement(project.improvement),
     evidence_kind: project.evidence_kind ?? 'local_work',
     acceptance: structuredClone(project.acceptance),
     constraints: structuredClone(project.constraints),
@@ -279,6 +283,10 @@ export function prepareHandoff(run: Run, project: FederationProject, packetId: s
   check(
     canonical(normalizeDei(run.dei)) === canonical(plan.brief.dei),
     'Buyer DEI policy differs from the registered project',
+  );
+  check(
+    canonical(normalizeImprovement(run.improvement)) === canonical(plan.brief.improvement),
+    'Buyer improvement policy differs from the registered project',
   );
   const dispatch = prepareDispatch(run, packetId);
   check(

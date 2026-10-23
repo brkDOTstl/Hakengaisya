@@ -1,3 +1,4 @@
+import { normalizeImprovement } from './learning.ts';
 import { agentReview, assertDeiAssignment, normalizeDei } from './participation.ts';
 import type { DispatchPlan } from './planning.ts';
 import { normalizeWrites, planWork, scopesConflict, validateWorkGraph } from './planning.ts';
@@ -223,6 +224,10 @@ function requireBriefBasics(brief: BriefInput, acceptanceMessage: string, accept
 
 function createReferenceRun(template: Template | null, brief: BriefInput): Run {
   check(
+    !normalizeImprovement(brief.improvement).enabled,
+    'Harness2 improvement requires task-first work_items',
+  );
+  check(
     !normalizeDei(brief.dei).enabled,
     'DEI requires task-first work_items, not a reference-template rehearsal',
   );
@@ -385,6 +390,7 @@ export function createWorkRun(brief: BriefInput): Run {
     template_id: 'task-graph',
     mode: effectiveParallel > 1 ? 'company' : 'compact',
     objective: brief.objective,
+    domain: brief.domain,
     acceptance: brief.acceptance ?? [],
     constraints: brief.constraints,
     lead_context: brief.lead_context,
@@ -397,6 +403,8 @@ export function createWorkRun(brief: BriefInput): Run {
     journal: [],
     intake_triage: intakeTriage,
     dei: normalizeDei(brief.dei),
+    improvement: normalizeImprovement(brief.improvement),
+    planning_limits: structuredClone(brief.planning_limits ?? {}),
     supervision: createSupervision(brief.lead_context, brief.reporting_lines),
     organization: structuredClone(TASK_GRAPH_ORGANIZATION),
     external_inputs: {

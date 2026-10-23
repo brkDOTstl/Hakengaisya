@@ -1,5 +1,7 @@
 # Hakengaisya
 
+Version 0.8.7 adds an optional [Harness2 core adapter](docs/harness2-integration.md) under packages/optimizer, with shared MCP/CLI job forms, bounded native-host probes, direct-supervisor adoption and local experience. The deterministic example executes the real upstream method. Real model gains and promoted default profiles remain unverified.
+
 Hakengaisya is an experimental technical-agent suite with explicit reporting lines, delegated work and upward acceptance. It derives a task-sized organization from real deliverables and dependencies, then matches adequate workers by contextual ability, cost and useful parallelism. The workflow and employee evaluator can each be used independently.
 
 **Development stage: 0.8.x preset completion.** See [ROADMAP.md](ROADMAP.md) for current work, preset/scale coverage gaps and completion criteria. The project stays on 0.8.x until the main researched workflow presets are complete; 0.9 is reserved for real-task testing/optimization, and 1.0 follows successful validation.

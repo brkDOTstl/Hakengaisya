@@ -1,3 +1,4 @@
+import { normalizeImprovement } from './learning.ts';
 import { normalizeDei, reserveDeiWork } from './participation.ts';
 import { assertRegisteredSupervisor, createSupervision } from './supervision.ts';
 import { validateTriageForBrief } from './triage.ts';
@@ -153,6 +154,7 @@ function orderGraph(items: WorkItem[], external: Set<string>, producerOf: Map<st
 }
 
 export function validateWorkGraph(brief: BriefInput): WorkGraph {
+  normalizeImprovement(brief.improvement);
   normalizeDei(brief.dei);
   requireText(brief.objective, 'Objective');
   check(TECHNICAL_DOMAINS.includes(brief.domain), 'Only technical domains are active');
@@ -496,6 +498,9 @@ export interface TrialSummary {
 }
 
 export interface ScheduledPlan extends PlanAnnotations {
+  improvement_overhead?: { included: false; recursion_budget: 1; max_host_calls: number };
+  base_dispatch_estimated_cost_usd?: number | null;
+  base_dispatch_estimated_makespan_seconds?: number | null;
   status: 'planned' | 'constraints-unmet';
   reason: string | null;
   evidence_kind: EvidenceKind | string;
@@ -657,6 +662,18 @@ function prepareRouting(brief: BriefInput, workers: unknown, dei: DeiPolicy): Pr
     dei,
   );
   const inventory = { graph, reasons, exclusions };
+  if (
+    normalizeImprovement(brief.improvement).enabled &&
+    (limits.budget_usd !== undefined || limits.deadline_seconds !== undefined)
+  )
+    return {
+      inventory,
+      unplanned: unplanned({
+        status: 'needs-evidence',
+        reason: 'improvement-probe-and-review-cost-time-unpriced',
+        assignments: [],
+      }),
+    };
   const needsOverheads =
     (limits.budget_usd !== undefined && !known.cost) ||
     (limits.deadline_seconds !== undefined && !known.time);
@@ -1114,8 +1131,27 @@ export function planWork(brief: BriefInput, workers: WorkerInput[]): AuditedPlan
     workers,
     dei,
   );
-  const withAudit = <P extends DispatchPlan>(plan: P) =>
-    attachRoutingAudit(plan, prepared.inventory, workers, dei);
+  const withAudit = <P extends DispatchPlan>(plan: P) => {
+    const policy = normalizeImprovement(brief.improvement);
+    if (policy.enabled && 'estimated_cost_usd' in plan) {
+      plan.base_dispatch_estimated_cost_usd = plan.estimated_cost_usd;
+      plan.base_dispatch_estimated_makespan_seconds = plan.estimated_makespan_seconds;
+      plan.estimated_cost_usd = null;
+      plan.estimated_makespan_seconds = null;
+      plan.improvement_overhead = {
+        included: false,
+        recursion_budget: 1,
+        max_host_calls: policy.max_host_calls,
+      };
+      plan.overheads_accounted = { ...plan.overheads_accounted, cost: false, time: false };
+      if (plan.staffing_comparison) {
+        plan.staffing_comparison.estimates_complete = false;
+        plan.staffing_comparison.basis +=
+          ' Alternatives describe base dispatch only; improvement probes/review are unpriced.';
+      }
+    }
+    return attachRoutingAudit(plan, prepared.inventory, workers, dei);
+  };
   if (prepared.unplanned) return withAudit(prepared.unplanned);
   const { ready } = prepared;
   const alternatives: Alternative[] = poolCaps(bound).map((cap) => ({

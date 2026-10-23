@@ -12,6 +12,8 @@ const json = async <T = unknown>(filename: string): Promise<T> =>
   JSON.parse(await readFile(filename, 'utf8'));
 const context = { base: process.cwd() };
 const usage = [
+  'harness2-job <run.json> <packet-id> [starting-harness.json]',
+  'harness2-result <run.json> <job.json> <report.json>',
   'federation-plan <project.json>',
   'handoff <run.json> <project.json> <packet-id>',
   'receipt <run.json> <request.json> <receipt.json>',
@@ -30,7 +32,21 @@ const usage = [
 ];
 try {
   let result: unknown;
-  if (command === 'federation-plan' && target && !source)
+  if (command === 'harness2-job' && target && source)
+    result = await commands.optimizer_job.run(
+      {
+        run_file: target,
+        packet_id: source,
+        starting_harness: extra ? await json(extra) : undefined,
+      },
+      context,
+    );
+  else if (command === 'harness2-result' && target && source && extra)
+    result = await commands.optimizer_result.run(
+      { run_file: target, job: await json(source), report: await json(extra) },
+      context,
+    );
+  else if (command === 'federation-plan' && target && !source)
     result = compileFederation(await json<FederationProject>(target));
   else if (command === 'handoff' && target && source && extra)
     result = prepareHandoff(await json<Run>(target), await json<FederationProject>(source), extra);

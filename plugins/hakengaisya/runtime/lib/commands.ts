@@ -1,4 +1,6 @@
 import { prepareDispatch, prepareReview } from './dispatch.ts';
+import type { Harness2Job, Harness2Report } from './learning.ts';
+import { createHarness2Job, proposeImprovementSubmission } from './learning.ts';
 import type { OrganizationCatalog, ProjectDescription } from './organization.ts';
 import { composeOrganization } from './organization.ts';
 import { agentReview } from './participation.ts';
@@ -78,6 +80,40 @@ async function createPersistedRun(filename: string, input: BriefInput) {
 }
 
 export const commands: Readonly<Record<string, Command>> = {
+  optimizer_job: {
+    description:
+      'Prepare one opt-in bounded Harness2 job for an assigned pending packet. Read-only; the host saves it and starts the separate optional worker. Does not launch models or accept work.',
+    inputSchema: schema(['run_file', 'packet_id'], {
+      run_file: runFile,
+      packet_id: packetId,
+      starting_harness: object(
+        'Optional advisory Markdown component overrides; guardrails cannot change.',
+      ),
+    }),
+    run: async ({ run_file, packet_id, starting_harness }, context) => {
+      const run = await readRun(resolveRunFile(run_file, context?.base));
+      return createHarness2Job(
+        run,
+        prepareDispatch(run, String(packet_id)),
+        form<Record<string, string> | undefined>(starting_harness),
+      );
+    },
+  },
+  optimizer_result: {
+    description:
+      'Validate an immutable Harness2 job and supervisor-reviewed report against the running packet. Proposes an ordinary submit event only; technical acceptance remains separate.',
+    inputSchema: schema(['run_file', 'job', 'report'], {
+      run_file: runFile,
+      job: object('The unchanged optimizer job.'),
+      report: object('The current reviewed report; no fabricated execution evidence.'),
+    }),
+    run: async ({ run_file, job, report }, context) =>
+      proposeImprovementSubmission(
+        await readRun(resolveRunFile(run_file, context?.base)),
+        form<Harness2Job>(job),
+        form<Harness2Report>(report),
+      ),
+  },
   triage_request: {
     description:
       'Prepare the bounded intake-triage questionnaire for one short native-model call. Returns the fixed questions, state and input fingerprint; performs no classification itself.',
