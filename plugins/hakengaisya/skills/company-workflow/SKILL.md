@@ -17,6 +17,8 @@ A separate QA agent or specialist can supply technical findings as evidence. It 
 
 Read [task planning and forms](references/task-first.md) to create a persisted work graph or route plan. The host fills internal forms; users provide goals and constraints. The evaluator is optional and independently usable.
 
+For bounded software work, start with the [executable preset path](references/presets.md). Use the registry to inspect applicability, select a scale and expand the task's coherent components into a draft brief. The first preset covers one owner or two independent components with integration, using the existing supervisor. Preserve no-match results, tighter host limits, qualification gaps and unknown constrained budgets. The controller enforces the declared current execution pool; integration reuses a qualified owner. Larger or different projects retain their own researched workflow requirements.
+
 ## Compose a project-sized organization
 
 For a new project, select capability modules from actual deliverables and constraints, then use organize PROJECT.json [PHASE] to validate a role proposal. Read [composition forms](references/organization-composition.md) when doing so. Combine compatible production responsibilities where ability and workload permit; preserve the root and upward acceptance. Working leads produce real outputs, and their own production is checked by their parent with independent technical findings where needed.

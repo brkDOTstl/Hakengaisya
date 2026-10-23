@@ -1,0 +1,58 @@
+{
+  "run_id": "preset-parallel-fixture",
+  "objective": "Implement a local settings reader with a separately testable command-line adapter.",
+  "family": "bounded-software",
+  "outcome": "localized-change",
+  "risk": "routine",
+  "lead_context": "fixture-supervisor",
+  "acceptance": [
+    "The command reads valid settings and reports malformed input clearly.",
+    "The integrated behavior preserves the documented command contract."
+  ],
+  "constraints": ["Synthetic controller example only; no deployment or live model invocation."],
+  "evidence_kind": "simulation",
+  "parallel_reason": "Both components use the declared settings interface and independent fixtures. They own disjoint files and do not consume each other's unfinished output.",
+  "external_inputs": {
+    "settings_interface": "The reader returns an object for valid input and a typed error for malformed input; the adapter prints either result."
+  },
+  "components": [
+    {
+      "id": "reader",
+      "objective": "Implement the settings reader and its behavioral checks.",
+      "task_type": "implementation",
+      "difficulty": "routine",
+      "skills": ["implementation"],
+      "inputs": ["task_brief", "settings_interface"],
+      "writes": ["src/reader.ts", "tests/reader.test.ts"],
+      "outputs": ["reader_delivery"],
+      "acceptance": ["Valid and malformed settings are checked against the declared interface."],
+      "required_tools": ["node-runtime"]
+    },
+    {
+      "id": "command",
+      "objective": "Implement the command adapter against an interface-compatible fixture.",
+      "task_type": "implementation",
+      "difficulty": "routine",
+      "skills": ["implementation"],
+      "inputs": ["task_brief", "settings_interface"],
+      "writes": ["src/command.ts", "tests/command.test.ts"],
+      "outputs": ["command_delivery"],
+      "acceptance": ["Arguments and reader errors produce the documented command output."],
+      "required_tools": ["node-runtime"]
+    }
+  ],
+  "integration": {
+    "id": "integrated",
+    "objective": "Connect the accepted components, check the combined command and provide usage notes.",
+    "task_type": "implementation",
+    "difficulty": "standard",
+    "skills": ["implementation", "verification"],
+    "writes": ["src/main.ts", "tests/integration.test.ts", "docs/usage.md"],
+    "outputs": ["integrated_delivery"],
+    "acceptance": [
+      "The actual components work together on valid and malformed input.",
+      "The handover documents invocation and verified limitations."
+    ],
+    "required_tools": ["node-runtime"]
+  }
+}

@@ -7,6 +7,7 @@ import test, { type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { commands } from '../lib/commands.ts';
 import type { Harness2Job } from '../lib/learning.ts';
+import type { expandPreset, PresetRequest } from '../lib/presets.ts';
 import type { BriefInput, SubmitEvent, WorkItemInput } from '../lib/types.ts';
 import { runtimeFiles, stagedFiles } from '../scripts/runtime-files.ts';
 
@@ -300,6 +301,41 @@ test('optimizer tools prepare a bounded job and propose submission without accep
   const after = JSON.parse(await readFile(path.join(workspace, runFile), 'utf8'));
   assert.equal(after.packets.handover.status, 'in_review');
   assert.deepEqual(after.artifacts, {});
+});
+
+test('preset MCP tools select and expand a draft then create a run without adding staff or dispatching', async (t) => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'hakengaisya-mcp-presets-'));
+  const rpc = server(t, { HAKENGAISYA_WORKSPACE: workspace });
+  const request: PresetRequest = JSON.parse(
+    await readFile(new URL('../examples/presets/micro.json', import.meta.url), 'utf8'),
+  );
+  const listed = await rpc('tools/call', { name: 'hakengaisya_presets_list', arguments: {} });
+  assert.equal(listed.result.isError, false);
+  assert.ok(listed.result.content[0].text.includes('bounded-software'));
+  const selected = await rpc('tools/call', {
+    name: 'hakengaisya_preset_select',
+    arguments: { request },
+  });
+  assert.equal(selected.result.isError, false);
+  assert.equal(JSON.parse(selected.result.content[0].text).variant, 'micro');
+  const response = await rpc('tools/call', {
+    name: 'hakengaisya_preset_expand',
+    arguments: { preset_id: 'bounded-software', request },
+  });
+  assert.equal(response.result.isError, false);
+  const expanded = JSON.parse(response.result.content[0].text) as ReturnType<typeof expandPreset>;
+  assert.equal(expanded.automatic_execution, false);
+  assert.equal(expanded.staffing.execution_pool_ceiling, 1);
+  const created = await call(rpc, 'hakengaisya_create_run', {
+    run_file: 'preset.json',
+    brief: expanded.brief,
+  });
+  assert.equal(created.isError, false);
+  assert.equal(created.value.ready.length, 1);
+  assert.deepEqual(created.value.running, []);
+  const invalid = await call(rpc, 'hakengaisya_preset_expand', { preset_id: '../escape', request });
+  assert.equal(invalid.isError, true);
+  assert.match(invalid.value.error, /Unknown registered preset/);
 });
 
 test('without a workspace base the server refuses relative run paths instead of writing beside the plugin', async (t) => {

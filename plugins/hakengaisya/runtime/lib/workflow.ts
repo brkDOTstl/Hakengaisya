@@ -2,6 +2,7 @@ import { normalizeImprovement } from './learning.ts';
 import { agentReview, assertDeiAssignment, normalizeDei } from './participation.ts';
 import type { DispatchPlan } from './planning.ts';
 import { normalizeWrites, planWork, scopesConflict, validateWorkGraph } from './planning.ts';
+import { assertPresetBrief, validatePresetBinding } from './presets.ts';
 import {
   assertSupervisedReview,
   bindSupervisedAssignment,
@@ -223,6 +224,7 @@ function requireBriefBasics(brief: BriefInput, acceptanceMessage: string, accept
 }
 
 function createReferenceRun(template: Template | null, brief: BriefInput): Run {
+  check(brief.preset === undefined, 'Executable presets require task-first work_items');
   check(
     !normalizeImprovement(brief.improvement).enabled,
     'Harness2 improvement requires task-first work_items',
@@ -344,6 +346,12 @@ function isAcyclic(packets: Record<string, Packet>): boolean {
 }
 
 export function createWorkRun(brief: BriefInput): Run {
+  if (brief.planning_limits?.max_workers !== undefined)
+    check(
+      Number.isSafeInteger(brief.planning_limits.max_workers) &&
+        brief.planning_limits.max_workers > 0,
+      'Invalid execution pool limit',
+    );
   const intakeTriage = validateTriageForBrief(brief);
   const graph = validateWorkGraph(brief);
   const selection = taskGraphStructure(brief, graph);
@@ -376,6 +384,7 @@ export function createWorkRun(brief: BriefInput): Run {
   );
   const packetId = (workId: string) =>
     workId === graph.terminal ? TERMINAL_PACKET : `work_${workId}`;
+  assertPresetBrief(brief, graph, limits);
   const qualificationOf = (workId: string) =>
     plannedRoutes?.assignments.find((item) => item.work_id === workId)?.qualification;
   const packets: Record<string, Packet> = Object.fromEntries(
@@ -405,6 +414,7 @@ export function createWorkRun(brief: BriefInput): Run {
     dei: normalizeDei(brief.dei),
     improvement: normalizeImprovement(brief.improvement),
     planning_limits: structuredClone(brief.planning_limits ?? {}),
+    ...(brief.preset !== undefined ? { preset: validatePresetBinding(brief.preset) } : {}),
     supervision: createSupervision(brief.lead_context, brief.reporting_lines),
     organization: structuredClone(TASK_GRAPH_ORGANIZATION),
     external_inputs: {
@@ -637,6 +647,25 @@ function applyAssign(draft: Draft, packet: Packet, event: AssignEvent): void {
     'Reviewer context must differ from every producer context',
   );
   const assignment: Assignment = { ...input, writes: assignmentWrites(input.writes) };
+  const maximumWorkers = run.planning_limits?.max_workers;
+  if (maximumWorkers !== undefined) {
+    const contexts = new Set(
+      Object.values(run.packets)
+        .filter((other) => other.id !== packet.id && other.assignment)
+        .map((other) => other.assignment?.owner_context),
+    );
+    contexts.add(assignment.owner_context);
+    check(
+      contexts.size <= maximumWorkers,
+      'Assignment exceeds the declared execution pool; reuse a qualified owner or revise the plan',
+    );
+  }
+  if (run.preset && !run.dispatch_plan)
+    check(
+      run.planning_limits?.budget_usd === undefined &&
+        run.planning_limits?.deadline_seconds === undefined,
+      'Preset dispatch needs route and overhead evidence for the hard budget/deadline',
+    );
   packet.assignment = assignment;
   if (run.supervision) {
     assignment.supervisor_context = bindSupervisedAssignment(
@@ -924,6 +953,7 @@ export function nextActions(run: Run) {
   const dispatchLimitReached = (packet: Packet) =>
     packet.attempt > run.limits.max_attempts || run.dispatches >= run.limits.max_dispatches;
   return {
+    preset: run.preset ?? null,
     run_id: run.run_id,
     revision: run.revision,
     complete: packets.every((packet) => packet.status === 'accepted'),

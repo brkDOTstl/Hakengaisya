@@ -160,6 +160,7 @@ export interface BriefInput {
   reporting_lines?: ReportingLine[];
   dei?: DeiInput;
   improvement?: ImprovementInput;
+  preset?: PresetBinding;
   intake_triage?: TriageResponse;
   external_inputs?: Record<string, unknown>;
   existing_assets?: unknown[];
@@ -389,9 +390,18 @@ export interface Run {
   intake_triage?: TriageRecord | null;
   dei?: DeiPolicy;
   improvement?: ImprovementPolicy;
+  preset?: PresetBinding;
   planning_limits?: PlanningLimitsInput;
   supervision?: Supervision;
   dispatch_plan?: DispatchPlan | null;
   bound_execution_contexts?: Record<string, string>;
   routing_status?: string;
+}
+
+export interface PresetBinding {
+  id: string;
+  revision: string;
+  variant: string;
+  topology: 'coherent-owner' | 'parallel-components';
+  contract_hash: string;
 }

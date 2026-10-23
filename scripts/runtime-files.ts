@@ -4,6 +4,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validatePreset, validatePresetRegistry } from '../lib/presets.ts';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 export const runtimeRoot = path.join(root, 'plugins/hakengaisya/runtime');
@@ -20,9 +21,24 @@ export function runtimeFiles(): string[] {
     readFileSync(path.join(root, 'config/project.json'), 'utf8'),
   );
   const templates = project.active_templates.map((id) => `templates/${id}.json`);
+  const presets = validatePresetRegistry(
+    JSON.parse(readFileSync(path.join(root, 'config/workflow-presets.json'), 'utf8')),
+  ).map((id) => `presets/${id}.json`);
+  const presetExamples = [
+    ...new Set(
+      presets.flatMap(
+        (file) =>
+          validatePreset(JSON.parse(readFileSync(path.join(root, file), 'utf8'))).verification
+            .examples,
+      ),
+    ),
+  ];
   return [
     ...library,
     'config/organization-modules.json',
+    'config/workflow-presets.json',
+    ...presets,
+    ...presetExamples,
     'scripts/workflow.ts',
     'packages/optimizer/src/adapter.ts',
     'packages/optimizer/src/contract.ts',

@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "id": "bounded-software",
+  "revision": "1.0.0",
+  "name": "Bounded software delivery",
+  "family": "bounded-software",
+  "domain": "software-engineering",
+  "maturity": "structurally-validated",
+  "sources": [
+    {
+      "id": "shape-up-size",
+      "url": "https://basecamp.com/shapeup/4.1-appendix-02",
+      "reviewed_on": "2026-10-24",
+      "adoption": "Combine compatible responsibilities for small work; specialize only when actual scale needs it.",
+      "transfer_limits": "Worker counts are this preset's bounded policy, not Basecamp headcount advice or a performance guarantee. No fixed human work cadence is copied."
+    },
+    {
+      "id": "shape-up-scopes",
+      "url": "https://basecamp.com/shapeup/3.3-chapter-12",
+      "reviewed_on": "2026-10-24",
+      "adoption": "Group work around independently finishable outcomes and integrate their artifacts.",
+      "transfer_limits": "The host must establish real dependency and file boundaries. A pair of task labels does not establish useful parallelism."
+    },
+    {
+      "id": "shape-up-stop",
+      "url": "https://basecamp.com/shapeup/3.5-chapter-14",
+      "reviewed_on": "2026-10-24",
+      "adoption": "Make scope and stop conditions explicit; producers own basic behavioral checks.",
+      "transfer_limits": "Scope reductions need an explicit requirement decision. They cannot silently remove user acceptance or excuse a failed check."
+    },
+    {
+      "id": "google-review",
+      "url": "https://google.github.io/eng-practices/review/reviewer/standard.html",
+      "reviewed_on": "2026-10-24",
+      "adoption": "Review evidence for correctness and maintainability; distinguish required corrections from optional polish.",
+      "transfer_limits": "Google's peer review guidance informs quality checks. Hakengaisya's direct-supervisor acceptance and context separation are its own authority rules."
+    }
+  ],
+  "applicability": {
+    "outcomes": ["small-tool", "script", "localized-change", "bug-fix"],
+    "risks": ["routine"],
+    "exclusions": [
+      "Production deployment and live data migration",
+      "Elevated safety or security consequences",
+      "More than two independent implementation streams",
+      "Unresolved product discovery or aesthetic acceptance"
+    ],
+    "required_inputs": [
+      "Observable objective and final acceptance",
+      "Explicit constraints and actual tool requirements",
+      "One coherent component or two independent components and an integration contract",
+      "Declared file ownership and input/output references",
+      "An existing responsible supervisor"
+    ]
+  },
+  "organization": {
+    "root": "existing-host",
+    "acceptance": "direct-supervisor",
+    "producer_review": "separate-context",
+    "extra_manager": false,
+    "responsibilities": [
+      "The existing host owns scope, model fit, direct acceptance and escalation.",
+      "A producer combines local design, implementation, relevant developer checks and a usable handover.",
+      "Integration reuses a qualified producer from the declared pool; the supervisor independently checks the combined result.",
+      "Specialist findings can support review but never replace the responsible supervisor's decision."
+    ]
+  },
+  "variants": [
+    {
+      "id": "micro",
+      "topology": "coherent-owner",
+      "components": 1,
+      "integration": "none",
+      "max_workers": 1,
+      "max_parallel": 1,
+      "max_attempts": 2,
+      "max_dispatches": 2,
+      "reason": "One coherent deliverable has one producer and acceptance by the existing supervisor; no extra administrative packet is needed."
+    },
+    {
+      "id": "small-parallel",
+      "topology": "parallel-components",
+      "components": 2,
+      "integration": "required",
+      "max_workers": 2,
+      "max_parallel": 2,
+      "max_attempts": 2,
+      "max_dispatches": 6,
+      "reason": "Two independently testable components with disjoint writes permit a bounded parallel pool, followed by integrated delivery. Qualification and overhead may still favor one reused producer."
+    }
+  ],
+  "scale_coverage": {
+    "micro": {
+      "variant": "micro"
+    },
+    "small": {
+      "variant": "small-parallel"
+    },
+    "multi-stream": {
+      "excluded_reason": "This bounded-task preset stops at two implementation streams. Larger projects need explicit inter-stream interfaces and another reviewed project preset."
+    },
+    "large": {
+      "excluded_reason": "A multi-team organization needs phase, integration and supervisor-capacity rules outside this bounded-task contract. Do not expand this preset by adding titles."
+    }
+  },
+  "stages": [
+    {
+      "id": "scope",
+      "owner": "direct-supervisor",
+      "entry": "The user outcome, constraints, baseline behavior and material unknowns are understood.",
+      "outputs": "A reviewed draft brief with concrete checks, bounded components and required tools.",
+      "exit_evidence": "The graph and applicability checks pass; model/tool access and any constrained budget are supported before dispatch."
+    },
+    {
+      "id": "delivery",
+      "owner": "producer",
+      "entry": "A current assignment names the producer, direct supervisor, permitted model/route and exact write scope.",
+      "outputs": "Every contracted component artifact and the relevant behavioral/regression evidence.",
+      "exit_evidence": "The assigned owner submits the current attempt with inspectable output and check references."
+    },
+    {
+      "id": "integration",
+      "owner": "producer",
+      "entry": "For the parallel variant, both component gates are accepted; micro work performs integration inside its coherent delivery.",
+      "outputs": "A combined usable result, compatibility checks and handover details requested by the task.",
+      "exit_evidence": "The terminal result depends on all component outputs and has its own observed checks; an existing qualified producer performs this work."
+    },
+    {
+      "id": "review",
+      "owner": "direct-supervisor",
+      "entry": "A submitted result and its evidence belong to the current assignment and attempt.",
+      "outputs": "An evidence-backed accept/reject decision for every gate check.",
+      "exit_evidence": "The supervisor is distinct from every producer. Failed or unverified checks return work to its owner and invalidate affected descendants."
+    },
+    {
+      "id": "handover",
+      "owner": "direct-supervisor",
+      "entry": "The terminal result has been submitted after all accepted dependencies.",
+      "outputs": "The accepted integrated result, usage information and honest remaining limitations.",
+      "exit_evidence": "Every user acceptance criterion passes with inspected evidence. Peer evaluation is optional and cannot block delivery or upgrade simulated evidence."
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "missing-tool",
+      "owner": "direct-supervisor",
+      "action": "block",
+      "required_evidence": [
+        "The missing tool or access capability",
+        "Which work is stopped and whether its process is still active"
+      ],
+      "resolution": "Restore and verify the capability before resume, or explicitly replan a qualified route. Do not penalize model skill for an environment failure."
+    },
+    {
+      "id": "unqualified-model",
+      "owner": "direct-supervisor",
+      "action": "replan",
+      "required_evidence": [
+        "The missing task/difficulty/skill support or confirmed model failure",
+        "A qualified replacement or explicitly authorized bounded trial"
+      ],
+      "resolution": "Stop dispatch and reassess the route. An unpriced host binding can be replaced within the current pool after renewing its ability-fit reason. A frozen planned-route change needs a supervisor-reviewed replacement plan/run with failure history retained. Honor attempt and budget limits."
+    },
+    {
+      "id": "unknown-budget",
+      "owner": "direct-supervisor",
+      "action": "replan",
+      "required_evidence": [
+        "The hard budget/deadline",
+        "Declared or observed execution, startup and review costs/times"
+      ],
+      "resolution": "Keep the plan at needs-evidence until estimates support the limit. Unknown cost is not zero; do not silently discard a user constraint."
+    },
+    {
+      "id": "review-rejected",
+      "owner": "direct-supervisor",
+      "action": "return-to-owner",
+      "required_evidence": [
+        "A failed or unverified gate check",
+        "The required correction and affected outputs"
+      ],
+      "resolution": "Reject the current packet with evidence. If integration exposes a component defect, the supervisor explicitly reopens that producing component so its downstream integration is invalidated; unaffected peers remain accepted. Renew ability-fit assignment before correction and stop at the retry ceiling."
+    },
+    {
+      "id": "interrupted",
+      "owner": "direct-supervisor",
+      "action": "block",
+      "required_evidence": [
+        "Last known producer/process state and current artifacts",
+        "Evidence that prior execution is stopped or a resumable instance is identified"
+      ],
+      "resolution": "Preserve the blocked reservation. Resume the same known execution, or reopen after confirming it stopped and bind the new attempt. A timeout alone never authorizes a duplicate launch."
+    },
+    {
+      "id": "changed-scope",
+      "owner": "direct-supervisor",
+      "action": "reopen-affected",
+      "required_evidence": [
+        "The changed requirement or input snapshot",
+        "Affected components, integration results and acceptance criteria"
+      ],
+      "resolution": "Reopen affected packets for changes within the frozen contract. Structural, acceptance or topology changes need an explicitly revised brief/run; preserve the old run and useful unaffected evidence."
+    }
+  ],
+  "resources": {
+    "qualification": "existing-route-planner",
+    "unknown_budget": "needs-evidence",
+    "trials": "explicit-opt-in",
+    "overhead": "Use host-declared or measured startup, handoff and review estimates. Worker counts are ceilings; the route planner may select a smaller adequate pool. Replacement history remains visible."
+  },
+  "topology": {
+    "supported": ["single-agency"],
+    "federation": "Native or router routes may remain inside one agency. Cross-client work must first use the registered buyer/supplier contract and actual adapter preflight; this preset does not launch or contact another client."
+  },
+  "verification": {
+    "examples": ["examples/presets/micro.json", "examples/presets/small-parallel.json"],
+    "checks": ["tests/presets.test.ts", "tests/mcp.test.ts"],
+    "evidence_level": "structural-and-simulation",
+    "real_task_validated": false,
+    "limitations": [
+      "Sources inform the workflow; they do not prove agent productivity.",
+      "The host decomposes the actual requirement and verifies tool/model identity and artifact contents.",
+      "The contract validator checks declared structure; meaningful acceptance and source claims still need review.",
+      "No live-model speedup, price, product deployment or multi-client readiness is established."
+    ]
+  }
+}
