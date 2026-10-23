@@ -20,7 +20,15 @@ export function runtimeFiles(): string[] {
     readFileSync(path.join(root, 'config/project.json'), 'utf8'),
   );
   const templates = project.active_templates.map((id) => `templates/${id}.json`);
-  return [...library, 'config/organization-modules.json', 'scripts/workflow.ts', ...templates];
+  return [
+    ...library,
+    'config/organization-modules.json',
+    'scripts/workflow.ts',
+    'packages/optimizer/src/adapter.ts',
+    'packages/optimizer/src/contract.ts',
+    'packages/optimizer/harness2_bridge.py',
+    ...templates,
+  ];
 }
 
 export function stagedFiles(directory = runtimeRoot, prefix = ''): string[] {

@@ -8,7 +8,7 @@ const files = execFileSync('git', ['ls-files', '--cached', '-z'], { cwd: root, e
   .filter(Boolean);
 if (!files.length) throw new Error('Stage or check out the intended release files before auditing');
 const blocked =
-  /(?:^|\/)(?:\.data|\.local|\.hakengaisya-evaluator|\.hakengaisya-exchange|node_modules|runs|coverage)(?:\/|$)|^(?:staff\/imported\/|staff\/registry\.json$|wiki\/)|\.(?:sqlite(?:-wal|-shm)?|key|pem|log)$|(?:^|\/)\.env(?:\.|$)/i;
+  /(?:^|\/)(?:\.data|\.local|\.hakengaisya-evaluator|\.hakengaisya-exchange|\.hakengaisya-learning|__pycache__|node_modules|runs|coverage)(?:\/|$)|^(?:staff\/imported\/|staff\/registry\.json$|wiki\/)|\.(?:sqlite(?:-wal|-shm)?|key|pem|log|pyc)$|(?:^|\/)\.env(?:\.|$)/i;
 for (const relative of files) {
   if (blocked.test(relative))
     throw new Error(`Runtime/private file in publication set: ${relative}`);

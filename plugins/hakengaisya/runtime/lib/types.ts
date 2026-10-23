@@ -4,6 +4,7 @@
 // validates at runtime. Input types describe what that validation accepts; normalized types
 // describe what the library produces after validation.
 
+import type { ImprovementInput, ImprovementPolicy } from '../packages/optimizer/src/contract.ts';
 import type { DispatchPlan } from './planning.ts';
 import type { TriageRecord } from './triage.ts';
 
@@ -158,6 +159,7 @@ export interface BriefInput {
   failures?: FailureInput[];
   reporting_lines?: ReportingLine[];
   dei?: DeiInput;
+  improvement?: ImprovementInput;
   intake_triage?: TriageResponse;
   external_inputs?: Record<string, unknown>;
   existing_assets?: unknown[];
@@ -370,6 +372,7 @@ export interface Run {
   template_id: string;
   mode: 'compact' | 'company';
   objective: string;
+  domain?: string;
   acceptance: string[];
   constraints: string[];
   lead_context: string;
@@ -385,6 +388,8 @@ export interface Run {
   // Task-first runs only.
   intake_triage?: TriageRecord | null;
   dei?: DeiPolicy;
+  improvement?: ImprovementPolicy;
+  planning_limits?: PlanningLimitsInput;
   supervision?: Supervision;
   dispatch_plan?: DispatchPlan | null;
   bound_execution_contexts?: Record<string, string>;

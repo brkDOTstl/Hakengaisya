@@ -9,6 +9,8 @@ node HELPER select BRIEF.json
 node HELPER create RUN.json BRIEF.json
 node HELPER next RUN.json
 node HELPER agent-review RUN.json
+node HELPER harness2-job RUN.json PACKET_ID [STARTING_HARNESS.json]
+node HELPER harness2-result RUN.json JOB.json REPORT.json
 node HELPER event RUN.json EVENT.json
 ```
 
@@ -19,6 +21,8 @@ node HELPER event RUN.json EVENT.json
 The plugin registers a stdio MCP server (`.mcp.json`, `mcp.ts`) with the same commands as inline-JSON tools: `hakengaisya_triage_request`, `hakengaisya_triage`, `hakengaisya_select`, `hakengaisya_plan`, `hakengaisya_organize`, `hakengaisya_create_run`, `hakengaisya_next`, `hakengaisya_dispatch`, `hakengaisya_review`, `hakengaisya_event` and `hakengaisya_agent_review`. Run-file tools take `run_file`; pass an absolute path inside the task workspace, because a relative path is only accepted when the server was started with `HAKENGAISYA_WORKSPACE`. `hakengaisya_event` takes `events`, an ordered array applied atomically, and returns the next-actions snapshot. Tool availability does not prove the host will invoke them; the same host permissions and evidence duties apply.
 
 Optional [DEI participation](model-participation.md) is configured in task-first briefs. Agent Review reports candidate consideration and the root manager's participation score/tag; it does not launch models or update technical ability scores.
+
+Optional [Harness2 improvement](harness2.md) adds the read-only MCP tools hakengaisya_optimizer_job and hakengaisya_optimizer_result. They prepare a bounded job and validate its reviewed submission; the separate worker runs outside the controller lock. They do not launch models or accept technical work.
 
 ## Brief
 

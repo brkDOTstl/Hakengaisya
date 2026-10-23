@@ -6,7 +6,8 @@ import path from 'node:path';
 import test, { type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { commands } from '../lib/commands.ts';
-import type { BriefInput, WorkItemInput } from '../lib/types.ts';
+import type { Harness2Job } from '../lib/learning.ts';
+import type { BriefInput, SubmitEvent, WorkItemInput } from '../lib/types.ts';
 import { runtimeFiles, stagedFiles } from '../scripts/runtime-files.ts';
 
 interface McpTool {
@@ -205,6 +206,100 @@ test('the workflow plugin exposes the controller as MCP tools and persists an at
   );
   const unsupported = await rpc('resources/list', {});
   assert.equal(unsupported.error.code, -32601);
+});
+
+test('optimizer tools prepare a bounded job and propose submission without accepting or mutating work', async (t) => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'hakengaisya-mcp-optimizer-'));
+  const rpc = server(t, { HAKENGAISYA_WORKSPACE: workspace });
+  const runFile = 'run.json';
+  const input: BriefInput = {
+    ...brief,
+    run_id: 'optimizer-mcp',
+    work_items: [work('one')],
+    improvement: { enabled: true, scope: 'fixture-project' },
+  };
+  assert.equal(
+    (await call(rpc, 'hakengaisya_create_run', { run_file: runFile, brief: input })).isError,
+    false,
+  );
+  const assignment = {
+    owner_context: 'worker',
+    reviewer_context: 'host',
+    contributor_contexts: [],
+    writes: ['src/one'],
+    model_id: 'fixture-model',
+    route: 'fixture-route',
+  };
+  await call(rpc, 'hakengaisya_event', {
+    run_file: runFile,
+    events: [
+      {
+        id: 'assign',
+        type: 'assign',
+        expected_revision: 0,
+        packet_id: 'handover',
+        attempt: 1,
+        actor_context: 'host',
+        assignment,
+      },
+    ],
+  });
+  const prepared = await rpc('tools/call', {
+    name: 'hakengaisya_optimizer_job',
+    arguments: { run_file: runFile, packet_id: 'handover' },
+  });
+  assert.equal(prepared.result.isError, false);
+  const job = JSON.parse(prepared.result.content[0].text) as Harness2Job;
+  assert.equal(job.supervisor_context, 'host');
+  assert.equal(job.policy.max_host_calls, 9);
+  await call(rpc, 'hakengaisya_event', {
+    run_file: runFile,
+    events: [
+      {
+        id: 'start',
+        type: 'start',
+        expected_revision: 1,
+        packet_id: 'handover',
+        attempt: 1,
+        actor_context: 'worker',
+      },
+    ],
+  });
+  const report = {
+    status: 'ready-for-submission',
+    job_id: job.job_id,
+    job_fingerprint: job.job_fingerprint,
+    evidence_kind: job.evidence_kind,
+    supervisor_review: {
+      actor_context: 'host',
+      decision: 'accepted',
+      reason: 'Inspected the synthetic contrast.',
+      evidence: [{ reference: 'fixture:contrast', summary: 'Synthetic comparison.' }],
+    },
+    outputs: job.dispatch.outputs.map((id) => ({
+      id,
+      reference: 'fixture:output',
+      summary: 'Synthetic deliverable.',
+    })),
+    evidence: [{ reference: 'fixture:check', summary: 'Synthetic check.' }],
+  };
+  const result = await rpc('tools/call', {
+    name: 'hakengaisya_optimizer_result',
+    arguments: { run_file: runFile, job, report },
+  });
+  assert.equal(result.result.isError, false);
+  const proposal = JSON.parse(result.result.content[0].text) as {
+    event: SubmitEvent;
+    requires_supervisor_task_review: boolean;
+  };
+  assert.equal(proposal.requires_supervisor_task_review, true);
+  assert.equal(proposal.event.type, 'submit');
+  const before = JSON.parse(await readFile(path.join(workspace, runFile), 'utf8'));
+  assert.equal(before.packets.handover.status, 'running');
+  await call(rpc, 'hakengaisya_event', { run_file: runFile, events: [proposal.event] });
+  const after = JSON.parse(await readFile(path.join(workspace, runFile), 'utf8'));
+  assert.equal(after.packets.handover.status, 'in_review');
+  assert.deepEqual(after.artifacts, {});
 });
 
 test('without a workspace base the server refuses relative run paths instead of writing beside the plugin', async (t) => {

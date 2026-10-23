@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-23. Current suite version: **0.8.6**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
+Updated: 2026-10-23. Current suite version: **0.8.7**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -49,7 +49,7 @@ The earlier Pomodoro trial was real and exposed excessive coordination overhead.
 | H03 | Implemented in 0.8.6 - strict typecheck, regression and trial tests | Strict TypeScript across the suite and evaluator (browser leaderboard excluded) run directly by Node 24; latent malformed-input crashes fixed; opt-in trial routes for the evidence cold start; journal growth measured (1.3 MB, about 7 ms per locked update at 300 items) and kept intact. Trial routes are synthetic-tested only; no real model run has used them yet |
 | H02 | Implemented in 0.8.5 - synthetic benchmark and regression tests | Copy-on-write events, single-pass route preparation, unified write-scope normalization, template-declared audits, Biome formatting and lint in CI; controller speed is measured on synthetic graphs only, not on real model runs |
 | H01 | Implemented in 0.8.4 - stdio round-trip tests | [MCP workflow tools, atomic event batches and lock metadata](plugins/hakengaisya/skills/company-workflow/references/run-commands.md) to cut per-transition host overhead; invocation in a fresh installed host remains unverified |
-| O01-O08 | Planned - integration architecture approved; implementation pending | [Harness2 optimization workstream](#harness2-integration-workstream): native MCP integration, optional optimization worker, versioned execution profiles, controlled experiments and evidence-based promotion |
+| O01-O08 | Partial O01/O03 foundation in 0.8.7; O02/O04-O08 remain planned | [Harness2 optimization workstream](#harness2-integration-workstream): native MCP integration, optional optimization worker, versioned execution profiles, controlled experiments and evidence-based promotion |
 
 The user added same-host multi-client agency coordination to the 0.8 scope. Track it alongside the preset contract and research without dropping the existing required families. Each finished increment updates this table and links its actual artifact/check evidence.
 
@@ -67,7 +67,7 @@ The first target is several clients on one computer. Cross-machine coordination 
 
 ## Harness2 integration workstream
 
-**Architecture approved on 2026-10-23; implementation planned.** Integrate [Google Research Harness²](https://github.com/google-research/harness2) as an optional optimization engine behind the existing Hakengaisya workflow/MCP plugin. Reuse its Propose-Probe-Compose method through a thin adapter, while Hakengaisya retains dispatch, supervision and delivery acceptance. The independent evaluator continues to supply contextual model observations.
+**Architecture approved on 2026-10-23; partial foundations implemented in 0.8.7.** Integrate [Google Research Harness²](https://github.com/google-research/harness2) as an optional optimization engine behind the existing Hakengaisya workflow/MCP plugin. Reuse its Propose-Probe-Compose method through a thin adapter, while Hakengaisya retains dispatch, supervision and delivery acceptance. The independent evaluator continues to supply contextual model observations.
 
 The objective is to improve delivery quality and cost efficiency by learning which execution profile works for a particular model and task context. Expensive optimization should produce reusable profiles for later tasks. Capability gains and savings will be measured in the 0.9 real-task comparisons.
 
@@ -85,7 +85,7 @@ Hakengaisya task planning and dispatch
   -> profile selection for subsequent matching tasks
 ```
 
-Add `packages/optimizer/` for the adapter, experiment state and local profile/experience store. Keep the upstream Python core as an optional worker, with a pinned upstream revision and preserved license/provenance records. The initial Windows integration can run that worker through WSL2; the existing Node.js workflow remains usable without it. Reuse existing authorized host/model connections for execution and advanced-agent review.
+Add `packages/optimizer/` for the adapter, experiment state and local profile/experience store. Keep the upstream Python core as an optional worker, with a pinned upstream revision and preserved license/provenance records. The 0.8.7 core bridge runs natively on Windows with path normalization; the full upstream benchmark runner still targets Linux/WSL2; the existing Node.js workflow remains usable without it. Reuse existing authorized host/model connections for execution and advanced-agent review.
 
 | Integration point | Planned change |
 | --- | --- |
@@ -99,7 +99,7 @@ Initial editable surfaces are execution prompts, skills, memory and tool guidanc
 
 ### Tracked implementation sequence
 
-All items below are **planned**. The target column expresses sequencing, not a completed release commitment.
+O01/O03 have a partial 0.8.7 foundation: immutable scoped jobs, a pinned Python core worker, shared CLI/MCP job/result commands, bounded native-host requests, direct-supervisor adoption and a deterministic local example. See [the integration evidence](docs/harness2-integration.md). Complete source/environment telemetry, promoted profile versions and start/status/cancel lifecycle tools remain pending. The other items below are still planned. The target column expresses sequencing, not a completed release commitment.
 
 | ID | Target | Deliverable and completion evidence |
 | --- | --- | --- |
