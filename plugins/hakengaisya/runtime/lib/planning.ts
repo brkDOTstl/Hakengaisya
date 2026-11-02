@@ -4,11 +4,13 @@ import { assertRegisteredSupervisor, createSupervision } from './supervision.ts'
 import { validateTriageForBrief } from './triage.ts';
 import type {
   BriefInput,
+  ContextCostEstimate,
   DeiPolicy,
   Difficulty,
   EvidenceKind,
   PlanningLimitsInput,
   RouteProfile,
+  SourcedTrial,
   Supervision,
   TrialEstimate,
   WorkerInput,
@@ -33,7 +35,7 @@ const OVERHEAD_KEYS = [
   'context_startup_seconds',
   'context_startup_cost_usd',
 ] as const;
-const UNPROVEN_ROUTE_POLICIES = ['refuse', 'trial'] as const;
+const UNPROVEN_ROUTE_POLICIES = ['refuse', 'trial', 'sourced-trial'] as const;
 // Trials fill evidence gaps for bounded work only; complex work still needs proven ability.
 const TRIAL_DIFFICULTIES: readonly Difficulty[] = ['routine', 'standard'];
 // Evidence gaps that a trial may cover. Availability, tools, reporting lines and confirmed
@@ -219,6 +221,7 @@ interface ResolvedLimits {
   unproven_routes: (typeof UNPROVEN_ROUTE_POLICIES)[number];
   trial_estimate?: TrialEstimate;
   max_trial_assignments: number;
+  sourced_trials: SourcedTrial[];
 }
 
 interface KnownOverheads {
@@ -268,9 +271,86 @@ function planningLimits(brief: BriefInput): { limits: ResolvedLimits; known: Kno
   const policy = merged.unproven_routes;
   check(
     (UNPROVEN_ROUTE_POLICIES as readonly string[]).includes(policy),
-    'unproven_routes must be refuse or trial',
+    'unproven_routes must be refuse or trial or sourced-trial',
+  );
+  check(
+    declared.allow_api_cost_estimates === undefined ||
+      typeof declared.allow_api_cost_estimates === 'boolean',
+    'Estimated-cost policy must be boolean',
+  );
+  check(
+    declared.max_cost_estimate_age_days === undefined ||
+      (Number.isInteger(declared.max_cost_estimate_age_days) &&
+        declared.max_cost_estimate_age_days >= 1 &&
+        declared.max_cost_estimate_age_days <= 365),
+    'Estimated-cost maximum age must be 1 to 365 days',
   );
   if (policy === 'trial') requireTrialEstimate(merged.trial_estimate);
+  const sourcedTrials = declared.sourced_trials ?? [];
+  check(Array.isArray(sourcedTrials), 'Sourced trials must be an array');
+  if (policy === 'sourced-trial')
+    check(
+      Number.isInteger(merged.max_trial_assignments) &&
+        (merged.max_trial_assignments as number) > 0,
+      'Sourced trials need an explicit positive max_trial_assignments',
+    );
+  else
+    check(sourcedTrials.length === 0, 'Sourced trials require the explicit sourced-trial policy');
+  const trialKeys = new Set<string>();
+  for (const candidate of sourcedTrials) {
+    check(isRecord(candidate), 'Invalid sourced trial');
+    requireText(candidate.work_id, 'Sourced trial work');
+    requireText(candidate.worker_id, 'Sourced trial worker');
+    requireTrialEstimate(candidate.estimate);
+    requireText(candidate.estimate_basis, 'Sourced trial estimate basis');
+    check(
+      candidate.cost_basis === undefined ||
+        ['declared-trial-estimate', 'api-equivalent-estimate'].includes(candidate.cost_basis),
+      'Invalid sourced trial cost basis',
+    );
+    check(
+      candidate.wall_basis === undefined ||
+        ['declared-trial-estimate', 'reported-local-observation'].includes(candidate.wall_basis),
+      'Invalid sourced trial wall basis',
+    );
+    check(
+      Array.isArray(candidate.sources) && candidate.sources.length > 0,
+      'Sourced trial needs public evidence',
+    );
+    const key = `${candidate.work_id}\u0000${candidate.worker_id}`;
+    check(!trialKeys.has(key), 'Duplicate sourced trial');
+    trialKeys.add(key);
+    for (const source of candidate.sources) {
+      check(isRecord(source), 'Invalid sourced trial evidence');
+      for (const name of [
+        'model_id',
+        'route',
+        'effort',
+        'domain',
+        'task_type',
+        'difficulty',
+        'skill',
+        'url',
+        'title',
+        'accessed_at',
+        'summary',
+      ] as const)
+        requireText(source[name], `Evidence ${name}`);
+      let url: URL;
+      try {
+        url = new URL(source.url as string);
+      } catch {
+        throw new Error('Invalid public evidence URL');
+      }
+      check(
+        ['http:', 'https:'].includes(url.protocol) &&
+          !url.username &&
+          !url.password &&
+          Number.isFinite(Date.parse(source.accessed_at as string)),
+        'Invalid public evidence provenance',
+      );
+    }
+  }
   const maxTrials = merged.max_trial_assignments ?? Number.POSITIVE_INFINITY;
   check(
     maxTrials === Number.POSITIVE_INFINITY || (Number.isInteger(maxTrials) && maxTrials > 0),
@@ -285,6 +365,7 @@ function planningLimits(brief: BriefInput): { limits: ResolvedLimits; known: Kno
       max_workers: maxWorkers,
       unproven_routes: policy as ResolvedLimits['unproven_routes'],
       max_trial_assignments: maxTrials,
+      sourced_trials: sourcedTrials,
     },
     known: {
       startupCost: knownStartupCost,
@@ -309,6 +390,9 @@ interface Fit {
   seconds: number;
   qualification: Qualification;
   trial_basis?: string;
+  cost_basis?: 'reported-historical' | 'api-equivalent-estimate' | 'declared-trial-estimate';
+  cost_evidence?: ContextCostEstimate[];
+  wall_basis?: 'reported-local-observation' | 'declared-trial-estimate';
 }
 
 type FitResult = Fit | { reason: string };
@@ -378,13 +462,89 @@ function findProfile(
   );
 }
 
-type PricedProfile = RouteProfile & { observed_cost_usd: number; observed_wall_seconds: number };
-
-const hasKnownCostAndTime = (profile: RouteProfile | undefined): profile is PricedProfile =>
-  profile !== undefined &&
-  isNonNegative(profile.observed_cost_usd) &&
-  isNonNegative(profile.observed_wall_seconds) &&
-  profile.observed_wall_seconds > 0;
+export function estimatedCost(
+  work: Pick<WorkItemInput, 'task_type' | 'difficulty'>,
+  worker: WorkerInput,
+  brief: BriefInput,
+  skill: string,
+): ContextCostEstimate | undefined {
+  if (
+    brief.evidence_kind === 'simulation' ||
+    brief.planning_limits?.allow_api_cost_estimates !== true
+  )
+    return undefined;
+  const domain = brief.domain === 'technical-product-design' ? 'technical-product' : brief.domain;
+  const candidates = (worker.cost_estimates ?? []).filter(
+    (item) =>
+      item?.basis === 'api-equivalent-estimate' &&
+      item.context?.model_id === worker.model_id &&
+      item.context.route === worker.route &&
+      item.context.effort === (worker.effort ?? 'unknown') &&
+      item.context.domain === domain &&
+      item.context.task_type === work.task_type &&
+      item.context.difficulty === work.difficulty &&
+      item.context.skill === skill &&
+      item.context.evidence_kind === 'local_work',
+  );
+  if (candidates.length !== 1) return undefined;
+  const item = candidates[0];
+  if (
+    !isNonNegative(item.estimated_cost_usd) ||
+    !Number.isSafeInteger(item.sample_count) ||
+    item.sample_count < 1 ||
+    !/^[a-f0-9]{64}$/.test(item.task_token_scope) ||
+    !Array.isArray(item.provenance) ||
+    item.provenance.length !== item.sample_count
+  )
+    return undefined;
+  const tokens = new Set<string>();
+  const maximumAge = (brief.planning_limits?.max_cost_estimate_age_days ?? 30) * 86400000;
+  for (const sample of item.provenance) {
+    if (
+      !sample ||
+      !/^[a-f0-9]{64}$/.test(sample.task_token) ||
+      tokens.has(sample.task_token) ||
+      !isNonNegative(sample.usd) ||
+      !Number.isSafeInteger(sample.input_tokens) ||
+      sample.input_tokens < 0 ||
+      !Number.isSafeInteger(sample.output_tokens) ||
+      sample.output_tokens < 0 ||
+      !Array.isArray(sample.records) ||
+      !sample.records.length
+    )
+      return undefined;
+    tokens.add(sample.task_token);
+    for (const record of sample.records) {
+      if (
+        !record?.usage_evidence ||
+        !record.source?.url ||
+        !record.source.assumptions ||
+        !record.source.checked_at
+      )
+        return undefined;
+      let url: URL;
+      try {
+        url = new URL(record.source.url);
+      } catch {
+        return undefined;
+      }
+      const age = Date.now() - Date.parse(record.source.checked_at);
+      if (
+        url.protocol !== 'https:' ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash ||
+        !Number.isFinite(age) ||
+        age < -300000 ||
+        age > maximumAge
+      )
+        return undefined;
+    }
+  }
+  const mean = item.provenance.reduce((sum, sample) => sum + sample.usd, 0) / item.sample_count;
+  return Math.abs(mean - item.estimated_cost_usd) <= 1e-9 ? item : undefined;
+}
 
 function routeIdentity(worker: WorkerInput) {
   return {
@@ -406,12 +566,35 @@ function fit(work: WorkItem, worker: WorkerInput, brief: BriefInput): FitResult 
   }
   const profiles = work.skills.map((skill) => findProfile(work, worker, brief, skill));
   if (profiles.some((profile) => !profile)) return { reason: 'ability-or-context-unproven' };
-  if (!profiles.every(hasKnownCostAndTime)) return { reason: 'cost-or-time-unknown' };
+  const assessed = profiles.map((profile, index) => {
+    if (
+      !profile ||
+      !isNonNegative(profile.observed_wall_seconds) ||
+      profile.observed_wall_seconds <= 0
+    )
+      return null;
+    if (isNonNegative(profile.observed_cost_usd))
+      return {
+        cost: profile.observed_cost_usd,
+        seconds: profile.observed_wall_seconds,
+        estimate: null,
+      };
+    const estimate = estimatedCost(work, worker, brief, work.skills[index]);
+    return estimate
+      ? { cost: estimate.estimated_cost_usd, seconds: profile.observed_wall_seconds, estimate }
+      : null;
+  });
+  if (assessed.some((item) => item === null)) return { reason: 'cost-or-time-unknown' };
+  const values = assessed.filter((item) => item !== null);
+  const estimates = values.flatMap((item) => (item.estimate ? [item.estimate] : []));
   return {
     ...routeIdentity(worker),
-    cost: maxOf(profiles.map((profile) => profile.observed_cost_usd)),
-    seconds: maxOf(profiles.map((profile) => profile.observed_wall_seconds)),
+    cost: maxOf(values.map((item) => item.cost)),
+    seconds: maxOf(values.map((item) => item.seconds)),
     qualification: 'qualified',
+    cost_basis: estimates.length ? 'api-equivalent-estimate' : 'reported-historical',
+    wall_basis: 'reported-local-observation',
+    ...(estimates.length ? { cost_evidence: structuredClone(estimates) } : {}),
   };
 }
 
@@ -422,7 +605,32 @@ function trialFit(worker: WorkerInput, estimate: TrialEstimate, basis: string): 
     seconds: estimate.wall_seconds,
     qualification: 'trial',
     trial_basis: basis,
+    cost_basis: 'declared-trial-estimate',
+    wall_basis: 'declared-trial-estimate',
   };
+}
+
+export function observedTrialWall(
+  work: Pick<WorkItemInput, 'task_type' | 'difficulty'>,
+  worker: WorkerInput,
+  brief: BriefInput,
+  skill: string,
+): number | undefined {
+  const domain = brief.domain === 'technical-product-design' ? 'technical-product' : brief.domain;
+  const matches = (worker.profiles ?? []).filter(
+    (profile) =>
+      profile.evaluation_kind === 'local_work' &&
+      profile.model_id === worker.model_id &&
+      profile.route === worker.route &&
+      profile.effort === (worker.effort ?? 'unknown') &&
+      profile.domain === domain &&
+      profile.task_type === work.task_type &&
+      profile.difficulty === work.difficulty &&
+      profile.skill === skill &&
+      isNonNegative(profile.observed_wall_seconds) &&
+      profile.observed_wall_seconds > 0,
+  );
+  return matches.length === 1 ? matches[0].observed_wall_seconds : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -451,6 +659,11 @@ export interface PlannedAssignment {
   context_startup_seconds: number | null;
   context_startup_cost_usd: number | null;
   qualification: Qualification;
+  trial_basis?: string;
+  trial_sources?: SourcedTrial['sources'];
+  cost_basis?: Fit['cost_basis'];
+  cost_evidence?: ContextCostEstimate[];
+  wall_basis?: Fit['wall_basis'];
 }
 
 interface ContextAllocation {
@@ -493,7 +706,7 @@ export interface UnplannedPlan extends PlanAnnotations {
 
 export interface TrialSummary {
   work_ids: string[];
-  estimate: TrialEstimate;
+  estimate: TrialEstimate | null;
   requirement: string;
 }
 
@@ -627,15 +840,69 @@ function collectRoutes(
       }
       byWorker.set(worker.id, result.reason);
       exclusions.push({ work_id: work.id, worker_id: worker.id, reason: result.reason });
-      if (limits.trial_estimate && TRIAL_COVERABLE.has(result.reason)) {
+      if (
+        limits.unproven_routes === 'trial' &&
+        limits.trial_estimate &&
+        TRIAL_COVERABLE.has(result.reason)
+      ) {
         trialable.push(trialFit(worker, limits.trial_estimate, result.reason));
+      }
+      if (limits.unproven_routes === 'sourced-trial' && TRIAL_COVERABLE.has(result.reason)) {
+        const source = limits.sourced_trials.find(
+          (entry) => entry.work_id === work.id && entry.worker_id === worker.id,
+        );
+        if (
+          source &&
+          work.skills.every((skill) =>
+            source.sources.some(
+              (item) =>
+                item.skill === skill &&
+                item.model_id === worker.model_id &&
+                item.route === worker.route &&
+                item.effort === (worker.effort ?? 'unknown') &&
+                item.domain === brief.domain &&
+                item.task_type === work.task_type &&
+                item.difficulty === work.difficulty,
+            ),
+          )
+        ) {
+          const costs = work.skills.map((skill) => estimatedCost(work, worker, brief, skill));
+          const walls = work.skills.map((skill) => observedTrialWall(work, worker, brief, skill));
+          const costValid =
+            source.cost_basis !== 'api-equivalent-estimate' ||
+            (costs.every(Boolean) &&
+              Math.abs(
+                maxOf(costs.map((item) => item?.estimated_cost_usd as number)) -
+                  source.estimate.cost_usd,
+              ) <= 1e-9 &&
+              JSON.stringify(source.cost_evidence) === JSON.stringify(costs));
+          const wallValid =
+            source.wall_basis !== 'reported-local-observation' ||
+            (walls.every((value) => value !== undefined) &&
+              maxOf(walls as number[]) === source.estimate.wall_seconds);
+          if (costValid && wallValid) {
+            const item = trialFit(
+              worker,
+              source.estimate,
+              'public-evidence-provisional; not local-work qualification',
+            );
+            if (source.cost_basis === 'api-equivalent-estimate') {
+              item.cost_basis = 'api-equivalent-estimate';
+              item.cost_evidence = structuredClone(costs as ContextCostEstimate[]);
+            }
+            if (source.wall_basis === 'reported-local-observation')
+              item.wall_basis = source.wall_basis;
+            trialable.push(item);
+          }
+        }
       }
     }
     const trialAllowed =
-      limits.unproven_routes === 'trial' &&
+      (limits.unproven_routes === 'trial' || limits.unproven_routes === 'sourced-trial') &&
       !qualified.length &&
       trialable.length > 0 &&
-      TRIAL_DIFFICULTIES.includes(work.difficulty) &&
+      (limits.unproven_routes === 'sourced-trial' ||
+        TRIAL_DIFFICULTIES.includes(work.difficulty)) &&
       trials.length < limits.max_trial_assignments;
     if (trialAllowed) {
       trials.push(work.id);
@@ -932,6 +1199,19 @@ function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPla
         context_startup_seconds: known.startupTime ? choice.startup : null,
         context_startup_cost_usd: known.startupCost ? choice.startupCost : null,
         qualification: choice.qualification,
+        ...(choice.cost_basis ? { cost_basis: choice.cost_basis } : {}),
+        ...(choice.wall_basis ? { wall_basis: choice.wall_basis } : {}),
+        ...(choice.cost_evidence ? { cost_evidence: structuredClone(choice.cost_evidence) } : {}),
+        ...(choice.trial_basis ? { trial_basis: choice.trial_basis } : {}),
+        ...(choice.qualification === 'trial' && limits.unproven_routes === 'sourced-trial'
+          ? {
+              trial_sources: structuredClone(
+                limits.sourced_trials.find(
+                  (item) => item.work_id === work.id && item.worker_id === choice.worker_id,
+                )?.sources ?? [],
+              ),
+            }
+          : {}),
       });
       pending.delete(work.id);
     }
@@ -964,6 +1244,9 @@ function summarizePlan(
     assignments.filter((other) => other.start_seconds <= time && other.end_seconds > time).length;
   const cost = roundUsd(totalCost);
   const trialEstimate = limits.trial_estimate;
+  const estimateBasis = trials.length
+    ? 'trial_estimate values and public evidence are provisional; reported prior timings do not qualify local ability or guarantee future duration or billing.'
+    : 'Comparable supported local task observations plus declared overhead do not guarantee future duration or billing.';
   return {
     status: late ? 'constraints-unmet' : 'planned',
     reason: late ? 'estimated-deadline' : null,
@@ -992,15 +1275,14 @@ function summarizePlan(
         work_id: work.id,
         reason: 'handoff-overhead-at-least-work-time; consider merging tightly coupled work',
       })),
-    trials:
-      trials.length && trialEstimate
-        ? { work_ids: [...trials], estimate: trialEstimate, requirement: TRIAL_REQUIREMENT }
-        : null,
+    trials: trials.length
+      ? { work_ids: [...trials], estimate: trialEstimate ?? null, requirement: TRIAL_REQUIREMENT }
+      : null,
     method:
       'Greedy adequate-route planning with a bounded parallelism premium and cheapest-remaining budget reserve; not a global optimum proof.',
-    estimate_basis: trials.length
-      ? 'Comparable supported local task observations plus declared overhead; trial assignments use the declared trial_estimate, not observations. Not a guaranteed future duration or bill.'
-      : 'Comparable supported local task observations plus declared overhead; not a guaranteed future duration or bill.',
+    estimate_basis: assignments.some((item) => item.cost_basis === 'api-equivalent-estimate')
+      ? `${estimateBasis} Some costs are token-derived API equivalents, not actual account charges.`
+      : estimateBasis,
     automatic_execution: false,
   };
 }

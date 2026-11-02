@@ -116,6 +116,153 @@ const call = async (rpc: Rpc, name: string, args: unknown) => {
   };
 };
 
+test('packaged MCP runs evaluator benchmark claims and scoring with no provider or peer service', async (t) => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'hakengaisya-benchmark-mcp-'));
+  const rpc = server(t, { HAKENGAISYA_WORKSPACE: workspace });
+  const spec = JSON.parse(
+    await readFile(path.join(root, 'packages/evaluator/fixtures/benchmark-smoke.json'), 'utf8'),
+  );
+  const database_file = path.join(workspace, 'benchmark.sqlite');
+  const run_id = 'mcp-benchmark';
+  const created = await call(rpc, 'hakengaisya_benchmark_create', {
+    database_file,
+    run_id,
+    request: spec,
+  });
+  assert.equal(created.isError, false);
+  const next = await call(rpc, 'hakengaisya_benchmark_next', { database_file, run_id });
+  assert.equal(next.isError, false);
+  const handoff = next.value as unknown as {
+    attempt_id: string;
+    benchmark_hash: string;
+    task: object;
+    candidate: { model: string; route: string; effort: string; configuration_ref: string };
+    environment: { id: string };
+  };
+  assert.equal(Object.hasOwn(handoff.task, 'criteria'), false);
+  const claim = {
+    run_id,
+    attempt_id: handoff.attempt_id,
+    benchmark_hash: handoff.benchmark_hash,
+    binding: {
+      model: handoff.candidate.model,
+      route: handoff.candidate.route,
+      effort: handoff.candidate.effort,
+      configuration_ref: handoff.candidate.configuration_ref,
+      environment_id: handoff.environment.id,
+      context_id: 'fixture-mcp-context',
+      identity_evidence: 'Synthetic MCP fixture identity.',
+    },
+  };
+  const claimed = await call(rpc, 'hakengaisya_benchmark_claim', {
+    database_file,
+    run_id,
+    request: claim,
+  });
+  assert.equal(claimed.isError, false);
+  const receipt = claimed.value as unknown as { claim_hash: string; dispatch_allowed: boolean };
+  assert.equal(receipt.dispatch_allowed, true);
+  const completion = await call(rpc, 'hakengaisya_benchmark_complete', {
+    database_file,
+    run_id,
+    request: {
+      ...claim,
+      claim_hash: receipt.claim_hash,
+      status: 'completed',
+      output: { total_cents: 2200 },
+      usage: { input_tokens: 100, output_tokens: 10, cost_usd: null, wall_seconds: 1 },
+      cost_basis: 'unknown',
+      cost_reference: null,
+      evidence_reference: 'Deterministic fixture result; no model invoked.',
+      failure_reason: null,
+    },
+  });
+  assert.equal(completion.isError, false);
+  const reported = await call(rpc, 'hakengaisya_benchmark_report', { database_file, run_id });
+  assert.equal(reported.isError, false);
+  const report = reported.value as unknown as {
+    recorded_attempts: number;
+    observed_frontier: unknown[];
+    complete: boolean;
+  };
+  assert.equal(report.recorded_attempts, 1);
+  assert.equal(report.complete, false);
+  assert.deepEqual(report.observed_frontier, []);
+});
+
+test('integrated MCP plans a sourced route before creating a run', async (t) => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'hakengaisya-integrated-mcp-'));
+  const rpc = server(t, { HAKENGAISYA_WORKSPACE: workspace });
+  const request = {
+    brief: {
+      run_id: 'mcp-integrated-fixture',
+      objective: 'Deliver a fixture.',
+      domain: 'software-engineering',
+      lead_context: '/host',
+      evidence_kind: 'simulation',
+      constraints: [],
+      acceptance: ['Checked.'],
+      planning_limits: { max_parallel: 1, max_workers: 1 },
+      work_items: [work('fixture')],
+    },
+    inventory: {
+      complete: true,
+      routes: [
+        {
+          id: 'worker',
+          model_id: 'fixture-model',
+          route: 'native',
+          effort: 'low',
+          available: true,
+          tools_verified: true,
+          tools: [],
+        },
+      ],
+    },
+    public_trials: { enabled: true, max_assignments: 1 },
+    external_evidence: [
+      {
+        model_id: 'fixture-model',
+        route: 'native',
+        effort: 'low',
+        task: {
+          domain: 'software-engineering',
+          task_type: 'implementation',
+          difficulty: 'routine',
+          skill: 'implementation',
+        },
+        source: {
+          url: 'https://example.com/fixture',
+          title: 'Fixture',
+          accessed_at: '2026-10-27T00:00:00Z',
+        },
+        assessment: { kind: 'qualitative', summary: 'Fixture only.', trial_fit: 'supports' },
+        estimates: {
+          kind: 'unobserved_estimate',
+          cost_usd: 0.01,
+          wall_seconds: 10,
+          basis: 'Fixture estimate.',
+        },
+      },
+    ],
+  };
+  const planned = await call(rpc, 'hakengaisya_integrated_plan', { request });
+  assert.equal(planned.isError, false);
+  const value = planned.value as unknown as {
+    status: string;
+    plan: { assignments: { model_id: string; qualification: string }[] };
+  };
+  assert.equal(value.status, 'planned');
+  assert.equal(value.plan.assignments[0].model_id, 'fixture-model');
+  assert.equal(value.plan.assignments[0].qualification, 'trial');
+  const created = await call(rpc, 'hakengaisya_integrated_create', {
+    run_file: 'integrated.json',
+    request,
+  });
+  assert.equal(created.isError, false);
+  assert.equal((created.value as unknown as { created: boolean }).created, true);
+});
+
 test('the workflow plugin exposes the controller as MCP tools and persists an atomic event batch', async (t) => {
   const workspace = await mkdtemp(path.join(tmpdir(), 'hakengaisya-mcp-'));
   const rpc = server(t, { HAKENGAISYA_WORKSPACE: workspace });

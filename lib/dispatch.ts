@@ -52,6 +52,19 @@ export function prepareDispatch(run: Run, packetId: string) {
     required_tools: structuredClone(packet.required_tools ?? []),
     inputs,
     route_qualification: packet.qualification ?? null,
+    route_trial_basis:
+      run.dispatch_plan?.assignments.find((item) => item.work_id === packet.source_work_id)
+        ?.trial_basis ?? null,
+    route_trial_sources: structuredClone(
+      run.dispatch_plan?.assignments.find((item) => item.work_id === packet.source_work_id)
+        ?.trial_sources ?? [],
+    ),
+    route_cost_basis:
+      run.dispatch_plan?.assignments.find((item) => item.work_id === packet.source_work_id)
+        ?.cost_basis ?? null,
+    route_wall_basis:
+      run.dispatch_plan?.assignments.find((item) => item.work_id === packet.source_work_id)
+        ?.wall_basis ?? null,
     improvement: structuredClone(run.improvement ?? { enabled: false }),
     preset: structuredClone(run.preset ?? null),
     model_binding: {

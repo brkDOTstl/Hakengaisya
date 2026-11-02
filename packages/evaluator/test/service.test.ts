@@ -59,8 +59,26 @@ function report(overrides: Partial<Report> = {}): Report {
 async function harness(t: TestContext) {
   const store = new Store(':memory:');
   const server = createApp(store);
-  server.listen(0, '127.0.0.1');
-  await once(server, 'listening');
+  for (let attempt = 0; ; attempt += 1) {
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}/`);
+      await response.arrayBuffer();
+      break;
+    } catch (error) {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      if (
+        !(error instanceof TypeError) ||
+        (error.cause as Error)?.message !== 'bad port' ||
+        attempt >= 15
+      ) {
+        store.close();
+        throw error;
+      }
+    }
+  }
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const keys = generateKeyPairSync('ed25519');
   store.enroll({

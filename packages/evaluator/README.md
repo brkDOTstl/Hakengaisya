@@ -6,6 +6,8 @@ This package lives in [the public Hakengaisya suite](https://github.com/brkDOTst
 
 The purpose is to use an adequate, inexpensive, fast model for routine work and reserve stronger models for tasks that actually need their abilities. Scores describe a skill in a task context. They are not disciplinary ratings or automatic dismissal rules.
 
+Unreleased development extends this same evaluator with [custom workload benchmarks](docs/custom-benchmarks.md): frozen user-curated tasks, comparable host-executed candidate attempts, objective structured-output grading, and per-task/category quality, cost and time comparisons. Try `npm run example:benchmark` for a fully local deterministic fixture. The evaluator CLI is independently usable; the company plugin also exposes these tools. Benchmark evidence remains distinct from real-work peer ratings and is currently advisory.
+
 The workflow's [optional DEI Agent Review](../../docs/model-participation.md) is a separate local management-policy score. It is not part of D1-D6, does not lower technical capability and has no upload endpoint in this evaluator. Keep local dispatch journals and model participation records out of technical report payloads.
 
 ## Run locally

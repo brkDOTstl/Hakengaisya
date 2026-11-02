@@ -791,6 +791,14 @@ function applyReview(draft: Draft, packet: Packet, event: ReviewEvent): void {
     'A producer cannot accept its own packet',
   );
   check(['accepted', 'rejected'].includes(event.decision), 'Review must accept or reject');
+  check(
+    (event.reviewer_model === undefined) === (event.reviewer_identity_evidence === undefined),
+    'Reviewer model and identity evidence must be supplied together',
+  );
+  if (event.reviewer_model !== undefined) {
+    requireText(event.reviewer_model, 'Reviewer model');
+    requireText(event.reviewer_identity_evidence, 'Reviewer identity evidence');
+  }
   requireGateChecks(packet, event.checks);
   const passed = event.checks.every((item) => item.result === 'pass');
   const accepted = event.decision === 'accepted';
@@ -874,6 +882,8 @@ function applyTyped(draft: Draft, packet: Packet, event: WorkflowEvent): void {
     case 'reopen':
       applyReopen(draft, packet, event);
       break;
+    case 'replan':
+      throw new Error('Use the validated integrated replan command');
   }
 }
 

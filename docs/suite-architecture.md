@@ -10,6 +10,8 @@ Hakengaisya-evaluator is the independently installable skill-feedback component.
 
 The recorder can be installed in Codex without the company workflow plugin. It can also be adapted to another host. It does not assign implementation workers, control a project, or claim that the final product passed acceptance.
 
+The evaluator is also the home of [custom workload benchmarking](../packages/evaluator/docs/custom-benchmarks.md). Real-work reviews and controlled task comparisons answer the same model-fit question with different evidence. Its first local benchmark slice freezes curated task/rubric/candidate versions, receives host-bound attempts, grades structured outputs and compares quality/cost/time. Raw tasks/results use a separate local benchmark database; they are not uploaded as peer reports. Benchmark creation, subjective judging/calibration, sufficient-sample qualification and integration into staffing remain staged work. The company CLI/MCP delegates benchmark operations to this evaluator module rather than creating another evaluation service.
+
 ## Company workflow plugin
 
 Hakengaisya itself is the company-structure workflow component. It adapts the calling concepts explored in oh-my-openagent into explicit responsibility, delegation, dependency, audit, and delivery rules. Its purpose is an organized execution process with accountable handoffs.
@@ -28,8 +30,8 @@ Delegation follows authority rules. Execution order follows task dependencies. R
 
 Company topology, task contracts, state transitions, budget decisions, independent review, and final integration are separate from the number of workers launched. The workflow can use one worker for a small task or several teams for a larger task while applying the same ownership and acceptance rules.
 
-## Optional connection
+## Integrated connection
 
-The company workflow can read the evaluator's capability and cost API when making assignments. Participants can record their peer observations through the independent recorder after work. Evaluation transport is advisory and must not become a required delivery gate: an offline evaluation service does not block implementation or invalidate actual test results.
+The integrated entry point joins an explicit host inventory with loopback evaluator profiles, historical references and separately labeled public trial evidence before a run is created. Reviewed outcomes can be retained locally and submitted to a matching configured evaluator identity; API-equivalent cost observations are separate from billing and capability scores. The optional Harness2 driver supplies bounded host requests and only registered, accepted, scope-matched experience can enter a later advisory dispatch. These modules retain their distinct contracts and data. When evaluation is unavailable, the integrated path reports missing research/evidence rather than silently inheriting a model; user-authorized sourced trials remain possible.
 
 The software and technical-product templates remain the active initial phase. Education remains deferred. Version 0.3 includes the company skill and a persisted local run controller. It validates scheduling and acceptance transitions, while the native host executes agents and inspects evidence. Installation of the evaluator recorder does not install the company plugin or establish company workflow execution. See [the controller boundary](workflow-architecture.md).

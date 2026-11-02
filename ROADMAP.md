@@ -1,6 +1,6 @@
 # Hakengaisya roadmap
 
-Updated: 2026-10-24. Current suite version: **0.8.8**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**.
+Updated: 2026-10-28. Current released suite version: **0.8.8**. Current milestone: **complete researched workflow presets, scale variants and same-host agency coordination**, with an unreleased integrated staffing and learning path and evaluator benchmark foundation in development.
 
 Hakengaisya should organize real work through an explicit superior-subordinate responsibility chain, finish independent work in useful parallel batches, and select adequate model/tool combinations without wasting cost. The evaluator supplies contextual skill observations; each responsible supervisor retains delivery acceptance.
 
@@ -33,6 +33,24 @@ Stay on 0.8.x until preset completion. Patch numbers identify delivered incremen
 The earlier Pomodoro trial was real and exposed excessive coordination overhead. It does not validate the newer hierarchy/composition system as a full real-game or multi-project workflow.
 
 ## Current work and immediate order
+
+### Integrated staffing and learning path, unreleased
+
+- Connect explicit complete host inventory to local evaluator profiles and separately labeled historical/public evidence. Sourced cold-start assignments remain bounded trials; incomplete inventory, missing evidence and unknown costs do not become an inherited-default launch.
+- Bind the selected model/effort before host execution; record independent review and route feedback to a private local queue and explicitly configured loopback evaluator. API-equivalent estimates remain separate from actual billing and can be used only under an explicit freshness-limited policy.
+- Prepare and adopt versioned supervisor-approved remaining-work replans without erasing accepted artifacts, earlier attempts, limits or context bindings.
+- Connect explicitly enabled Harness2 jobs through model-mediated next/claim/complete steps, source snapshots, supervisor adoption, ordinary task review and explicit scope-matched experience reuse. Unknown costs cannot establish savings; no background optimizer or provider call runs by default.
+- Local validation includes an isolated real evaluator service, existing historical records read through a protected copy, a bounded native-agent execution and real pinned Harness2 core steps. The native host still mediates calls; same-conversation probes are not independent comparisons, an unchanged candidate was rejected, and no actual cost/quality improvement or installed-client automatic invocation is established.
+
+### Evaluator custom workload benchmarks, unreleased
+
+Extend the existing evaluator from observed peer reviews to controlled comparisons on user-specific work. The objective remains contextual model suitability, quality, cost and time. Keep benchmark provenance distinct from real-work observations while presenting both as evidence for future staffing advice. See [the design and current CLI/MCP slice](packages/evaluator/docs/custom-benchmarks.md).
+
+- B01 foundation: implemented frozen manually curated structured-output tasks, model/route/effort configurations, candidate/repeat matrix, single-claim host handoffs, immutable results, deterministic JSON grading, per-category evidence and same-cost-basis observed frontier. Local fixtures and concurrent subprocess claims validate this slice; no actual model comparison or measured savings is claimed.
+- B02 planned: build and review tasks from approved work examples/trace imports; version data, task categories, rubrics and development/holdout sets.
+- B03 planned: executable artifact graders, blind rubric/pairwise judging, human preference calibration, judge/version provenance, uncertainty and preparation/judging costs.
+- B04 planned: explicit scoped benchmark qualification and integration into staffing alongside real-work profiles. Current benchmark reports are advisory and cannot be relabeled as `local_work` or D1-D6 scores.
+- B05 planned: controlled refresh and visual comparison, followed by actual host/model execution evidence and human acceptance. These increments do not bypass the existing 0.8 release gates or start paid model calls by default.
 
 | ID | Status | Deliverable |
 | --- | --- | --- |

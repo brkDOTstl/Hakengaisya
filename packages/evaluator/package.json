@@ -17,6 +17,8 @@
     "start": "node src/server.ts",
     "test": "node --test test/*.test.ts",
     "example": "node scripts/example.ts",
+    "benchmark": "node scripts/benchmark.ts",
+    "example:benchmark": "node scripts/benchmark-example.ts",
     "audit": "node scripts/privacy-audit.ts",
     "plugin:build": "node scripts/build-plugin.ts"
   }

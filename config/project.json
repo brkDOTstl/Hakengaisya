@@ -22,6 +22,6 @@
     "repository": "https://github.com/brkDOTstl/Hakengaisya",
     "package_path": "packages/evaluator",
     "recorder_tool": "record_evaluation",
-    "workflow_role": "optional-adapter"
+    "workflow_role": "integrated-profile-and-feedback-source-with-standalone-support"
   }
 }
