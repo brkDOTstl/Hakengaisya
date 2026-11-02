@@ -327,7 +327,9 @@ test('a second host driver cannot dispatch while the first holds its state lock'
     return handler(request, execution);
   };
   const first = driveHarness2(f.options);
-  await started;
+  // If the first driver stops before reaching the host, fail instead of waiting forever.
+  const early = await Promise.race([started.then(() => null), first]);
+  assert.equal(early, null, `First driver stopped before dispatch: ${JSON.stringify(early)}`);
   const second = await driveHarness2(f.options);
   assert.equal(second.status, 'blocked');
   assert.match(second.status === 'blocked' ? second.reason : '', /lock/);
@@ -601,6 +603,48 @@ test('model-mediated steps require a claim and preserve an idempotent response',
     'blocked',
   );
   assert.equal((await nextHarness2Step(options)).status, 'ready-for-submission');
+});
+
+// Windows resolves directories to their on-disk spelling (case, 8.3 short names such as
+// RUNNER~1), while a bridge reports whatever spelling it was given. The driver must compare
+// resolved paths, not strings, when it checks that pending requests belong to the session.
+function respelled(bridge: BridgeRunner): BridgeRunner {
+  return async (invocation) => {
+    const result = await bridge(invocation);
+    if (result.status !== 'needs-host') return result;
+    const upperDir = (value: unknown) =>
+      path.join(path.dirname(String(value)).toUpperCase(), path.basename(String(value)));
+    return {
+      ...result,
+      session: String(result.session).toUpperCase(),
+      response_directory: String(result.response_directory).toUpperCase(),
+      pending_requests: (result.pending_requests as unknown[]).map(upperDir),
+    };
+  };
+}
+
+test('pending requests reported with another Windows path spelling are still driven and claimed', {
+  skip: process.platform !== 'win32' && 'Windows path spelling only',
+}, async () => {
+  const driven = await fixture();
+  driven.options.run_bridge = respelled(driven.options.run_bridge as BridgeRunner);
+  assert.equal((await driveHarness2(driven.options)).status, 'ready-for-submission');
+
+  const f = await fixture(['edit']);
+  const options = {
+    job_file: f.jobFile,
+    state_dir: f.state,
+    run_bridge: respelled(f.options.run_bridge as BridgeRunner),
+  };
+  const pending = await nextHarness2Step(options);
+  assert.equal(pending.status, 'needs-host');
+  if (pending.status !== 'needs-host') return;
+  const claimed = await claimHarness2Request({
+    ...options,
+    session: pending.session,
+    request_id: pending.requests[0].request_id,
+  });
+  assert.equal(claimed.status, 'claimed');
 });
 
 test('a step response written without its immutable receipt remains uncertain', async () => {

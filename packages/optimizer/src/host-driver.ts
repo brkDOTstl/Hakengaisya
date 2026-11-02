@@ -297,6 +297,12 @@ async function directory(filename: string): Promise<string> {
   requireValue(stats.isDirectory() && !stats.isSymbolicLink(), 'Expected a real directory');
   return realpath(filename);
 }
+// Compare request files in the same resolved form as the directories they must sit in.
+// On Windows realpath expands 8.3 short names (RUNNER~1) that path.resolve leaves alone.
+async function resolvedFile(filename: string, label: string): Promise<string> {
+  const resolved = absolute(filename, label);
+  return path.join(await directory(path.dirname(resolved)), path.basename(resolved));
+}
 async function writeImmutable(filename: string, value: unknown): Promise<void> {
   const body = `${JSON.stringify(value, null, 2)}\n`;
   requireValue(Buffer.byteLength(body) <= MAX_RECORD_BYTES, 'Host record exceeds the size limit');
@@ -888,7 +894,7 @@ export async function driveHarness2(options: HostDriverOptions): Promise<HostDri
       requireValue((await directory(claimsDir)) === claimsDir, 'Host claim directory is not local');
       for (const candidate of pending) {
         requireValue(typeof candidate === 'string', 'Invalid pending request path');
-        const filename = absolute(candidate, 'Pending request');
+        const filename = await resolvedFile(candidate, 'Pending request');
         requireValue(
           path.dirname(filename) === requestDir &&
             /^request-[a-f0-9]{32}\.json$/.test(path.basename(filename)),
@@ -1238,7 +1244,7 @@ export async function nextHarness2Step(options: HostStepOptions): Promise<HostSt
     const requests: PendingRequest[] = [];
     for (const candidate of result.pending_requests) {
       requireValue(typeof candidate === 'string', 'Invalid pending request path');
-      const filename = absolute(candidate, 'Pending request');
+      const filename = await resolvedFile(candidate, 'Pending request');
       requireValue(
         path.dirname(filename) === paths.requests &&
           /^request-[a-f0-9]{32}\.json$/.test(path.basename(filename)),
@@ -1301,10 +1307,21 @@ export async function claimHarness2Request(options: HostClaimOptions): Promise<H
     requireValue(
       current.status === 'needs-host' &&
         current.job_id === context.job.job_id &&
-        current.session === paths.session &&
-        current.response_directory === paths.responses &&
-        Array.isArray(current.pending_requests) &&
-        current.pending_requests.includes(path.join(paths.requests, name)),
+        typeof current.session === 'string' &&
+        typeof current.response_directory === 'string' &&
+        Array.isArray(current.pending_requests),
+      'The request is no longer pending in the bridge',
+    );
+    const pending: string[] = [];
+    for (const candidate of current.pending_requests) {
+      requireValue(typeof candidate === 'string', 'Invalid pending request path');
+      pending.push(await resolvedFile(candidate, 'Pending request'));
+    }
+    requireValue(
+      (await directory(absolute(current.session, 'Session directory'))) === paths.session &&
+        (await directory(absolute(current.response_directory, 'Response directory'))) ===
+          paths.responses &&
+        pending.includes(path.join(paths.requests, name)),
       'The request is no longer pending in the bridge',
     );
     const execution =
