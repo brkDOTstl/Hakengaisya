@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "benchmark_id": "structured-work-smoke",
+  "revision": "v1",
+  "title": "Synthetic structured work comparison",
+  "evidence_kind": "simulation",
+  "source": {
+    "kind": "synthetic",
+    "reference": "Bundled fixture; no model performance observation."
+  },
+  "environment": {
+    "id": "json-only-v1",
+    "description": "Independent JSON-only tasks with no tools or external calls."
+  },
+  "repeats": 1,
+  "quality_floor": 1,
+  "limits": { "max_wall_seconds": 60, "max_output_tokens": 1000 },
+  "tasks": [
+    {
+      "id": "ledger",
+      "category": "arithmetic",
+      "prompt": "Sum signed integer cents. Return a JSON object with total_cents.",
+      "input": [2499, -499, 200],
+      "criteria": [
+        {
+          "id": "total",
+          "pointer": "/total_cents",
+          "expected": 2200,
+          "weight": 1,
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "extract",
+      "category": "extraction",
+      "prompt": "Extract the first record's id and active flag. Return exactly those two JSON fields.",
+      "input": [{ "id": "item-one", "active": false }, { "id": "item-two", "active": true }],
+      "criteria": [
+        {
+          "id": "identity",
+          "pointer": "/id",
+          "expected": "item-one",
+          "weight": 1,
+          "required": true
+        },
+        { "id": "flag", "pointer": "/active", "expected": false, "weight": 1, "required": true }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "fast",
+      "model": "fixture-fast",
+      "route": "fixture",
+      "effort": "low",
+      "configuration_ref": "Deterministic fixture v1; not an actual model."
+    },
+    {
+      "id": "careful",
+      "model": "fixture-careful",
+      "route": "fixture",
+      "effort": "standard",
+      "configuration_ref": "Deterministic fixture v1; not an actual model."
+    }
+  ]
+}

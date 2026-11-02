@@ -57,6 +57,30 @@ def save(path, value):
     os.replace(temporary, path)
 
 
+def cost_summary(responses, requests):
+    costs = [response.get("cost_usd") for response in responses]
+    kinds = {request.get("request_id"): request.get("kind") for request in requests}
+    response_ids = [response.get("request_id") for response in responses]
+    complete = (
+        bool(requests)
+        and len(responses) == len(requests)
+        and len(set(response_ids)) == len(response_ids)
+        and set(response_ids) == set(kinds)
+        and all(cost is not None for cost in costs)
+    )
+    placeholders = any(
+        response.get("cost_usd") is None
+        and kinds.get(response.get("request_id")) in ("edit", "experience")
+        for response in responses
+    )
+    return {
+        "observed_cost_usd": sum(costs) if complete else None,
+        "cost_evidence_complete": complete,
+        "upstream_cost_placeholder_used": placeholders,
+        "cost_comparison_allowed": False,
+    }
+
+
 def inspect_tree(root, *, bounded=True):
     files = {}
     for path in sorted(root.rglob("*")):
@@ -82,9 +106,18 @@ def materialize(files, root):
 def load_upstream(source):
     if source:
         checkout = Path(source).resolve()
-        result = subprocess.run(["git", "-C", str(checkout), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
+        if not checkout.is_dir():
+            raise Stop("unavailable", "The configured Harness2 upstream checkout is unavailable")
+        try:
+            result = subprocess.run(["git", "-C", str(checkout), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            raise Stop("unavailable", "Git is unavailable or timed out while checking the Harness2 checkout") from None
         require(result.returncode == 0 and result.stdout.strip() == REVISION, "Use the documented pinned Harness2 revision")
-        require(not subprocess.run(["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True, timeout=10).stdout.strip(), "The upstream checkout has tracked modifications")
+        try:
+            status = subprocess.run(["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True, timeout=10)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            raise Stop("unavailable", "Git is unavailable or timed out while checking the Harness2 checkout") from None
+        require(status.returncode == 0 and not status.stdout.strip(), "The upstream checkout has tracked modifications or could not be inspected")
         sys.path.insert(0, str(checkout))
     else:
         try:
@@ -257,8 +290,8 @@ def run(job, state, upstream):
             delivery = read_json(result.rollouts[chosen].run_dir / "result.json")
             report.update(status="ready-for-submission", outputs=[{key: item[key] for key in ("id", "reference", "summary")} for item in delivery["outputs"]], evidence=delivery["evidence"], adopted_harness=str(session / "work/harnesses" / chosen), library_entries=len(retained.entries()))
         responses = [read_json(path) for path in (session / "responses").glob("*.json")]
-        costs = [response.get("cost_usd") for response in responses]
-        report.update(host_calls=len(list((session / "requests").glob("*.json"))), observed_cost_usd=sum(costs) if costs and all(cost is not None for cost in costs) else None, automatic_model_calls=False)
+        requests = [read_json(path) for path in (session / "requests").glob("*.json")]
+        report.update(host_calls=len(requests), **cost_summary(responses, requests), automatic_model_calls=False)
         save(session / "report.json", report)
         return report
     except Stop as stop:

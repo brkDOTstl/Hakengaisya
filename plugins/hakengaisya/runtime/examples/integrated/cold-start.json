@@ -1,0 +1,105 @@
+{
+  "brief": {
+    "run_id": "integrated-synthetic-example",
+    "objective": "Deliver a bounded synthetic result.",
+    "domain": "software-engineering",
+    "lead_context": "fixture-supervisor",
+    "evidence_kind": "simulation",
+    "acceptance": ["The synthetic result is checked."],
+    "constraints": ["Fixture only; no real model or billing claim."],
+    "planning_limits": { "max_parallel": 1, "max_workers": 1 },
+    "work_items": [
+      {
+        "id": "work",
+        "objective": "Produce the synthetic result.",
+        "task_type": "implementation",
+        "difficulty": "standard",
+        "skills": ["implementation"],
+        "depends_on": [],
+        "writes": ["output"],
+        "outputs": ["result"],
+        "acceptance": ["The result matches the fixture."]
+      }
+    ]
+  },
+  "inventory": {
+    "complete": true,
+    "routes": [
+      {
+        "id": "fixture-alpha",
+        "model_id": "fixture-alpha",
+        "route": "fixture",
+        "effort": "low",
+        "available": true,
+        "tools_verified": true,
+        "tools": []
+      },
+      {
+        "id": "fixture-beta",
+        "model_id": "fixture-beta",
+        "route": "fixture",
+        "effort": "low",
+        "available": true,
+        "tools_verified": true,
+        "tools": []
+      }
+    ]
+  },
+  "public_trials": { "enabled": true, "max_assignments": 1 },
+  "external_evidence": [
+    {
+      "model_id": "fixture-alpha",
+      "route": "fixture",
+      "effort": "low",
+      "task": {
+        "domain": "software-engineering",
+        "task_type": "implementation",
+        "difficulty": "standard",
+        "skill": "implementation"
+      },
+      "source": {
+        "url": "https://example.com/fixture-alpha",
+        "title": "Synthetic source",
+        "accessed_at": "2026-10-27T00:00:00Z"
+      },
+      "assessment": {
+        "kind": "qualitative",
+        "summary": "Synthetic suitability; not a real model evaluation.",
+        "trial_fit": "supports"
+      },
+      "estimates": {
+        "kind": "unobserved_estimate",
+        "cost_usd": 0.02,
+        "wall_seconds": 20,
+        "basis": "Synthetic fixture estimate."
+      }
+    },
+    {
+      "model_id": "fixture-beta",
+      "route": "fixture",
+      "effort": "low",
+      "task": {
+        "domain": "software-engineering",
+        "task_type": "implementation",
+        "difficulty": "standard",
+        "skill": "implementation"
+      },
+      "source": {
+        "url": "https://example.com/fixture-beta",
+        "title": "Synthetic source",
+        "accessed_at": "2026-10-27T00:00:00Z"
+      },
+      "assessment": {
+        "kind": "qualitative",
+        "summary": "Synthetic suitability; not a real model evaluation.",
+        "trial_fit": "supports"
+      },
+      "estimates": {
+        "kind": "unobserved_estimate",
+        "cost_usd": 0.2,
+        "wall_seconds": 10,
+        "basis": "Synthetic fixture estimate."
+      }
+    }
+  ]
+}

@@ -91,12 +91,38 @@ export interface PlanningLimitsInput {
   unproven_routes?: string;
   trial_estimate?: TrialEstimate;
   max_trial_assignments?: number;
+  sourced_trials?: SourcedTrial[];
+  allow_api_cost_estimates?: boolean;
+  max_cost_estimate_age_days?: number;
 }
 
 // A host-declared estimate for routes that have no qualifying observations yet.
 export interface TrialEstimate {
   wall_seconds: number;
   cost_usd: number;
+}
+
+export interface SourcedTrial {
+  work_id: string;
+  worker_id: string;
+  estimate: TrialEstimate;
+  estimate_basis: string;
+  cost_basis?: 'declared-trial-estimate' | 'api-equivalent-estimate';
+  cost_evidence?: ContextCostEstimate[];
+  wall_basis?: 'declared-trial-estimate' | 'reported-local-observation';
+  sources: Array<{
+    model_id: string;
+    route: string;
+    effort: string;
+    domain: string;
+    task_type: string;
+    difficulty: string;
+    skill: string;
+    url: string;
+    title: string;
+    accessed_at: string;
+    summary: string;
+  }>;
 }
 
 export interface DimensionObservation {
@@ -129,6 +155,36 @@ export interface WorkerInput {
   tools?: string[];
   context_id?: string;
   profiles?: RouteProfile[];
+  cost_estimates?: ContextCostEstimate[];
+}
+
+export interface ContextCostEstimate {
+  context: {
+    model_id: string;
+    route: string;
+    effort: string;
+    domain: string;
+    task_type: string;
+    difficulty: string;
+    skill: string;
+    evidence_kind: 'local_work';
+  };
+  basis: 'api-equivalent-estimate';
+  estimated_cost_usd: number;
+  sample_count: number;
+  task_token_scope: string;
+  provenance: Array<{
+    task_token: string;
+    usd: number;
+    input_tokens: number;
+    output_tokens: number;
+    records: Array<{
+      record_id: string;
+      kind: 'evaluator-report' | 'operational-only';
+      usage_evidence: string;
+      source: { url: string; checked_at: string; assumptions: string };
+    }>;
+  }>;
 }
 
 export interface FailureInput {
@@ -341,10 +397,30 @@ export type ReviewEvent = EventBase & {
   decision: ReviewDecision;
   checks: CheckRecord[];
   task_checks?: CheckRecord[];
+  reviewer_model?: string;
+  reviewer_identity_evidence?: string;
 };
 export type ReasonEvent = EventBase & { type: 'block' | 'resume' | 'reopen'; reason: string };
+export interface ReplanApproval {
+  actor_context: string;
+  work_ids: string[];
+  evidence_reference: string;
+}
+export type ReplanEvent = EventBase & {
+  type: 'replan';
+  reason: string;
+  plan_before: DispatchPlan;
+  plan_after: DispatchPlan;
+  approvals: ReplanApproval[];
+};
 
-export type WorkflowEvent = AssignEvent | StartEvent | SubmitEvent | ReviewEvent | ReasonEvent;
+export type WorkflowEvent =
+  | AssignEvent
+  | StartEvent
+  | SubmitEvent
+  | ReviewEvent
+  | ReasonEvent
+  | ReplanEvent;
 export type EventType = WorkflowEvent['type'];
 
 // Later events of a batch may omit expected_revision; the controller fills it in order.
