@@ -31,6 +31,12 @@ import {
 import type { Harness2Job, Harness2Report } from './learning.ts';
 import { createHarness2Job, proposeImprovementSubmission } from './learning.ts';
 import {
+  lookupProjectMemory,
+  type ProjectMemoryCategory,
+  registerProjectMemory,
+  snapshotToBinding,
+} from './project-memory.ts';
+import {
   adoptIntegratedReplan,
   type ReplanAdoption,
   type ReplanProposal,
@@ -155,6 +161,7 @@ export async function runIntegratedReserve(
     fit_reason?: string;
     config_file?: string;
     experience?: { state_dir: string; scope: string; max_entries?: number };
+    project_memory?: { state_dir: string; scope: string; max_bytes?: number };
   }>(request);
   const loaded = input.config_file ? await loadIntegrationConfig(input.config_file) : null;
   if (loaded) check(loaded.config, 'The explicit integration configuration is unavailable');
@@ -162,6 +169,11 @@ export async function runIntegratedReserve(
   if (learning?.reuse_enabled) check(learning.scope, 'Configured experience reuse needs a scope');
   const experienceRequest =
     input.experience ??
+    (learning?.reuse_enabled && learning.scope
+      ? { state_dir: learning.state_dir, scope: learning.scope }
+      : undefined);
+  const projectMemoryRequest =
+    input.project_memory ??
     (learning?.reuse_enabled && learning.scope
       ? { state_dir: learning.state_dir, scope: learning.scope }
       : undefined);
@@ -202,24 +214,76 @@ export async function runIntegratedReserve(
         },
       },
     ]);
-    const contract = prepareDispatch(assigned, packet.id);
-    const optimizerJob = assigned.improvement?.enabled
-      ? createHarness2Job(assigned, contract)
+    let stagedAssigned = assigned;
+    let projectMemoryStatus: Record<string, unknown> = {
+      status: 'not-requested',
+      entry_ids: [],
+    };
+    const existingFrozen = assigned.bound_memory_snapshots?.[input.owner_context];
+    if (existingFrozen) {
+      let deferredDiskUpdates = false;
+      if (projectMemoryRequest && assigned.domain) {
+        const currentOnDisk = await lookupProjectMemory(
+          assigned,
+          existingFrozen.scope,
+          projectMemoryRequest.state_dir,
+          projectMemoryRequest.max_bytes,
+        );
+        deferredDiskUpdates = currentOnDisk.snapshot_sha256 !== existingFrozen.snapshot_sha256;
+      }
+      projectMemoryStatus = {
+        status: 'frozen-reused',
+        scope: existingFrozen.scope,
+        memory_id: existingFrozen.memory_id,
+        snapshot_sha256: existingFrozen.snapshot_sha256,
+        entry_ids: [...existingFrozen.entry_ids],
+        frozen_at_revision: existingFrozen.frozen_at_revision,
+        deferred_disk_updates: deferredDiskUpdates,
+      };
+    } else if (projectMemoryRequest && assigned.domain) {
+      const snapshot = await lookupProjectMemory(
+        assigned,
+        projectMemoryRequest.scope,
+        projectMemoryRequest.state_dir,
+        projectMemoryRequest.max_bytes,
+      );
+      const binding = snapshotToBinding(snapshot, assigned.revision);
+      stagedAssigned = {
+        ...assigned,
+        bound_memory_snapshots: {
+          ...assigned.bound_memory_snapshots,
+          [input.owner_context]: binding,
+        },
+      };
+      projectMemoryStatus = {
+        status: snapshot.status,
+        scope: snapshot.scope,
+        memory_id: snapshot.memory_id,
+        snapshot_sha256: snapshot.snapshot_sha256,
+        entry_ids: snapshot.entry_ids,
+        truncated: snapshot.truncated,
+        frozen_at_revision: assigned.revision,
+        deferred_disk_updates: false,
+      };
+    }
+    const contract = prepareDispatch(stagedAssigned, packet.id);
+    const optimizerJob = stagedAssigned.improvement?.enabled
+      ? createHarness2Job(stagedAssigned, contract)
       : null;
     const experience = experienceRequest
       ? await lookupAcceptedExperience(
-          assigned,
-          assigned.packets[packet.id],
+          stagedAssigned,
+          stagedAssigned.packets[packet.id],
           experienceRequest.scope,
           experienceRequest.state_dir,
           'max_entries' in experienceRequest ? experienceRequest.max_entries : undefined,
         )
       : { status: 'not-requested', entries: [] };
-    const reserved = applyEvents(assigned, [
+    const reserved = applyEvents(stagedAssigned, [
       {
         id: `reserve-${packet.id}-${packet.attempt}`,
         type: 'start',
-        expected_revision: assigned.revision,
+        expected_revision: stagedAssigned.revision,
         packet_id: packet.id,
         attempt: packet.attempt,
         actor_context: input.owner_context,
@@ -236,6 +300,7 @@ export async function runIntegratedReserve(
       contract,
       optimizer_job: optimizerJob,
       experience,
+      project_memory: projectMemoryStatus,
     };
     return reserved;
   });
@@ -608,6 +673,84 @@ export async function runExperienceLookup(
     : undefined;
   check(packet, 'Unknown packet');
   return lookupAcceptedExperience(run, packet, scope, stateDir, input.max_entries);
+}
+
+export async function runProjectMemoryRegister(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input = form<{
+    packet_id: string;
+    attempt: number;
+    scope?: string;
+    state_dir?: string;
+    config_file?: string;
+    actor_context: string;
+    evidence_reference: string;
+    entry: {
+      entry_id: string;
+      category: ProjectMemoryCategory;
+      title: string;
+      content: string;
+      supersedes_entry_id?: string;
+    };
+  }>(request);
+  const run = await readRun(resolveRunFile(run_file, base));
+  const loaded = input?.config_file ? await loadIntegrationConfig(input.config_file) : null;
+  if (loaded) check(loaded.config, 'The explicit integration configuration is unavailable');
+  const learning = loaded?.config?.learning;
+  if (input?.state_dir && learning?.state_dir) {
+    check(
+      input.state_dir === learning.state_dir,
+      'Learning state differs from explicit configuration',
+    );
+  }
+  if (input?.scope && learning?.scope) {
+    check(input.scope === learning.scope, 'Learning scope differs from explicit configuration');
+  }
+  const scope = input?.scope ?? learning?.scope;
+  const stateDir = input?.state_dir ?? learning?.state_dir;
+  check(scope && stateDir, 'Supply a project memory scope and local learning state');
+  return registerProjectMemory(run, {
+    packet_id: input.packet_id,
+    attempt: input.attempt,
+    scope,
+    state_dir: stateDir,
+    actor_context: input.actor_context,
+    evidence_reference: input.evidence_reference,
+    entry: input.entry,
+  });
+}
+
+export async function runProjectMemoryLookup(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input = form<{
+    scope?: string;
+    state_dir?: string;
+    config_file?: string;
+    max_bytes?: number;
+  }>(request);
+  const run = await readRun(resolveRunFile(run_file, base));
+  const loaded = input?.config_file ? await loadIntegrationConfig(input.config_file) : null;
+  if (loaded) check(loaded.config, 'The explicit integration configuration is unavailable');
+  const learning = loaded?.config?.learning;
+  if (input?.state_dir && learning?.state_dir) {
+    check(
+      input.state_dir === learning.state_dir,
+      'Learning state differs from explicit configuration',
+    );
+  }
+  if (input?.scope && learning?.scope) {
+    check(input.scope === learning.scope, 'Learning scope differs from explicit configuration');
+  }
+  const scope = input?.scope ?? learning?.scope;
+  const stateDir = input?.state_dir ?? learning?.state_dir;
+  check(scope && stateDir, 'Supply a project memory scope and local learning state');
+  return lookupProjectMemory(run, scope, stateDir, input?.max_bytes);
 }
 
 export async function runOptimizerHostNext(request: unknown) {

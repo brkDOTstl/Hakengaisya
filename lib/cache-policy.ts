@@ -227,7 +227,9 @@ export function summarizeCacheAndContinuity(run: Run, complete: boolean): CacheC
   let totalCachedTokens = 0;
   let totalOutputTokens = 0;
 
-  for (const { event } of run.journal) {
+  for (const entry of run.journal) {
+    const event = entry?.event;
+    if (!event) continue;
     const key = JSON.stringify([event.packet_id, event.attempt]);
     const packet = run.packets[event.packet_id];
     if (event.type === 'assign') {

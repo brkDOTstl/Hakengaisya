@@ -509,11 +509,17 @@ export interface Run {
   supervision?: Supervision;
   dispatch_plan?: DispatchPlan | null;
   bound_execution_contexts?: Record<string, string>;
-  bound_memory_snapshots?: Record<
-    string,
-    { scope: string; snapshot_sha256: string; entry_ids: string[] }
-  >;
+  bound_memory_snapshots?: Record<string, MemorySnapshotBinding>;
   routing_status?: string;
+}
+
+export interface MemorySnapshotBinding {
+  scope: string;
+  memory_id: string;
+  snapshot_sha256: string;
+  entry_ids: string[];
+  rendered_prefix: string;
+  frozen_at_revision: number;
 }
 
 export interface PresetBinding {

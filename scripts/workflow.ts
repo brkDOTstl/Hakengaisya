@@ -30,6 +30,8 @@ const usage = [
   'optimizer-save-job <run.json> <request.json>',
   'experience-register <run.json> <request.json>',
   'experience-lookup <run.json> <request.json>',
+  'project-memory-register <run.json> <request.json>',
+  'project-memory-lookup <run.json> <request.json>',
   'optimizer-snapshot <directory>',
   'optimizer-host-next <request.json>',
   'optimizer-host-claim <request.json>',
@@ -119,6 +121,16 @@ try {
     );
   else if (command === 'experience-lookup' && target && source)
     result = await commands.experience_lookup.run(
+      { run_file: target, request: await json(source) },
+      context,
+    );
+  else if (command === 'project-memory-register' && target && source)
+    result = await commands.project_memory_register.run(
+      { run_file: target, request: await json(source) },
+      context,
+    );
+  else if (command === 'project-memory-lookup' && target && source)
+    result = await commands.project_memory_lookup.run(
       { run_file: target, request: await json(source) },
       context,
     );

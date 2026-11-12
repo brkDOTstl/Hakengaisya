@@ -559,6 +559,9 @@ function draftRun(current: Run): Draft {
   if (current.bound_execution_contexts) {
     run.bound_execution_contexts = { ...current.bound_execution_contexts };
   }
+  if (current.bound_memory_snapshots) {
+    run.bound_memory_snapshots = { ...current.bound_memory_snapshots };
+  }
   const edited = new Set<string>();
   return {
     run,

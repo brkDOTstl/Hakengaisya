@@ -23,6 +23,8 @@ import {
   runOptimizerHostComplete,
   runOptimizerHostNext,
   runOptimizerSaveJob,
+  runProjectMemoryLookup,
+  runProjectMemoryRegister,
 } from './integrated-workflows.ts';
 import { createIntegrationConfig, loadIntegrationConfig } from './integration-config.ts';
 import type { Harness2Job, Harness2Report } from './learning.ts';
@@ -313,6 +315,31 @@ export const commands: Readonly<Record<string, Command>> = {
       ),
     }),
     run: ({ run_file, request }, context) => runExperienceLookup(run_file, request, context?.base),
+  },
+  project_memory_register: {
+    description:
+      'Register a supervisor-curated project engineering memory entry after an accepted packet attempt. Stored locally by (scope, evidence_kind, domain) across task types and models; never mutates frozen active context prefixes mid-run.',
+    inputSchema: schema(['run_file', 'request'], {
+      run_file: runFile,
+      request: object(
+        'Accepted packet_id/attempt, direct supervisor actor_context, evidence_reference, scope/state_dir (or config_file) and entry {entry_id, category, title, content, optional supersedes_entry_id}.',
+      ),
+    }),
+    writes: true,
+    run: ({ run_file, request }, context) =>
+      runProjectMemoryRegister(run_file, request, context?.base),
+  },
+  project_memory_lookup: {
+    description:
+      'Read the deterministic L1 project engineering memory snapshot and SHA-256 prefix hash for a run and project scope. Read-only; shared across task types while isolating simulation from local_work.',
+    inputSchema: schema(['run_file', 'request'], {
+      run_file: runFile,
+      request: object(
+        'Project scope and local state_dir (or config_file) plus optional max_bytes limit.',
+      ),
+    }),
+    run: ({ run_file, request }, context) =>
+      runProjectMemoryLookup(run_file, request, context?.base),
   },
   optimizer_snapshot: {
     description:
