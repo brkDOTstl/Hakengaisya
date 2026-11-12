@@ -1,7 +1,8 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { link, lstat, mkdir, open, realpath, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ImprovementInput } from '../packages/optimizer/src/contract.ts';
+import { canonical, sha256Digest } from './canonical.ts';
 import { prepareDispatch } from './dispatch.ts';
 import { normalizeImprovement } from './learning.ts';
 import { normalizeDei } from './participation.ts';
@@ -71,20 +72,7 @@ function identifier(value: unknown): asserts value is string {
   );
 }
 
-// Key-sorted JSON, so digests do not depend on property order.
-const canonical = (value: unknown): string => {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  if (isRecord(value)) {
-    const members = Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`);
-    return `{${members.join(',')}}`;
-  }
-  return String(JSON.stringify(value));
-};
-
-export const handoffDigest = (value: unknown): string =>
-  createHash('sha256').update(canonical(value)).digest('hex');
+export const handoffDigest = sha256Digest;
 
 function fields(value: unknown, allowed: string[]): asserts value is Record<string, unknown> {
   check(

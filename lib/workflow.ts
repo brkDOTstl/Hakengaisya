@@ -1,3 +1,9 @@
+import {
+  assertCacheReviewGate,
+  assertStrictContinuityAssignment,
+  normalizeCachePolicy,
+  validatePacketUsage,
+} from './cache-policy.ts';
 import { normalizeImprovement } from './learning.ts';
 import { agentReview, assertDeiAssignment, normalizeDei } from './participation.ts';
 import type { DispatchPlan } from './planning.ts';
@@ -234,6 +240,10 @@ function createReferenceRun(template: Template | null, brief: BriefInput): Run {
     'DEI requires task-first work_items, not a reference-template rehearsal',
   );
   check(
+    brief.cache_policy === undefined,
+    'Cache and continuity policies require task-first work_items',
+  );
+  check(
     brief.reference_workflow === true,
     'Supply work_items for task-first execution; reference_workflow:true is only for an explicit full-template rehearsal',
   );
@@ -352,6 +362,16 @@ export function createWorkRun(brief: BriefInput): Run {
         brief.planning_limits.max_workers > 0,
       'Invalid execution pool limit',
     );
+  const dei = normalizeDei(brief.dei);
+  const cachePolicy = normalizeCachePolicy(brief.cache_policy, brief.planning_limits);
+  check(
+    !(
+      dei.enabled &&
+      dei.model_ids.length > 1 &&
+      cachePolicy.continuity_mode === 'strict-single-model'
+    ),
+    'strict-single-model continuity conflicts with a multi-model DEI roster',
+  );
   const intakeTriage = validateTriageForBrief(brief);
   const graph = validateWorkGraph(brief);
   const selection = taskGraphStructure(brief, graph);
@@ -411,8 +431,9 @@ export function createWorkRun(brief: BriefInput): Run {
     artifacts: {},
     journal: [],
     intake_triage: intakeTriage,
-    dei: normalizeDei(brief.dei),
+    dei,
     improvement: normalizeImprovement(brief.improvement),
+    cache_policy: cachePolicy,
     planning_limits: structuredClone(brief.planning_limits ?? {}),
     ...(brief.preset !== undefined ? { preset: validatePresetBinding(brief.preset) } : {}),
     supervision: createSupervision(brief.lead_context, brief.reporting_lines),
@@ -634,6 +655,7 @@ function applyAssign(draft: Draft, packet: Packet, event: AssignEvent): void {
   );
   const input = event.assignment;
   assertDeiAssignment(run.dei, input ?? {});
+  assertStrictContinuityAssignment(run, packet, input ?? {});
   requireText(input?.owner_context, 'Owner context');
   requireText(input?.reviewer_context, 'Reviewer context');
   check(
@@ -728,6 +750,7 @@ function applySubmit(draft: Draft, packet: Packet, event: SubmitEvent): void {
     requireText(item.reference, 'Evidence reference');
     requireText(item.summary, 'Evidence summary');
   }
+  const usage = event.usage !== undefined ? validatePacketUsage(event.usage) : undefined;
   packet.result = {
     outputs: event.outputs,
     evidence: event.evidence,
@@ -735,6 +758,7 @@ function applySubmit(draft: Draft, packet: Packet, event: SubmitEvent): void {
     ...(draft.run.supervision && packet.supervisor_context
       ? { reports_to: packet.supervisor_context }
       : {}),
+    ...(usage ? { usage } : {}),
   };
   packet.status = 'in_review';
 }
@@ -805,7 +829,10 @@ function applyReview(draft: Draft, packet: Packet, event: ReviewEvent): void {
   check(!accepted || passed, 'Failed or unverified checks cannot pass a gate');
   check(accepted || !passed, 'Rejection must identify a failed or unverified check');
   const finalAcceptance = packet.id === TERMINAL_PACKET && accepted;
-  if (finalAcceptance) requireUserAcceptance(run, event.task_checks);
+  if (finalAcceptance) {
+    requireUserAcceptance(run, event.task_checks);
+    assertCacheReviewGate(run, true);
+  }
   packet.review = {
     reviewer_context: event.actor_context,
     decision: event.decision,
@@ -813,7 +840,16 @@ function applyReview(draft: Draft, packet: Packet, event: ReviewEvent): void {
     task_checks: event.task_checks ?? [],
     attempt: packet.attempt,
   };
-  if (finalAcceptance && run.dei?.enabled) packet.review.agent_review = agentReview(run, true);
+  if (
+    finalAcceptance &&
+    (run.dei?.enabled ||
+      run.cache_policy?.target_cache_hit_rate !== null ||
+      run.cache_policy?.minimum_cache_hit_rate !== null ||
+      run.cache_policy?.enforce_cache_gate === true ||
+      (run.cache_policy !== undefined && run.cache_policy.continuity_mode !== 'sticky'))
+  ) {
+    packet.review.agent_review = agentReview(run, true);
+  }
   if (!accepted) {
     reopen(draft, packet.rework_to, `Rejected ${packet.id} attempt ${packet.attempt}`);
     return;

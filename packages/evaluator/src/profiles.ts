@@ -161,6 +161,18 @@ export function buildProfiles(rows: ReportRow[], registry: RegistryEntry[] = [])
     const usage = new Map<string, Usage>();
     for (const row of samples)
       usage.set(canonical([row.collection_id, row.report.task_token]), row.report.usage);
+    const cacheSamples = [...usage.values()].filter(
+      (item) =>
+        item.input_tokens !== null &&
+        item.input_tokens > 0 &&
+        item.cached_input_tokens !== undefined &&
+        item.cached_input_tokens !== null,
+    );
+    const cacheInputTotal = cacheSamples.reduce((sum, item) => sum + Number(item.input_tokens), 0);
+    const cacheHitTotal = cacheSamples.reduce(
+      (sum, item) => sum + Number(item.cached_input_tokens),
+      0,
+    );
     return {
       ...profile,
       dimensions,
@@ -175,6 +187,8 @@ export function buildProfiles(rows: ReportRow[], registry: RegistryEntry[] = [])
           .map((item) => item.wall_seconds)
           .filter((value): value is number => value !== null),
       ),
+      observed_cache_hit_rate:
+        cacheInputTotal > 0 ? Math.round((cacheHitTotal / cacheInputTotal) * 10000) / 10000 : null,
       guidance: samples.map((row) => ({
         report_id: row.report.report_id,
         comment: row.report.comment,
@@ -286,6 +300,7 @@ export function displayRanking(profiles: Profile[]): DisplayRow[] {
         ),
         cost_usd: first.observed_cost_usd,
         wall_seconds: first.observed_wall_seconds,
+        cache_hit_rate: first.observed_cache_hit_rate,
         use: 'Optional human display only; dispatch uses detailed profiles.',
       };
     })

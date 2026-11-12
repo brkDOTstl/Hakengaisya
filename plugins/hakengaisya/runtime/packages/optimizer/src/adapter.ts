@@ -1,27 +1,10 @@
-import { createHash } from 'node:crypto';
+import { canonical, sha256Digest } from '../../../lib/canonical.ts';
 import type { prepareDispatch } from '../../../lib/dispatch.ts';
 import type { ArtifactReference, EvidenceReference, Run, SubmitEvent } from '../../../lib/types.ts';
 import { check } from '../../../lib/validate.ts';
 import { HARNESS2, normalizeImprovement } from './contract.ts';
 
-function canonical(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  if (value !== null && typeof value === 'object') {
-    const record = value as Record<string, unknown>;
-    return (
-      '{' +
-      Object.keys(record)
-        .sort()
-        .map((key) => `${JSON.stringify(key)}:${canonical(record[key])}`)
-        .join(',') +
-      '}'
-    );
-  }
-  return JSON.stringify(value) ?? 'null';
-}
-const digest = (value: unknown): string =>
-  createHash('sha256').update(canonical(value)).digest('hex');
-
+const digest = sha256Digest;
 export function createHarness2Job(
   run: Run,
   dispatch: ReturnType<typeof prepareDispatch>,

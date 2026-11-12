@@ -20,6 +20,7 @@ export interface CostProvenance {
   task_token: string;
   usd: number;
   input_tokens: number;
+  cached_input_tokens: number | null;
   output_tokens: number;
   records: Array<{
     record_id: string;
@@ -35,6 +36,7 @@ export interface CostEstimate {
   basis: 'api-equivalent-estimate';
   estimated_cost_usd: number;
   sample_count: number;
+  observed_cache_hit_rate: number | null;
   provenance: CostProvenance[];
 }
 
@@ -69,6 +71,7 @@ interface CostRow {
   skills: string[];
   usd: number;
   input_tokens: number;
+  cached_input_tokens: number | null;
   output_tokens: number;
   record: CostProvenance['records'][number];
 }
@@ -168,6 +171,9 @@ function parseRecord(value: unknown, fileId: string): Parsed {
       report.usage.cost_usd !== null
     )
       return { status: 'unknown' };
+    const cached = report.usage.cached_input_tokens ?? null;
+    if (cached !== null && (!tokens(cached) || cached > report.usage.input_tokens))
+      return { status: 'unknown' };
     const reference = source(price.source);
     if (!reference) return { status: 'unknown' };
     return {
@@ -181,6 +187,7 @@ function parseRecord(value: unknown, fileId: string): Parsed {
         ...task,
         usd: price.usd,
         input_tokens: report.usage.input_tokens,
+        cached_input_tokens: cached,
         output_tokens: report.usage.output_tokens,
         record: {
           record_id: fileId,
@@ -223,6 +230,9 @@ function parseRecord(value: unknown, fileId: string): Parsed {
     !reference
   )
     return { status: 'unknown' };
+  const rawCached = record.usage.cached_input_tokens ?? null;
+  if (rawCached !== null && (!tokens(rawCached) || rawCached > record.usage.input_tokens))
+    return { status: 'unknown' };
   return {
     status: 'eligible',
     row: {
@@ -234,6 +244,7 @@ function parseRecord(value: unknown, fileId: string): Parsed {
       ...task,
       usd: record.usage.cost_usd,
       input_tokens: record.usage.input_tokens,
+      cached_input_tokens: rawCached,
       output_tokens: record.usage.output_tokens,
       record: {
         record_id: fileId,
@@ -348,6 +359,9 @@ export async function readCostObservations(
           identity(row) !== identity(first) ||
           row.usd !== first.usd ||
           row.input_tokens !== first.input_tokens ||
+          (row.cached_input_tokens !== null &&
+            first.cached_input_tokens !== null &&
+            row.cached_input_tokens !== first.cached_input_tokens) ||
           row.output_tokens !== first.output_tokens,
       )
     ) {
@@ -379,23 +393,36 @@ export async function readCostObservations(
           basis: 'api-equivalent-estimate',
           estimated_cost_usd: 0,
           sample_count: 0,
+          observed_cache_hit_rate: null,
           provenance: [],
         };
         contexts.set(key, estimate);
       }
+      const cached =
+        copies.find((row) => row.cached_input_tokens !== null)?.cached_input_tokens ?? null;
       estimate.sample_count++;
       estimate.estimated_cost_usd += first.usd;
       estimate.provenance.push({
         task_token: taskToken,
         usd: first.usd,
         input_tokens: first.input_tokens,
+        cached_input_tokens: cached,
         output_tokens: first.output_tokens,
         records: copies.map((row) => row.record),
       });
     }
   }
   const estimates = [...contexts.values()];
-  for (const estimate of estimates) estimate.estimated_cost_usd /= estimate.sample_count;
+  for (const estimate of estimates) {
+    estimate.estimated_cost_usd /= estimate.sample_count;
+    const withCache = estimate.provenance.filter(
+      (item) => item.cached_input_tokens !== null && item.input_tokens > 0,
+    );
+    const totalIn = withCache.reduce((sum, item) => sum + item.input_tokens, 0);
+    const totalCached = withCache.reduce((sum, item) => sum + Number(item.cached_input_tokens), 0);
+    estimate.observed_cache_hit_rate =
+      totalIn > 0 ? Math.round((totalCached / totalIn) * 10000) / 10000 : null;
+  }
   const partial =
     diagnostics.unknown_records > 0 ||
     diagnostics.malformed_records > 0 ||

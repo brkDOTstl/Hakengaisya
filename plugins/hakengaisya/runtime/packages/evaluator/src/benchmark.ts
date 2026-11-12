@@ -63,6 +63,7 @@ export interface BenchmarkResult extends BenchmarkClaim {
   output: JsonValue;
   usage: {
     input_tokens: number | null;
+    cached_input_tokens?: number | null;
     output_tokens: number | null;
     cost_usd: number | null;
     wall_seconds: number | null;
@@ -282,11 +283,23 @@ export function validateBenchmarkResult(
     ['completed', 'failed', 'interrupted'].includes(result.status),
     'Unknown attempt result status',
   );
-  object(result.usage, ['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds']);
+  object(
+    result.usage,
+    ['input_tokens', 'cached_input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'],
+    ['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'],
+  );
   for (const [key, value] of Object.entries(result.usage)) {
+    if (value === undefined) continue;
     if (value !== null) finite(value);
     if (key.endsWith('_tokens'))
       assert(value === null || Number.isInteger(value), 'Token counts must be integers');
+  }
+  if (result.usage.cached_input_tokens !== undefined && result.usage.cached_input_tokens !== null) {
+    assert(
+      result.usage.input_tokens !== null &&
+        result.usage.cached_input_tokens <= result.usage.input_tokens,
+      'Cached input tokens cannot exceed input tokens',
+    );
   }
   assert(
     ['actual-billed', 'api-equivalent-estimate', 'fixture', 'unknown'].includes(result.cost_basis),
@@ -395,6 +408,17 @@ export function summarizeBenchmark(spec: BenchmarkSpec, results: BenchmarkResult
         (item) =>
           item.result.usage.wall_seconds !== null && item.result.usage.output_tokens !== null,
       );
+    const cacheKnown =
+      items.length === expected &&
+      items.every(
+        (item) =>
+          item.result.usage.input_tokens !== null &&
+          item.result.usage.cached_input_tokens !== undefined &&
+          item.result.usage.cached_input_tokens !== null,
+      );
+    const totalInputTokens = cacheKnown
+      ? items.reduce((total, item) => total + Number(item.result.usage.input_tokens), 0)
+      : 0;
     const meanScore = items.length
       ? items.reduce((total, item) => total + item.grade.score, 0) / items.length
       : null;
@@ -421,6 +445,17 @@ export function summarizeBenchmark(spec: BenchmarkSpec, results: BenchmarkResult
         ? items.reduce((total, item) => total + Number(item.result.usage.wall_seconds), 0) /
           expected
         : null,
+      cache_hit_rate:
+        cacheKnown && totalInputTokens > 0
+          ? Math.round(
+              (items.reduce(
+                (total, item) => total + Number(item.result.usage.cached_input_tokens),
+                0,
+              ) /
+                totalInputTokens) *
+                10000,
+            ) / 10000
+          : null,
       meets_observed_floor:
         items.length === expected &&
         limitsKnown &&

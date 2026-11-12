@@ -1,4 +1,5 @@
-import { createHash } from 'node:crypto';
+import { assertStrictContinuityAssignment } from './cache-policy.ts';
+import { canonicalEqual, sha256Digest } from './canonical.ts';
 import {
   externalTrials,
   type IntegratedPlan,
@@ -58,19 +59,21 @@ export type ReplanResult =
   | { status: 'adopted'; run: Run; event: ReplanEvent; changed_work_ids: string[] }
   | { status: 'needs-evidence' | 'constraints-unmet' | 'no-change'; reason: string };
 
-function canonical(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  if (isRecord(value))
-    return `{${Object.keys(value)
-      .filter((key) => value[key] !== undefined)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`)
-      .join(',')}}`;
-  return JSON.stringify(value) ?? 'null';
-}
+const digest = sha256Digest;
+const equal = canonicalEqual;
 
-const digest = (value: unknown) => createHash('sha256').update(canonical(value)).digest('hex');
-const equal = (a: unknown, b: unknown) => canonical(a) === canonical(b);
+function runStateDigest(run: Run): string {
+  return digest({
+    ...run,
+    journal: run.journal.map((entry) => [
+      entry.revision,
+      entry.event.id,
+      entry.event.type,
+      entry.event.packet_id,
+      entry.event.attempt,
+    ]),
+  });
+}
 const validNumber = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0;
 const active = (packet: Packet) => ['running', 'in_review', 'blocked'].includes(packet.status);
@@ -168,7 +171,9 @@ function originalBrief(run: Run): BriefInput {
       `External input ${key} differs from its original contract`,
     );
   check(
-    equal(run.dei, baseline.dei) && equal(run.improvement, baseline.improvement),
+    equal(run.dei, baseline.dei) &&
+      equal(run.improvement, baseline.improvement) &&
+      (run.cache_policy === undefined || equal(run.cache_policy, baseline.cache_policy)),
     'Run policy differs from its original contract',
   );
   for (const field of ['budget_usd', 'deadline_seconds'] as const)
@@ -329,6 +334,19 @@ function remainingBrief(run: Run, original: BriefInput, progress?: ObservedProgr
       limits.max_workers ?? run.planning_limits.max_workers,
       run.planning_limits.max_workers,
     );
+  const warmContextKeys = new Set<string>(limits.warm_context_keys ?? []);
+  const incumbentModels = new Set<string>(limits.incumbent_model_ids ?? []);
+  for (const completedId of completed) {
+    const completedPacket = byWork.get(completedId);
+    const priorAdvice = run.dispatch_plan.assignments.find((item) => item.work_id === completedId);
+    if (priorAdvice?.context_key) warmContextKeys.add(priorAdvice.context_key);
+    if (!completedPacket?.audit_sources?.length) {
+      const usedModel = completedPacket?.assignment?.model_id ?? priorAdvice?.model_id;
+      if (isText(usedModel)) incumbentModels.add(usedModel);
+    }
+  }
+  if (warmContextKeys.size > 0) limits.warm_context_keys = [...warmContextKeys];
+  if (incumbentModels.size > 0) limits.incumbent_model_ids = [...incumbentModels];
   return {
     ...structuredClone(original),
     work_items: pending,
@@ -389,7 +407,7 @@ export async function prepareIntegratedReplan(
     checkTrialCap(run, original, prepared.plan as ScheduledPlan);
     const proposal = {
       expected_revision: run.revision,
-      state_hash: digest(run),
+      state_hash: runStateDigest(run),
       original_brief_hash: digest(original),
       remaining_brief: brief,
       prepared,
@@ -409,6 +427,8 @@ function comparableBrief(brief: BriefInput): BriefInput {
     delete clean.planning_limits.sourced_trials;
     delete clean.planning_limits.max_trial_assignments;
     delete clean.planning_limits.trial_estimate;
+    delete clean.planning_limits.warm_context_keys;
+    delete clean.planning_limits.incumbent_model_ids;
   }
   return clean;
 }
@@ -447,7 +467,9 @@ export function adoptIntegratedReplan(
   adoption: ReplanAdoption,
 ): ReplanResult {
   check(
-    proposal && proposal.expected_revision === run.revision && proposal.state_hash === digest(run),
+    proposal &&
+      proposal.expected_revision === run.revision &&
+      proposal.state_hash === runStateDigest(run),
     'Stale run revision or changed run snapshot',
   );
   const { proposal_hash, ...contents } = proposal;
@@ -678,40 +700,53 @@ export function adoptIntegratedReplan(
       !run.journal.some((entry) => entry.event.id === event.id),
       'Replan event identifier already exists',
     );
-    const updated = structuredClone(run);
+    const nextPackets: Record<string, Packet> = { ...run.packets };
     for (const id of remainingIds) {
-      const packet = updated.packets[(byWork.get(id) as Packet).id];
+      const targetId = (byWork.get(id) as Packet).id;
+      const packet = structuredClone(run.packets[targetId]);
       const old = oldById.get(id);
       const selected = newById.get(id) as PlannedAssignment;
+      assertStrictContinuityAssignment(run, packet, { model_id: selected.model_id });
       if (old && !equal(identity(old), identity(selected))) {
         packet.assignment = null;
         delete packet.assignment_attempt;
       }
       packet.qualification = selected.qualification;
+      nextPackets[targetId] = packet;
     }
-    const previousRecords = updated.external_inputs.integrated_replan_evidence;
+    const previousRecords = run.external_inputs.integrated_replan_evidence;
     check(
       previousRecords === undefined || Array.isArray(previousRecords),
       'Invalid existing replan evidence history',
     );
-    updated.external_inputs.integrated_replan_evidence = [
-      ...(previousRecords ?? []),
-      {
-        revision: run.revision + 1,
-        original_brief_hash: proposal.original_brief_hash,
-        catalog: structuredClone(prepared.catalog),
-        progress: structuredClone(proposal.progress ?? null),
-        boundary:
-          'Host-declared inventory, evidence and observed progress require independent host verification; no model was launched.',
+    const updated: Run = {
+      ...run,
+      packets: nextPackets,
+      external_inputs: {
+        ...run.external_inputs,
+        integrated_replan_evidence: [
+          ...(previousRecords ?? []),
+          {
+            revision: run.revision + 1,
+            original_brief_hash: proposal.original_brief_hash,
+            catalog: structuredClone(prepared.catalog),
+            progress: structuredClone(proposal.progress ?? null),
+            boundary:
+              'Host-declared inventory, evidence and observed progress require independent host verification; no model was launched.',
+          },
+        ],
       },
-    ];
-    updated.dispatch_plan = combined;
-    updated.revision++;
-    updated.journal.push({
-      revision: updated.revision,
-      recorded_at: new Date().toISOString(),
-      event,
-    });
+      dispatch_plan: combined,
+      revision: run.revision + 1,
+      journal: [
+        ...run.journal,
+        {
+          revision: run.revision + 1,
+          recorded_at: new Date().toISOString(),
+          event,
+        },
+      ],
+    };
     return { status: 'adopted', run: updated, event, changed_work_ids: changed };
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Unable to adopt replan';

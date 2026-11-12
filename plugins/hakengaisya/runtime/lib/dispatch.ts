@@ -107,6 +107,7 @@ export function prepareReview(run: Run, packetId: string) {
     actor_context: assignment.reviewer_context,
     writes: [],
     agent_review_preview: packet.id === 'handover' ? agentReview(run, true) : null,
+    cache_and_continuity_preview: agentReview(run, packet.id === 'handover').cache_and_continuity,
     result: structuredClone(packet.result),
     task_acceptance: packet.id === 'handover' ? structuredClone(run.acceptance) : [],
     return_contract:

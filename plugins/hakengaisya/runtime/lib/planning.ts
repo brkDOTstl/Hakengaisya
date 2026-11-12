@@ -1,3 +1,4 @@
+import { normalizeCachePolicy } from './cache-policy.ts';
 import { normalizeImprovement } from './learning.ts';
 import { normalizeDei, reserveDeiWork } from './participation.ts';
 import { assertRegisteredSupervisor, createSupervision } from './supervision.ts';
@@ -5,6 +6,7 @@ import { validateTriageForBrief } from './triage.ts';
 import type {
   BriefInput,
   ContextCostEstimate,
+  ContinuityMode,
   DeiPolicy,
   Difficulty,
   EvidenceKind,
@@ -222,6 +224,10 @@ interface ResolvedLimits {
   trial_estimate?: TrialEstimate;
   max_trial_assignments: number;
   sourced_trials: SourcedTrial[];
+  continuity_policy: ContinuityMode;
+  warm_context_cost_discount: number;
+  warm_context_keys: string[];
+  incumbent_model_ids: string[];
 }
 
 interface KnownOverheads {
@@ -356,6 +362,17 @@ function planningLimits(brief: BriefInput): { limits: ResolvedLimits; known: Kno
     maxTrials === Number.POSITIVE_INFINITY || (Number.isInteger(maxTrials) && maxTrials > 0),
     'max_trial_assignments must be a positive integer',
   );
+  const cachePolicy = normalizeCachePolicy(brief.cache_policy, declared);
+  const warmDiscount = declared.warm_context_cost_discount ?? 0;
+  check(
+    isNonNegative(warmDiscount) && warmDiscount <= 0.95,
+    'warm_context_cost_discount must be between 0 and 0.95',
+  );
+  const warmContextKeys = requireUniqueTexts(declared.warm_context_keys ?? [], 'Warm context keys');
+  const incumbentModelIds = requireUniqueTexts(
+    declared.incumbent_model_ids ?? [],
+    'Incumbent model identifiers',
+  );
   // Defaults of zero are placeholders. Only declared overheads count toward complete estimates.
   const knownStartupCost = Object.hasOwn(declared, 'context_startup_cost_usd');
   const knownStartupTime = Object.hasOwn(declared, 'context_startup_seconds');
@@ -366,6 +383,10 @@ function planningLimits(brief: BriefInput): { limits: ResolvedLimits; known: Kno
       unproven_routes: policy as ResolvedLimits['unproven_routes'],
       max_trial_assignments: maxTrials,
       sourced_trials: sourcedTrials,
+      continuity_policy: cachePolicy.continuity_mode,
+      warm_context_cost_discount: warmDiscount,
+      warm_context_keys: warmContextKeys,
+      incumbent_model_ids: incumbentModelIds,
     },
     known: {
       startupCost: knownStartupCost,
@@ -709,8 +730,18 @@ export interface TrialSummary {
   estimate: TrialEstimate | null;
   requirement: string;
 }
+export interface PlanContinuitySummary {
+  policy: ContinuityMode;
+  execution_models: string[];
+  execution_contexts: string[];
+  context_reuses: number;
+  single_model_achieved: boolean;
+  warm_context_cost_discount: number;
+  fallback_reason: string | null;
+}
 
 export interface ScheduledPlan extends PlanAnnotations {
+  continuity?: PlanContinuitySummary;
   improvement_overhead?: { included: false; recursion_budget: 1; max_host_calls: number };
   base_dispatch_estimated_cost_usd?: number | null;
   base_dispatch_estimated_makespan_seconds?: number | null;
@@ -921,6 +952,14 @@ function prepareRouting(brief: BriefInput, workers: unknown, dei: DeiPolicy): Pr
   const graph = validateWorkGraph(brief);
   validateWorkers(workers);
   const { limits, known } = planningLimits(brief);
+  check(
+    !(
+      dei.enabled &&
+      dei.model_ids.length > 1 &&
+      limits.continuity_policy === 'strict-single-model'
+    ),
+    'strict-single-model continuity conflicts with a multi-model DEI roster',
+  );
   const { reasons, matches, exclusions, trials } = collectRoutes(
     graph,
     workers,
@@ -984,10 +1023,12 @@ function prepareRouting(brief: BriefInput, workers: unknown, dei: DeiPolicy): Pr
   const minimumSeconds = new Map(
     graph.items.map((work) => [work.id, minOf(candidatesOf(work.id).map((item) => item.seconds))]),
   );
+  const discountFactor = 1 - limits.warm_context_cost_discount;
   const minimumCost = new Map(
     graph.items.map((work) => [
       work.id,
-      minOf(candidatesOf(work.id).map((item) => item.cost)) + limits.overhead_cost_usd,
+      minOf(candidatesOf(work.id).map((item) => item.cost * discountFactor)) +
+        limits.overhead_cost_usd,
     ]),
   );
   return {
@@ -1092,6 +1133,8 @@ function chooseRoute(
   candidates: Candidate[],
   limits: ResolvedLimits,
   tailAfter: number,
+  warmContexts: Set<string>,
+  warmModels: Set<string>,
 ): Candidate {
   const deadline = limits.deadline_seconds;
   const onTime = candidates.filter(
@@ -1102,13 +1145,29 @@ function chooseRoute(
   const boundedPremium = pool.filter(
     (item) => item.cost <= cheapest * (1 + limits.parallel_cost_premium) + EPSILON,
   );
+  if (limits.continuity_policy === 'none') {
+    boundedPremium.sort(
+      (a, b) => a.end - b.end || a.cost - b.cost || a.worker_id.localeCompare(b.worker_id),
+    );
+    return boundedPremium[0];
+  }
   boundedPremium.sort(
-    (a, b) => a.end - b.end || a.cost - b.cost || a.worker_id.localeCompare(b.worker_id),
+    (a, b) =>
+      a.end - b.end ||
+      Number(warmContexts.has(b.context_key)) - Number(warmContexts.has(a.context_key)) ||
+      Number(warmModels.has(b.model_id)) - Number(warmModels.has(a.model_id)) ||
+      a.cost - b.cost ||
+      a.worker_id.localeCompare(b.worker_id),
   );
   return boundedPremium[0];
 }
 
-function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPlan {
+function scheduleForPool(
+  routing: ReadyRouting,
+  maxWorkers: number,
+  executionModelFilter?: string,
+  fallbackReason: string | null = null,
+): DispatchPlan {
   const { brief, graph, known, matches, exclusions, minimumCost, minimumSeconds, tails } = routing;
   const limits = { ...routing.limits, max_workers: maxWorkers };
   const budget = limits.budget_usd;
@@ -1127,26 +1186,43 @@ function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPla
       ]);
       let reserve = 0;
       for (const id of pending) if (id !== work.id) reserve += minimumCost.get(id) ?? 0;
-      const usedContexts = new Set(assignments.map((item) => item.context_key));
+      const poolContexts = new Set(assignments.map((item) => item.context_key));
+      const warmContexts = new Set([...limits.warm_context_keys, ...poolContexts]);
+      const warmModels = new Set([
+        ...limits.incumbent_model_ids,
+        ...assignments
+          .filter((item) => {
+            const priorWork = graph.items.find((entry) => entry.id === item.work_id);
+            return !priorWork?.audit_sources.length;
+          })
+          .map((item) => item.model_id),
+      ]);
       const auditedContexts = new Set(
         assignments
           .filter((item) => work.audit_sources.includes(item.work_id))
           .map((item) => item.context_key),
       );
       const supervisor = work.supervisor_context ?? brief.lead_context ?? null;
+      const restrictExecutionModel =
+        executionModelFilter !== undefined && work.audit_sources.length === 0;
       const allowed = (item: Fit) =>
+        (!restrictExecutionModel || item.model_id === executionModelFilter) &&
         !auditedContexts.has(item.context_key) &&
         !assignments.some(
           (prior) =>
             prior.context_key === item.context_key && prior.supervisor_context !== supervisor,
         ) &&
-        (usedContexts.has(item.context_key) || usedContexts.size < limits.max_workers);
+        (poolContexts.has(item.context_key) || poolContexts.size < limits.max_workers);
       const candidates = (matches.get(work.id) ?? [])
         .filter(allowed)
         .map((item): Candidate => {
-          const reused = usedContexts.has(item.context_key);
+          const reused = warmContexts.has(item.context_key);
           const startup = reused ? 0 : limits.context_startup_seconds;
           const startupCost = reused ? 0 : limits.context_startup_cost_usd;
+          const workCost =
+            reused && limits.warm_context_cost_discount > 0
+              ? item.cost * (1 - limits.warm_context_cost_discount)
+              : item.cost;
           const duration = item.seconds + limits.overhead_seconds + startup;
           const start = earliestSlot(
             work,
@@ -1158,7 +1234,7 @@ function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPla
           );
           return {
             ...item,
-            cost: item.cost + limits.overhead_cost_usd + startupCost,
+            cost: workCost + limits.overhead_cost_usd + startupCost,
             startup,
             startupCost,
             start,
@@ -1169,9 +1245,12 @@ function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPla
           (item) => budget === undefined || totalCost + item.cost + reserve <= budget + EPSILON,
         );
       if (!candidates.length) {
+        let failureReason = 'pool-or-estimated-budget';
+        if (restrictExecutionModel) failureReason = 'single-model-continuity-unmet';
+        else if (auditedContexts.size) failureReason = 'independence-pool-or-budget';
         return {
           status: 'constraints-unmet',
-          reason: auditedContexts.size ? 'independence-pool-or-budget' : 'pool-or-estimated-budget',
+          reason: failureReason,
           unassigned: [...pending],
           assignments,
           exclusions,
@@ -1180,7 +1259,7 @@ function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPla
       }
       const tailAfter =
         (tails.get(work.id) ?? 0) - (minimumSeconds.get(work.id) ?? 0) - limits.overhead_seconds;
-      const choice = chooseRoute(candidates, limits, tailAfter);
+      const choice = chooseRoute(candidates, limits, tailAfter, warmContexts, warmModels);
       totalCost += choice.cost;
       assignments.push({
         work_id: work.id,
@@ -1216,7 +1295,7 @@ function scheduleForPool(routing: ReadyRouting, maxWorkers: number): DispatchPla
       pending.delete(work.id);
     }
   }
-  return summarizePlan(routing, limits, assignments, totalCost);
+  return summarizePlan(routing, limits, assignments, totalCost, fallbackReason);
 }
 
 const TRIAL_REQUIREMENT =
@@ -1227,11 +1306,24 @@ function summarizePlan(
   limits: ResolvedLimits,
   assignments: PlannedAssignment[],
   totalCost: number,
+  fallbackReason: string | null = null,
 ): ScheduledPlan {
   const { brief, graph, known, exclusions, minimumSeconds, trials } = routing;
   const duration = maxOf(assignments.map((item) => item.end_seconds));
   const late = limits.deadline_seconds !== undefined && duration > limits.deadline_seconds;
   const contextKeys = [...new Set(assignments.map((item) => item.context_key))];
+  const auditWorkIds = new Set(
+    graph.items.filter((item) => item.audit_sources.length > 0).map((item) => item.id),
+  );
+  const executionAssignments = assignments.filter((item) => !auditWorkIds.has(item.work_id));
+  const executionModels = [...new Set(executionAssignments.map((item) => item.model_id))];
+  const executionContexts = [...new Set(executionAssignments.map((item) => item.context_key))];
+  const seenWarm = new Set(limits.warm_context_keys);
+  let contextReuses = 0;
+  for (const item of assignments) {
+    if (seenWarm.has(item.context_key)) contextReuses += 1;
+    else seenWarm.add(item.context_key);
+  }
   const organization = contextKeys.map((key) => {
     const owned = assignments.filter((item) => item.context_key === key);
     return {
@@ -1251,6 +1343,15 @@ function summarizePlan(
     status: late ? 'constraints-unmet' : 'planned',
     reason: late ? 'estimated-deadline' : null,
     evidence_kind: brief.evidence_kind ?? 'local_work',
+    continuity: {
+      policy: limits.continuity_policy,
+      execution_models: executionModels,
+      execution_contexts: executionContexts,
+      context_reuses: contextReuses,
+      single_model_achieved: executionModels.length <= 1,
+      warm_context_cost_discount: limits.warm_context_cost_discount,
+      fallback_reason: fallbackReason,
+    },
     assignments,
     organization,
     exclusions,
@@ -1436,9 +1537,94 @@ export function planWork(brief: BriefInput, workers: WorkerInput[]): AuditedPlan
   };
   if (prepared.unplanned) return withAudit(prepared.unplanned);
   const { ready } = prepared;
-  const alternatives: Alternative[] = poolCaps(bound).map((cap) => ({
+  const caps = poolCaps(bound);
+  const policyMode = ready.limits.continuity_policy;
+  if (policyMode === 'prefer-single-model' || policyMode === 'strict-single-model') {
+    const incumbents = ready.limits.incumbent_model_ids;
+    if (policyMode === 'strict-single-model' && incumbents.length > 1) {
+      return withAudit(
+        unplanned({
+          status: 'constraints-unmet',
+          reason: 'single-model-continuity-unmet',
+          unassigned: [...ready.graph.order],
+          exclusions: ready.exclusions,
+        }),
+      );
+    }
+    const candidateModels =
+      policyMode === 'strict-single-model' && incumbents.length === 1
+        ? incumbents
+        : [...new Set([...incumbents, ...workers.map((worker) => worker.model_id)])];
+    const singleModelSolutions: Array<{
+      model_id: string;
+      selected: FeasibleAlternative;
+      alternatives: Alternative[];
+    }> = [];
+    let lastSingleAttempt: Alternative[] | null = null;
+    for (const modelId of candidateModels) {
+      const modelAlternatives: Alternative[] = caps.map((cap) => ({
+        pool_cap: cap,
+        plan: scheduleForPool(ready, cap, modelId),
+      }));
+      lastSingleAttempt = modelAlternatives;
+      const modelFeasible = modelAlternatives.filter(isFeasible);
+      if (modelFeasible.length) {
+        singleModelSolutions.push({
+          model_id: modelId,
+          selected: selectAlternative(modelFeasible, brief, saving),
+          alternatives: modelAlternatives,
+        });
+      }
+    }
+    if (singleModelSolutions.length) {
+      const incumbentSolutions = incumbents.length
+        ? singleModelSolutions.filter((entry) => incumbents.includes(entry.model_id))
+        : [];
+      const pool = incumbentSolutions.length ? incumbentSolutions : singleModelSolutions;
+      const chosen = selectAlternative(
+        pool.map((entry) => entry.selected),
+        brief,
+        saving,
+      );
+      const ownerEntry = pool.find((entry) => entry.selected === chosen) ?? pool[0];
+      return withAudit({
+        ...chosen.plan,
+        staffing_comparison: {
+          selected_pool_cap: chosen.pool_cap,
+          minimum_parallel_savings_seconds: saving,
+          estimates_complete:
+            chosen.plan.overheads_accounted.cost && chosen.plan.overheads_accounted.time,
+          alternatives: ownerEntry.alternatives.map(({ pool_cap, plan }) => ({
+            pool_cap,
+            status: plan.status,
+            contexts: plan.organization?.length ?? null,
+            estimated_cost_usd: 'estimated_cost_usd' in plan ? plan.estimated_cost_usd : null,
+            estimated_makespan_seconds:
+              'estimated_makespan_seconds' in plan ? plan.estimated_makespan_seconds : null,
+          })),
+          basis:
+            'Bounded greedy single-model pool alternatives; keep one execution model across the task unless parallel slots of that same model justify the time-savings threshold.',
+        },
+      });
+    }
+    if (policyMode === 'strict-single-model') {
+      const fallback = lastSingleAttempt?.[lastSingleAttempt.length - 1]?.plan;
+      return withAudit(
+        fallback ??
+          unplanned({
+            status: 'constraints-unmet',
+            reason: 'single-model-continuity-unmet',
+            unassigned: [...ready.graph.order],
+            exclusions: ready.exclusions,
+          }),
+      );
+    }
+  }
+  const fallbackReason =
+    policyMode === 'prefer-single-model' ? 'no-single-model-satisfied-all-work-and-bounds' : null;
+  const alternatives: Alternative[] = caps.map((cap) => ({
     pool_cap: cap,
-    plan: scheduleForPool(ready, cap),
+    plan: scheduleForPool(ready, cap, undefined, fallbackReason),
   }));
   const feasible = alternatives.filter(isFeasible);
   if (!feasible.length) return withAudit(alternatives[alternatives.length - 1].plan);

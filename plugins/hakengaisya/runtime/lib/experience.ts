@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { lstat, mkdir, readdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { canonical } from '../packages/evaluator/src/contract.ts';
+import { canonical, canonicalEqual } from './canonical.ts';
 import { type Harness2Job, type Harness2Report, proposeImprovementSubmission } from './learning.ts';
 import type { Packet, Run } from './types.ts';
 import { check, isRecord, isText, requireText } from './validate.ts';
@@ -108,12 +108,17 @@ export async function registerAcceptedExperience(
         packet.review.task_checks.every((item) => item.result === 'pass'),
       'Final user acceptance remains required',
     );
-  const staged = structuredClone(run);
-  staged.packets[job.packet_id].status = 'running';
+  const staged: Run = {
+    ...run,
+    packets: {
+      ...run.packets,
+      [job.packet_id]: { ...packet, status: 'running' },
+    },
+  };
   const proposal = proposeImprovementSubmission(staged, job, report);
   check(
-    canonical(packet.result.outputs) === canonical(proposal.event.outputs) &&
-      canonical(packet.result.evidence) === canonical(proposal.event.evidence),
+    canonicalEqual(packet.result.outputs, proposal.event.outputs) &&
+      canonicalEqual(packet.result.evidence, proposal.event.evidence),
     'Accepted result differs from the adopted improvement delivery',
   );
   const profile = experienceProfileId(job);

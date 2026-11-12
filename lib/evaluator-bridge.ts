@@ -146,6 +146,12 @@ function profileCopy(
   }
   for (const key of ['observed_cost_usd', 'observed_wall_seconds'])
     if (raw[key] !== undefined && raw[key] !== null && !validNumber(raw[key])) return null;
+  if (
+    raw.observed_cache_hit_rate !== undefined &&
+    raw.observed_cache_hit_rate !== null &&
+    (!validNumber(raw.observed_cache_hit_rate) || (raw.observed_cache_hit_rate as number) > 1)
+  )
+    return null;
   return {
     model_id: raw.model_id as string,
     route: raw.route as string,
@@ -162,6 +168,9 @@ function profileCopy(
     ...(raw.observed_wall_seconds == null
       ? {}
       : { observed_wall_seconds: raw.observed_wall_seconds as number }),
+    ...(raw.observed_cache_hit_rate == null
+      ? {}
+      : { observed_cache_hit_rate: raw.observed_cache_hit_rate as number }),
   };
 }
 

@@ -86,6 +86,7 @@ export interface Profile {
   capability_estimate: number | null;
   observed_cost_usd: number | null;
   observed_wall_seconds: number | null;
+  observed_cache_hit_rate: number | null;
   guidance: GuidanceEntry[];
   meaning: string;
 }
@@ -137,6 +138,7 @@ export interface DisplayRow {
   display_score: number | null;
   cost_usd: number | null;
   wall_seconds: number | null;
+  cache_hit_rate: number | null;
   use: string;
 }
 

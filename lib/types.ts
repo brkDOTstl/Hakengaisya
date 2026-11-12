@@ -41,6 +41,24 @@ export interface DeiPolicy {
   model_ids: string[];
 }
 
+export type ContinuityMode = 'sticky' | 'prefer-single-model' | 'strict-single-model' | 'none';
+
+export interface CachePolicyInput {
+  continuity_mode?: ContinuityMode;
+  target_cache_hit_rate?: number;
+  minimum_cache_hit_rate?: number;
+  enforce_cache_gate?: boolean;
+  max_execution_models?: number;
+}
+
+export interface CachePolicy {
+  continuity_mode: ContinuityMode;
+  target_cache_hit_rate: number | null;
+  minimum_cache_hit_rate: number | null;
+  enforce_cache_gate: boolean;
+  max_execution_models: number | null;
+}
+
 // ---------------------------------------------------------------------------
 // Task-first briefs
 
@@ -94,6 +112,10 @@ export interface PlanningLimitsInput {
   sourced_trials?: SourcedTrial[];
   allow_api_cost_estimates?: boolean;
   max_cost_estimate_age_days?: number;
+  continuity_policy?: ContinuityMode;
+  warm_context_cost_discount?: number;
+  warm_context_keys?: string[];
+  incumbent_model_ids?: string[];
 }
 
 // A host-declared estimate for routes that have no qualifying observations yet.
@@ -142,6 +164,7 @@ export interface RouteProfile {
   dimensions?: Record<string, DimensionObservation>;
   observed_cost_usd?: number;
   observed_wall_seconds?: number;
+  observed_cache_hit_rate?: number;
 }
 
 export interface WorkerInput {
@@ -172,11 +195,13 @@ export interface ContextCostEstimate {
   basis: 'api-equivalent-estimate';
   estimated_cost_usd: number;
   sample_count: number;
+  observed_cache_hit_rate?: number | null;
   task_token_scope: string;
   provenance: Array<{
     task_token: string;
     usd: number;
     input_tokens: number;
+    cached_input_tokens?: number | null;
     output_tokens: number;
     records: Array<{
       record_id: string;
@@ -216,6 +241,7 @@ export interface BriefInput {
   reporting_lines?: ReportingLine[];
   dei?: DeiInput;
   improvement?: ImprovementInput;
+  cache_policy?: CachePolicyInput;
   preset?: PresetBinding;
   intake_triage?: TriageResponse;
   external_inputs?: Record<string, unknown>;
@@ -307,11 +333,21 @@ export interface CheckRecord {
   note: string;
 }
 
+export interface PacketUsage {
+  input_tokens: number | null;
+  cached_input_tokens?: number | null;
+  output_tokens: number | null;
+  cost_usd?: number | null;
+  wall_seconds?: number | null;
+  evidence_reference?: string;
+}
+
 export interface PacketResult {
   outputs: ArtifactReference[];
   evidence: EvidenceReference[];
   attempt: number;
   reports_to?: string;
+  usage?: PacketUsage;
 }
 
 export interface PacketReview {
@@ -391,6 +427,7 @@ export type SubmitEvent = EventBase & {
   type: 'submit';
   outputs: ArtifactReference[];
   evidence: EvidenceReference[];
+  usage?: PacketUsage;
 };
 export type ReviewEvent = EventBase & {
   type: 'review';
@@ -466,11 +503,16 @@ export interface Run {
   intake_triage?: TriageRecord | null;
   dei?: DeiPolicy;
   improvement?: ImprovementPolicy;
+  cache_policy?: CachePolicy;
   preset?: PresetBinding;
   planning_limits?: PlanningLimitsInput;
   supervision?: Supervision;
   dispatch_plan?: DispatchPlan | null;
   bound_execution_contexts?: Record<string, string>;
+  bound_memory_snapshots?: Record<
+    string,
+    { scope: string; snapshot_sha256: string; entry_ids: string[] }
+  >;
   routing_status?: string;
 }
 

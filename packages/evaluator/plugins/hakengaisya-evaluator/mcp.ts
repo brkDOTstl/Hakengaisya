@@ -90,10 +90,9 @@ export const tool = {
         type: 'object',
         additionalProperties: false,
         properties: Object.fromEntries(
-          ['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'].map((key) => [
-            key,
-            { type: ['number', 'null'], minimum: 0 },
-          ]),
+          ['input_tokens', 'cached_input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'].map(
+            (key) => [key, { type: ['number', 'null'], minimum: 0 }],
+          ),
         ),
       },
     },

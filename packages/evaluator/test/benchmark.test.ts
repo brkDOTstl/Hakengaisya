@@ -384,3 +384,62 @@ test('refuses peer-history databases and linked database paths without modifying
   await link(file, alias);
   await assert.rejects(openBenchmarkStore(alias, 'read'), /regular unlinked/);
 });
+
+test('benchmark attempts validate cached_input_tokens and summarize token-weighted cache_hit_rate', () => {
+  const value = spec();
+  const store = new BenchmarkStore(':memory:');
+  try {
+    store.create('run', value);
+    const firstClaim = store.claim(claimFor(value, 0, 'ctx-0'));
+    assert.ok(firstClaim.dispatch_allowed);
+    assert.throws(
+      () =>
+        store.complete(
+          resultFor(value, claimFor(value, 0, 'ctx-0'), {
+            usage: {
+              input_tokens: 100,
+              cached_input_tokens: 101,
+              output_tokens: 10,
+              cost_usd: 0.001,
+              wall_seconds: 2,
+            },
+          }),
+        ),
+      /cannot exceed input tokens/,
+    );
+    store.complete(
+      resultFor(value, claimFor(value, 0, 'ctx-0'), {
+        usage: {
+          input_tokens: 1000,
+          cached_input_tokens: 900,
+          output_tokens: 10,
+          cost_usd: 0.001,
+          wall_seconds: 2,
+        },
+      }),
+    );
+    // Candidate 0 runs on two tasks (indices 0 and 2 in benchmarkCells).
+    const secondIdx = benchmarkCells(value).findIndex(
+      (cell, idx) => idx > 0 && cell.candidate_id === value.candidates[0].id,
+    );
+    store.claim(claimFor(value, secondIdx, 'ctx-second'));
+    store.complete(
+      resultFor(value, claimFor(value, secondIdx, 'ctx-second'), {
+        usage: {
+          input_tokens: 3000,
+          cached_input_tokens: 2100,
+          output_tokens: 20,
+          cost_usd: 0.002,
+          wall_seconds: 3,
+        },
+      }),
+    );
+    const report = store.report('run');
+    const cand0 = report.candidates.find((item) => item.candidate.id === value.candidates[0].id);
+    const cand1 = report.candidates.find((item) => item.candidate.id === value.candidates[1].id);
+    assert.equal(cand0?.cache_hit_rate, 0.75);
+    assert.equal(cand1?.cache_hit_rate, null);
+  } finally {
+    store.close();
+  }
+});

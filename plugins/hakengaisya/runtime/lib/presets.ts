@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { CONTINUITY_MODES, normalizeCachePolicy } from './cache-policy.ts';
 import { normalizeImprovement } from './learning.ts';
 import { normalizeDei } from './participation.ts';
 import { normalizeWrites, planWork, scopesConflict, validateWorkGraph } from './planning.ts';
@@ -122,6 +123,7 @@ export interface PresetRequest {
   limits?: Partial<RunLimits>;
   dei?: BriefInput['dei'];
   improvement?: BriefInput['improvement'];
+  cache_policy?: BriefInput['cache_policy'];
   intake_triage?: BriefInput['intake_triage'];
 }
 
@@ -482,6 +484,7 @@ function requestOf(value: unknown): PresetRequest {
       'limits',
       'dei',
       'improvement',
+      'cache_policy',
       'intake_triage',
     ],
   );
@@ -548,12 +551,24 @@ function requestOf(value: unknown): PresetRequest {
         'unproven_routes',
         'trial_estimate',
         'max_trial_assignments',
+        'continuity_policy',
+        'warm_context_cost_discount',
       ],
     );
     for (const [key, limit] of Object.entries(value.planning_limits)) {
       if (['max_parallel', 'max_workers', 'max_trial_assignments'].includes(key)) positive(limit);
       else if (key === 'unproven_routes')
         check(limit === 'refuse' || limit === 'trial', 'Unknown unproven-route policy');
+      else if (key === 'continuity_policy')
+        check(
+          typeof limit === 'string' && (CONTINUITY_MODES as readonly string[]).includes(limit),
+          'Unknown continuity policy',
+        );
+      else if (key === 'warm_context_cost_discount')
+        check(
+          typeof limit === 'number' && Number.isFinite(limit) && limit >= 0 && limit <= 0.95,
+          'Invalid warm context cost discount',
+        );
       else if (key === 'trial_estimate') {
         fields(limit, ['wall_seconds', 'cost_usd']);
         check(
@@ -578,6 +593,10 @@ function requestOf(value: unknown): PresetRequest {
   }
   normalizeDei(value.dei);
   normalizeImprovement(value.improvement);
+  normalizeCachePolicy(
+    value.cache_policy,
+    value.planning_limits as PlanningLimitsInput | undefined,
+  );
   return structuredClone(value) as unknown as PresetRequest;
 }
 
@@ -748,6 +767,7 @@ export function expandPreset(value: unknown, input: unknown) {
     ...(request.workers ? { workers: request.workers } : {}),
     ...(request.dei ? { dei: request.dei } : {}),
     ...(request.improvement ? { improvement: request.improvement } : {}),
+    ...(request.cache_policy ? { cache_policy: request.cache_policy } : {}),
     ...(request.intake_triage ? { intake_triage: request.intake_triage } : {}),
   };
   validateWorkGraph(brief);

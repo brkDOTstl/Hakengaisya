@@ -571,3 +571,69 @@ test('revoked agent cannot submit further evaluations', async (t) => {
   assert.equal((await h.post(report())).status, 401);
   assert.equal(h.store.count(), 0);
 });
+
+test('optional cached_input_tokens stays backward-compatible and projects token-weighted cache hit rates', async (t) => {
+  const h = await harness(t);
+  assert.throws(
+    () =>
+      validateReport(
+        report({
+          usage: {
+            input_tokens: 100,
+            cached_input_tokens: 120,
+            output_tokens: 20,
+            cost_usd: 0.01,
+            wall_seconds: 5,
+          },
+        }),
+      ),
+    /cannot exceed input tokens/,
+  );
+  const prepared = prepareReport(
+    {
+      reviewer_model: 'reviewer-B',
+      subject_model: 'worker-A',
+      route: 'test-route',
+      effort: 'standard',
+      local_task_identity: 'task-one',
+      evaluation_kind: 'local_work',
+      task: {
+        domain: 'software-engineering',
+        type: 'implementation',
+        difficulty: 'routine',
+        skills: ['routine-scripting'],
+      },
+      ratings: { D1: 8, D2: 8, D3: 8, D4: 8, D5: 8, D6: 8 },
+      comment: 'Synthetic cache report.',
+      example: 'Synthetic bounded continuation.',
+      guidance: 'Reuse existing context prefix.',
+      relationship: 'direct',
+      attribution: 'model',
+      usage: {
+        input_tokens: 1000,
+        cached_input_tokens: 800,
+        output_tokens: 50,
+        cost_usd: 0.004,
+        wall_seconds: 6,
+      },
+    },
+    's'.repeat(32),
+  );
+  assert.equal((await submitReport(h.base, prepared, h.credentials)).accepted, true);
+  const second = report({
+    task_token: sha256('task-two'),
+    usage: {
+      input_tokens: 3000,
+      cached_input_tokens: 200,
+      output_tokens: 80,
+      cost_usd: 0.012,
+      wall_seconds: 9,
+    },
+  });
+  assert.equal((await submitReport(h.base, second, h.credentials)).accepted, true);
+  const profiles = (await (await fetch(`${h.base}/api/v1/profiles`)).json()) as ProfilesResponse;
+  const matched = profiles.profiles.find((item) => item.model_id === 'worker-A');
+  assert.ok(matched);
+  // Token-weighted: (800 + 200) / (1000 + 3000) = 0.25, not unweighted mean (0.8 + 0.0667) / 2.
+  assert.equal(matched.observed_cache_hit_rate, 0.25);
+});

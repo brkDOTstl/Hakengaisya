@@ -35,6 +35,7 @@ export interface TaskContext {
 
 export interface Usage {
   input_tokens: number | null;
+  cached_input_tokens?: number | null;
   output_tokens: number | null;
   cost_usd: number | null;
   wall_seconds: number | null;
@@ -68,13 +69,14 @@ export const canonical = (value: unknown): string =>
     : value && typeof value === 'object'
       ? '{' +
         Object.keys(value)
+          .filter((key) => (value as Record<string, unknown>)[key] !== undefined)
           .sort()
           .map(
             (key) => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`,
           )
           .join(',') +
         '}'
-      : (JSON.stringify(value) as string);
+      : (JSON.stringify(value) ?? 'null');
 export const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
 
 export function object(
@@ -189,7 +191,23 @@ export function validateReport(input: unknown): Report {
     ['model', 'route', 'environment', 'specification', 'unknown'].includes(report.attribution),
     'Unknown attribution',
   );
-  object(report.usage, ['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds']);
-  for (const value of Object.values(report.usage)) if (value !== null) finite(value);
+  object(
+    report.usage,
+    ['input_tokens', 'cached_input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'],
+    ['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'],
+  );
+  for (const value of Object.values(report.usage))
+    if (value !== null && value !== undefined) finite(value);
+  if (report.usage.cached_input_tokens !== undefined && report.usage.cached_input_tokens !== null) {
+    assert(
+      Number.isSafeInteger(report.usage.cached_input_tokens),
+      'Cached input tokens must be an integer',
+    );
+    assert(
+      report.usage.input_tokens !== null &&
+        report.usage.cached_input_tokens <= report.usage.input_tokens,
+      'Cached input tokens cannot exceed input tokens',
+    );
+  }
   return report;
 }

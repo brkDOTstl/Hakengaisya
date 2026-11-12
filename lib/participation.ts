@@ -1,3 +1,4 @@
+import { type CacheContinuityReview, summarizeCacheAndContinuity } from './cache-policy.ts';
 import type { AssignmentInput, DeiPolicy, Run, WorkGraph } from './types.ts';
 import { check, isRecord } from './validate.ts';
 
@@ -154,10 +155,32 @@ function collectParticipation(run: Run): Participation[] {
   return submissions;
 }
 
+export interface AgentReview {
+  manager_context: string;
+  evidence_kind: Run['evidence_kind'];
+  scope: 'run-local-management-policy';
+  routing_audit:
+    | NonNullable<Run['dispatch_plan']>['routing_audit']
+    | {
+        scope: 'not-recorded';
+        boundary: string;
+      };
+  dei: DeiPolicy & {
+    status: DeiStatus;
+    score: number | null;
+    score_range: [number, number];
+    tags: string[];
+    missing_model_ids: string[];
+    models: Array<{ model_id: string; submissions: Participation[] }>;
+  };
+  cache_and_continuity: CacheContinuityReview;
+  boundary: string;
+}
+
 export function agentReview(
   run: Run,
   complete = Object.values(run.packets).every((packet) => packet.status === 'accepted'),
-) {
+): AgentReview {
   const policy = normalizeDei(run.dei);
   const submissions = collectParticipation(run);
   const models = policy.model_ids.map((model_id) => ({
@@ -186,9 +209,8 @@ export function agentReview(
       missing_model_ids: missing,
       models,
     },
+    cache_and_continuity: summarizeCacheAndContinuity(run, complete),
     boundary:
-      'Submitted work with declared model bindings and evidence references counts as participation, including rejected attempts. This is not provider authentication, technical ability, or an evaluator upload. The host inspects real execution evidence.',
+      'Submitted work with declared model bindings and evidence references counts as participation, including rejected attempts. Cache and continuity metrics reflect host-reported token usage and recorded assignments, not provider billing or authentication. The host inspects real execution evidence.',
   };
 }
-
-export type AgentReview = ReturnType<typeof agentReview>;

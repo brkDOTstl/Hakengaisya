@@ -160,10 +160,25 @@ export function preparePeerFeedback(
   }
   if (observation.usage) {
     for (const [key, value] of Object.entries(observation.usage)) {
+      if (value === undefined) continue;
       check(
-        ['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'].includes(key) &&
+        [
+          'input_tokens',
+          'cached_input_tokens',
+          'output_tokens',
+          'cost_usd',
+          'wall_seconds',
+        ].includes(key) &&
           (value === null || (typeof value === 'number' && Number.isFinite(value) && value >= 0)),
         'Invalid observed usage',
+      );
+    }
+    if (observation.usage.cached_input_tokens != null) {
+      check(
+        Number.isSafeInteger(observation.usage.cached_input_tokens) &&
+          observation.usage.input_tokens != null &&
+          observation.usage.cached_input_tokens <= observation.usage.input_tokens,
+        'Cached input tokens must be an integer not exceeding input_tokens',
       );
     }
   }

@@ -113,12 +113,19 @@ export function prepareReport(localReport: LocalReport, taskSalt: string): Repor
     guidance: redactText(localReport.guidance),
     relationship: localReport.relationship,
     attribution: localReport.attribution,
-    usage: Object.fromEntries(
-      (['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'] as const).map((key) => [
-        key,
-        localReport.usage?.[key] ?? null,
-      ]),
-    ) as unknown as Usage,
+    usage: {
+      ...(Object.fromEntries(
+        (['input_tokens', 'output_tokens', 'cost_usd', 'wall_seconds'] as const).map((key) => [
+          key,
+          localReport.usage?.[key] ?? null,
+        ]),
+      ) as unknown as Usage),
+      ...(localReport.usage &&
+      Object.hasOwn(localReport.usage, 'cached_input_tokens') &&
+      localReport.usage.cached_input_tokens !== undefined
+        ? { cached_input_tokens: localReport.usage.cached_input_tokens }
+        : {}),
+    },
   };
   assert(
     typeof taskSalt === 'string' && taskSalt.length >= 32,

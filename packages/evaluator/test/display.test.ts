@@ -139,6 +139,7 @@ test('comments with the same identifier but different content remain distinct', 
     capability_estimate: 7,
     observed_cost_usd: null,
     observed_wall_seconds: null,
+    observed_cache_hit_rate: null,
     meaning: 'Synthetic fixture',
   };
   const profiles: Profile[] = ['first', 'second'].map((comment, index) => ({
