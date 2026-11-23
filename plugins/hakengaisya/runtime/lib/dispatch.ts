@@ -1,4 +1,9 @@
 import { sha256Digest } from './canonical.ts';
+import {
+  applicableComplianceForDispatch,
+  handoverClearance,
+  summarizeComplianceMonitor,
+} from './compliance-monitor.ts';
 import { agentReview } from './participation.ts';
 import { assertSupervisedReview } from './supervision.ts';
 import type { Packet, Run } from './types.ts';
@@ -69,6 +74,7 @@ export function prepareDispatch(run: Run, packetId: string) {
   const assignment = packet.assignment;
   const priorTurns = countContextStarts(run, assignment.owner_context);
   const boundMemory = run.bound_memory_snapshots?.[assignment.owner_context] ?? null;
+  const compliance = applicableComplianceForDispatch(run, packet);
   const l1TaskHeader = {
     run_id: run.run_id,
     domain: run.domain ?? null,
@@ -105,6 +111,7 @@ export function prepareDispatch(run: Run, packetId: string) {
       inputs: structuredClone(inputs),
       outputs: structuredClone(packet.required_outputs),
       acceptance: structuredClone(packet.checks),
+      ...(compliance ? { compliance_directives: compliance } : {}),
     },
     host_rule:
       'Keep L0 and L1 byte-identical for the lifetime of owner_context to maximize KV-cache hit rate. On append-turn-delta-only dispatches, append turn_delta as the next turn in the existing conversation; never rewrite system prompts or inject mid-run memory edits.',
@@ -139,6 +146,7 @@ export function prepareDispatch(run: Run, packetId: string) {
       effort: assignment.effort ?? null,
     },
     prefix_cache_contract: prefixCacheContract,
+    ...(compliance ? { compliance_monitor: compliance } : {}),
     return_contract: {
       outputs: packet.required_outputs.map((id) => ({
         id,
@@ -182,6 +190,14 @@ export function prepareReview(run: Run, packetId: string) {
     writes: [],
     agent_review_preview: packet.id === 'handover' ? agentReview(run, true) : null,
     cache_and_continuity_preview: agentReview(run, packet.id === 'handover').cache_and_continuity,
+    ...(run.compliance_monitor?.enabled
+      ? {
+          compliance_preview: {
+            ...summarizeComplianceMonitor(run, packet.id === 'handover'),
+            handover_clearance: handoverClearance(run),
+          },
+        }
+      : {}),
     result: structuredClone(packet.result),
     task_acceptance: packet.id === 'handover' ? structuredClone(run.acceptance) : [],
     return_contract:

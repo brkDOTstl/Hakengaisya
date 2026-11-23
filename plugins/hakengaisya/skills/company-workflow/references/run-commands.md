@@ -17,6 +17,11 @@ node HELPER agent-review RUN.json
 node HELPER harness2-job RUN.json PACKET_ID [STARTING_HARNESS.json]
 node HELPER harness2-result RUN.json JOB.json REPORT.json
 node HELPER event RUN.json EVENT.json
+node HELPER compliance-inspect RUN.json [REQUEST.json]
+node HELPER compliance-record-rule RUN.json REQUEST.json
+node HELPER compliance-cite RUN.json REQUEST.json
+node HELPER compliance-resolve RUN.json REQUEST.json
+node HELPER compliance-checkpoint RUN.json REQUEST.json
 ```
 
 `create` builds missing parent directories and refuses to overwrite a run. `event` takes a single-writer lock, requires the current revision and attempt, and atomically replaces the persisted state. The EVENT file may hold one event or an ordered array; an array is applied as one atomic batch whose first entry states `expected_revision` and whose later entries may omit it. If a crash leaves a lock, read `RUN.json.lock` for the writer's pid and start time and inspect that process before removing it. Each journal entry records `recorded_at`, the controller clock at recording time; it measures handoff and waiting, not model execution time. The snapshot embeds its reference organization, packets, artifact references, attempts, and event journal. It stays local.
@@ -30,6 +35,8 @@ The plugin registers a stdio MCP server (`.mcp.json`, `mcp.ts`) with the same co
 Optional [DEI participation](model-participation.md) is configured in task-first briefs. Agent Review reports candidate consideration and the root manager's participation score/tag; it does not launch models or update technical ability scores.
 
 Optional [Harness2 improvement](harness2.md) adds the read-only MCP tools hakengaisya_optimizer_job and hakengaisya_optimizer_result. They prepare a bounded job and validate its reviewed submission; the separate worker runs outside the controller lock. They do not launch models or accept technical work.
+
+Optional [Requirement & decision compliance monitor](compliance-monitor.md) adds `hakengaisya_compliance_inspect` (read-only oversight brief for the isolated monitor), `hakengaisya_compliance_record_rule`, `hakengaisya_compliance_cite`, `hakengaisya_compliance_resolve` and `hakengaisya_compliance_checkpoint`. The monitor performs zero production work, never merges with producing roles, and alone resolves citations or clears pre-handover checkpoints.
 
 ## Brief
 

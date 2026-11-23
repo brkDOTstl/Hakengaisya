@@ -172,6 +172,41 @@
           "evidence_mode": "Reviewed materials and actual responses; external publication or contact still needs authorization"
         }
       ]
+    },
+    {
+      "id": "compliance-monitor",
+      "requires": ["core"],
+      "positions": [
+        {
+          "id": "compliance_monitor",
+          "title": "Requirement & decision compliance monitor",
+          "reports_to": "project_lead",
+          "non_producing": true,
+          "escalates_to": "project_owner",
+          "functions": [
+            "Maintain the authoritative ledger of settled owner decisions, governing documents and declared requirements in an isolated clean context",
+            "Audit the project lead and major executors for forgotten decisions, document drift, silent substitutions or re-asking already-settled questions",
+            "Issue immediate non-compliance citations naming the violated decision or document and the required correction"
+          ],
+          "deliverables": [
+            "Maintained settled-decision and governing-document compliance ledger",
+            "Evidence-backed compliance citations and pre-handover clearance checkpoints"
+          ],
+          "skills": ["compliance-auditing", "requirement-verification"],
+          "independent_of": [
+            "project_lead",
+            "technical_lead",
+            "gameplay_engineer",
+            "game_designer",
+            "visual_lead",
+            "generalist_artist",
+            "qa_release",
+            "audio_specialist",
+            "release_support"
+          ],
+          "evidence_mode": "Zero-production isolated oversight: compares lead and executor actions, outputs and questions directly against settled owner decisions and governing documents; never performs production work, never merges with another role, and escalates unresolved drift directly to the project owner"
+        }
+      ]
     }
   ]
 }

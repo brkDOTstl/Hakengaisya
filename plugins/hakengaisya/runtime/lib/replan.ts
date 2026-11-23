@@ -1,5 +1,6 @@
 import { assertStrictContinuityAssignment } from './cache-policy.ts';
 import { canonicalEqual, sha256Digest } from './canonical.ts';
+import { assertMonitorIsolation } from './compliance-monitor.ts';
 import {
   externalTrials,
   type IntegratedPlan,
@@ -598,6 +599,7 @@ export function adoptIntegratedReplan(
       'Accepted work must retain its prior plan',
     );
     for (const item of next.assignments) {
+      assertMonitorIsolation(run, { owner_context: item.context_key });
       const bound = run.bound_execution_contexts?.[item.context_key];
       if (!bound) continue;
       const previous = current.assignments.filter((old) => old.context_key === item.context_key);

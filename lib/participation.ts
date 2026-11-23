@@ -1,4 +1,5 @@
 import { type CacheContinuityReview, summarizeCacheAndContinuity } from './cache-policy.ts';
+import { type ComplianceMonitorReview, summarizeComplianceMonitor } from './compliance-monitor.ts';
 import type { AssignmentInput, DeiPolicy, Run, WorkGraph } from './types.ts';
 import { check, isRecord } from './validate.ts';
 
@@ -174,6 +175,7 @@ export interface AgentReview {
     models: Array<{ model_id: string; submissions: Participation[] }>;
   };
   cache_and_continuity: CacheContinuityReview;
+  compliance: ComplianceMonitorReview;
   boundary: string;
 }
 
@@ -210,6 +212,7 @@ export function agentReview(
       models,
     },
     cache_and_continuity: summarizeCacheAndContinuity(run, complete),
+    compliance: summarizeComplianceMonitor(run, complete),
     boundary:
       'Submitted work with declared model bindings and evidence references counts as participation, including rejected attempts. Cache and continuity metrics reflect host-reported token usage and recorded assignments, not provider billing or authentication. The host inspects real execution evidence.',
   };

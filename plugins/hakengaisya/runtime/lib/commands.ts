@@ -9,6 +9,11 @@ import {
   createPersistedRun,
   loadTemplate,
   reviewerModels,
+  runComplianceCheckpoint,
+  runComplianceCite,
+  runComplianceInspect,
+  runComplianceRecordRule,
+  runComplianceResolve,
   runExperienceLookup,
   runExperienceRegister,
   runFeedbackFlush,
@@ -340,6 +345,65 @@ export const commands: Readonly<Record<string, Command>> = {
     }),
     run: ({ run_file, request }, context) =>
       runProjectMemoryLookup(run_file, request, context?.base),
+  },
+  compliance_inspect: {
+    description:
+      'Return the isolated, read-only oversight packet for the zero-production compliance monitor: active settled decisions, governing documents, watched targets, open citations, handover clearance and compact packet state without raw execution transcripts.',
+    inputSchema: schema(['run_file'], {
+      run_file: runFile,
+      request: object('Optional filter: { target_context?, packet_id? }.'),
+    }),
+    run: ({ run_file, request }, context) => runComplianceInspect(run_file, request, context?.base),
+  },
+  compliance_record_rule: {
+    description:
+      'Record a settled owner decision or governing document in the run compliance ledger. Lead or compliance monitor may add new rules; only the compliance monitor may supersede an existing rule with an explicit owner_change_reference.',
+    inputSchema: schema(['run_file', 'request'], {
+      run_file: runFile,
+      request: object(
+        'expected_revision, actor_context, decision or document, and optional supersedes_id + owner_change_reference.',
+      ),
+    }),
+    writes: true,
+    run: ({ run_file, request }, context) =>
+      runComplianceRecordRule(run_file, request, context?.base),
+  },
+  compliance_cite: {
+    description:
+      'Issue a compliance monitor citation against lead_context or a watched executor for forgotten decisions, document drift, silent substitutions or re-asking settled questions. Only monitor_context may invoke it; blocking citations halt further starts and can reopen tainted packets.',
+    inputSchema: schema(['run_file', 'request'], {
+      run_file: runFile,
+      request: object(
+        'expected_revision, actor_context (monitor_context), citation_id, target_context, violation_kind, decision_ids/document_ids, observed_deviation, evidence_reference, required_correction, optional severity/packet_id/reopen_packet.',
+      ),
+    }),
+    writes: true,
+    run: ({ run_file, request }, context) => runComplianceCite(run_file, request, context?.base),
+  },
+  compliance_resolve: {
+    description:
+      'Mark an open compliance citation resolved after the cited lead or executor corrects the violation. Only monitor_context may resolve citations with verified evidence; targets cannot self-clear.',
+    inputSchema: schema(['run_file', 'request'], {
+      run_file: runFile,
+      request: object(
+        'expected_revision, actor_context (monitor_context), citation_id, resolution_evidence and resolution_note.',
+      ),
+    }),
+    writes: true,
+    run: ({ run_file, request }, context) => runComplianceResolve(run_file, request, context?.base),
+  },
+  compliance_checkpoint: {
+    description:
+      'Record a compliance monitor audit checkpoint (clear or violations-found) covering active settled decisions and governing documents. Required before terminal handover acceptance when require_checkpoint_before_handover is enabled.',
+    inputSchema: schema(['run_file', 'request'], {
+      run_file: runFile,
+      request: object(
+        'expected_revision, actor_context (monitor_context), checkpoint_id, status, checked_decision_ids, checked_document_ids, evidence_reference, note, optional target_context/packet_id.',
+      ),
+    }),
+    writes: true,
+    run: ({ run_file, request }, context) =>
+      runComplianceCheckpoint(run_file, request, context?.base),
   },
   optimizer_snapshot: {
     description:

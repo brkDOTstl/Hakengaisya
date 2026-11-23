@@ -13,6 +13,17 @@ import {
   rejectedHarness2Baseline,
 } from '../packages/optimizer/src/host-driver.ts';
 import { canonicalEqual, sha256Digest } from './canonical.ts';
+import {
+  type ComplianceCheckpointRequest,
+  type ComplianceCiteRequest,
+  type ComplianceResolveRequest,
+  type ComplianceRuleRequest,
+  issueComplianceCitation,
+  prepareComplianceAudit,
+  recordComplianceCheckpoint,
+  recordComplianceRule,
+  resolveComplianceCitation,
+} from './compliance-monitor.ts';
 import { prepareDispatch } from './dispatch.ts';
 import { lookupAcceptedExperience, registerAcceptedExperience } from './experience.ts';
 import {
@@ -751,6 +762,106 @@ export async function runProjectMemoryLookup(
   const stateDir = input?.state_dir ?? learning?.state_dir;
   check(scope && stateDir, 'Supply a project memory scope and local learning state');
   return lookupProjectMemory(run, scope, stateDir, input?.max_bytes);
+}
+
+export async function runComplianceInspect(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input =
+    request === undefined || request === null
+      ? {}
+      : form<{ target_context?: string; packet_id?: string }>(request);
+  const run = await readRun(resolveRunFile(run_file, base));
+  return prepareComplianceAudit(run, input);
+}
+
+export async function runComplianceRecordRule(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input = form<ComplianceRuleRequest>(request);
+  const filename = resolveRunFile(run_file, base);
+  let recorded: { kind: 'decision' | 'document'; rule: unknown } | null = null;
+  const updated = await updateRun(filename, (run) => {
+    const result = recordComplianceRule(run, input);
+    recorded = { kind: result.kind, rule: result.rule };
+    return result.run;
+  });
+  return {
+    run_file: filename,
+    recorded,
+    ...nextActions(updated),
+  };
+}
+
+export async function runComplianceCite(run_file: unknown, request: unknown, base?: string | null) {
+  const input = form<ComplianceCiteRequest>(request);
+  const filename = resolveRunFile(run_file, base);
+  let outcome: {
+    citation: unknown;
+    reopened_packets: string[];
+    correction_notice: unknown;
+  } | null = null;
+  const updated = await updateRun(filename, (run) => {
+    const result = issueComplianceCitation(run, input);
+    outcome = {
+      citation: result.citation,
+      reopened_packets: result.reopened_packets,
+      correction_notice: result.correction_notice,
+    };
+    return result.run;
+  });
+  return {
+    run_file: filename,
+    ...(outcome ?? {}),
+    ...nextActions(updated),
+  };
+}
+
+export async function runComplianceResolve(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input = form<ComplianceResolveRequest>(request);
+  const filename = resolveRunFile(run_file, base);
+  let citation: unknown = null;
+  const updated = await updateRun(filename, (run) => {
+    const result = resolveComplianceCitation(run, input);
+    citation = result.citation;
+    return result.run;
+  });
+  return {
+    run_file: filename,
+    citation,
+    ...nextActions(updated),
+  };
+}
+
+export async function runComplianceCheckpoint(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input = form<ComplianceCheckpointRequest>(request);
+  const filename = resolveRunFile(run_file, base);
+  let outcome: { checkpoint: unknown; handover_clearance: unknown } | null = null;
+  const updated = await updateRun(filename, (run) => {
+    const result = recordComplianceCheckpoint(run, input);
+    outcome = {
+      checkpoint: result.checkpoint,
+      handover_clearance: result.handover_clearance,
+    };
+    return result.run;
+  });
+  return {
+    run_file: filename,
+    ...(outcome ?? {}),
+    ...nextActions(updated),
+  };
 }
 
 export async function runOptimizerHostNext(request: unknown) {

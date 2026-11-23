@@ -6,6 +6,7 @@ import type { EvidenceKind, MemorySnapshotBinding, Run } from './types.ts';
 import { check, isRecord, isText, requireText } from './validate.ts';
 
 export const PROJECT_MEMORY_CATEGORIES = [
+  'decisions',
   'architecture',
   'commands',
   'conventions',
@@ -16,11 +17,12 @@ export const PROJECT_MEMORY_CATEGORIES = [
 export type ProjectMemoryCategory = (typeof PROJECT_MEMORY_CATEGORIES)[number];
 
 const CATEGORY_RANK: Record<ProjectMemoryCategory, number> = {
-  architecture: 0,
-  commands: 1,
-  conventions: 2,
-  pitfalls: 3,
-  constraints: 4,
+  decisions: 0,
+  architecture: 1,
+  commands: 2,
+  conventions: 3,
+  pitfalls: 4,
+  constraints: 5,
 };
 
 const MAX_ENTRY_BYTES = 8192;
@@ -185,38 +187,44 @@ export async function registerProjectMemory(run: Run, input: ProjectMemoryInput)
   check(isRecord(input) && isRecord(input.entry), 'Supply a project memory registration request');
   const domain = run.domain;
   check(isText(domain), 'Project memory requires a task-first run with an explicit domain');
-  const packet = Object.hasOwn(run.packets, input.packet_id)
-    ? run.packets[input.packet_id]
-    : undefined;
-  check(
-    packet?.status === 'accepted' &&
-      packet.attempt === input.attempt &&
-      packet.assignment !== null &&
-      packet.result !== null &&
-      packet.review !== null,
-    'The referenced packet attempt must be accepted before registering project memory',
-  );
-  check(
-    input.actor_context === packet.supervisor_context &&
-      input.actor_context === packet.review.reviewer_context &&
-      ![packet.assignment.owner_context, ...packet.assignment.contributor_contexts].includes(
-        input.actor_context,
-      ),
-    'Only the independent direct supervisor may register project memory',
-  );
-  check(
-    packet.review.decision === 'accepted' &&
-      packet.review.attempt === input.attempt &&
-      packet.review.checks.length === packet.checks.length &&
-      packet.review.checks.every((item) => item.result === 'pass'),
-    'Accepted packet gate checks must all pass before registering project memory',
-  );
-  if (packet.id === 'handover') {
+  const isComplianceDecision =
+    run.compliance_monitor?.enabled === true &&
+    input.actor_context === run.compliance_monitor.monitor_context &&
+    input.entry.category === 'decisions';
+  if (!isComplianceDecision) {
+    const packet = Object.hasOwn(run.packets, input.packet_id)
+      ? run.packets[input.packet_id]
+      : undefined;
     check(
-      packet.review.task_checks.length === run.acceptance.length &&
-        packet.review.task_checks.every((item) => item.result === 'pass'),
-      'Final user acceptance checks must pass before registering handover project memory',
+      packet?.status === 'accepted' &&
+        packet.attempt === input.attempt &&
+        packet.assignment !== null &&
+        packet.result !== null &&
+        packet.review !== null,
+      'The referenced packet attempt must be accepted before registering project memory',
     );
+    check(
+      input.actor_context === packet.supervisor_context &&
+        input.actor_context === packet.review.reviewer_context &&
+        ![packet.assignment.owner_context, ...packet.assignment.contributor_contexts].includes(
+          input.actor_context,
+        ),
+      'Only the independent direct supervisor may register project memory',
+    );
+    check(
+      packet.review.decision === 'accepted' &&
+        packet.review.attempt === input.attempt &&
+        packet.review.checks.length === packet.checks.length &&
+        packet.review.checks.every((item) => item.result === 'pass'),
+      'Accepted packet gate checks must all pass before registering project memory',
+    );
+    if (packet.id === 'handover') {
+      check(
+        packet.review.task_checks.length === run.acceptance.length &&
+          packet.review.task_checks.every((item) => item.result === 'pass'),
+        'Final user acceptance checks must pass before registering handover project memory',
+      );
+    }
   }
   requireText(input.evidence_reference, 'Project memory evidence reference');
   const memoryId = projectMemoryId(input.scope, run.evidence_kind, domain);
@@ -268,8 +276,16 @@ export async function registerProjectMemory(run: Run, input: ProjectMemoryInput)
     title,
     supersedes_entry_id: supersedes,
     run_id: run.run_id,
-    packet_id: input.packet_id,
-    attempt: input.attempt,
+    packet_id: isComplianceDecision
+      ? isText(input.packet_id)
+        ? input.packet_id
+        : 'compliance_monitor'
+      : input.packet_id,
+    attempt: isComplianceDecision
+      ? Number.isInteger(input.attempt) && input.attempt >= 0
+        ? input.attempt
+        : 0
+      : input.attempt,
     direct_supervisor: input.actor_context,
     evidence_reference: input.evidence_reference,
     content_sha256: contentSha,

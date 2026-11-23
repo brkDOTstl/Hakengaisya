@@ -4,6 +4,13 @@ import {
   normalizeCachePolicy,
   validatePacketUsage,
 } from './cache-policy.ts';
+import {
+  assertComplianceReviewGate,
+  assertComplianceStartable,
+  assertMonitorIsolation,
+  handoverClearance,
+  normalizeComplianceMonitor,
+} from './compliance-monitor.ts';
 import { normalizeImprovement } from './learning.ts';
 import { agentReview, assertDeiAssignment, normalizeDei } from './participation.ts';
 import type { DispatchPlan } from './planning.ts';
@@ -364,6 +371,7 @@ export function createWorkRun(brief: BriefInput): Run {
     );
   const dei = normalizeDei(brief.dei);
   const cachePolicy = normalizeCachePolicy(brief.cache_policy, brief.planning_limits);
+  const complianceMonitor = normalizeComplianceMonitor(brief.compliance_monitor, brief);
   check(
     !(
       dei.enabled &&
@@ -434,6 +442,7 @@ export function createWorkRun(brief: BriefInput): Run {
     dei,
     improvement: normalizeImprovement(brief.improvement),
     cache_policy: cachePolicy,
+    ...(complianceMonitor !== undefined ? { compliance_monitor: complianceMonitor } : {}),
     planning_limits: structuredClone(brief.planning_limits ?? {}),
     ...(brief.preset !== undefined ? { preset: validatePresetBinding(brief.preset) } : {}),
     supervision: createSupervision(brief.lead_context, brief.reporting_lines),
@@ -503,6 +512,7 @@ export function assertStartable(
   );
   assertDeiAssignment(run.dei, packet.assignment);
   assertSupervisedReview(run, packet);
+  assertComplianceStartable(run, packet);
   if (packet.source_work_id) {
     check(
       packet.assignment_attempt === packet.attempt,
@@ -659,6 +669,7 @@ function applyAssign(draft: Draft, packet: Packet, event: AssignEvent): void {
   const input = event.assignment;
   assertDeiAssignment(run.dei, input ?? {});
   assertStrictContinuityAssignment(run, packet, input ?? {});
+  assertMonitorIsolation(run, input ?? {}, event.actor_context);
   requireText(input?.owner_context, 'Owner context');
   requireText(input?.reviewer_context, 'Reviewer context');
   check(
@@ -832,6 +843,7 @@ function applyReview(draft: Draft, packet: Packet, event: ReviewEvent): void {
   check(!accepted || passed, 'Failed or unverified checks cannot pass a gate');
   check(accepted || !passed, 'Rejection must identify a failed or unverified check');
   const finalAcceptance = packet.id === TERMINAL_PACKET && accepted;
+  assertComplianceReviewGate(run, packet, event.decision, finalAcceptance);
   if (finalAcceptance) {
     requireUserAcceptance(run, event.task_checks);
     assertCacheReviewGate(run, true);
@@ -846,6 +858,7 @@ function applyReview(draft: Draft, packet: Packet, event: ReviewEvent): void {
   if (
     finalAcceptance &&
     (run.dei?.enabled ||
+      run.compliance_monitor?.enabled ||
       run.cache_policy?.target_cache_hit_rate !== null ||
       run.cache_policy?.minimum_cache_hit_rate !== null ||
       run.cache_policy?.enforce_cache_gate === true ||
@@ -923,6 +936,11 @@ function applyTyped(draft: Draft, packet: Packet, event: WorkflowEvent): void {
       break;
     case 'replan':
       throw new Error('Use the validated integrated replan command');
+    case 'compliance_rule':
+    case 'compliance_cite':
+    case 'compliance_resolve':
+    case 'compliance_checkpoint':
+      throw new Error('Use the dedicated compliance monitor command');
   }
 }
 
@@ -1038,6 +1056,17 @@ export function nextActions(run: Run) {
         result: packet.result,
       })),
     agent_review: agentReview(run),
+    ...(run.compliance_monitor?.enabled
+      ? {
+          compliance_monitor: {
+            monitor_context: run.compliance_monitor.monitor_context,
+            open_citations: structuredClone(
+              run.compliance_monitor.citations.filter((item) => item.status === 'open'),
+            ),
+            handover_clearance: handoverClearance(run),
+          },
+        }
+      : {}),
     running: packets.filter((packet) => packet.status === 'running').map((packet) => packet.id),
     blocked: packets
       .filter((packet) => packet.status === 'blocked')

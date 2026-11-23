@@ -60,6 +60,116 @@ export interface CachePolicy {
 }
 
 // ---------------------------------------------------------------------------
+// Dedicated compliance monitor (zero-production oversight)
+
+export type ComplianceViolationKind =
+  | 'forgotten-decision'
+  | 'violated-decision'
+  | 'reasked-settled-decision'
+  | 'doc-drift'
+  | 'unapproved-deviation';
+
+export type ComplianceSeverity = 'blocking' | 'warning';
+
+export interface SettledDecisionInput {
+  id: string;
+  summary: string;
+  source: string;
+  must_not_reask?: boolean;
+  applies_to?: string[];
+}
+
+export interface SettledDecision {
+  id: string;
+  summary: string;
+  source: string;
+  must_not_reask: boolean;
+  applies_to: string[];
+  status: 'active' | 'superseded';
+  recorded_by: string;
+  recorded_at_revision: number;
+  superseded_by?: string;
+  owner_change_reference?: string;
+}
+
+export interface GoverningDocumentInput {
+  id: string;
+  reference: string;
+  requirement: string;
+}
+
+export interface GoverningDocument {
+  id: string;
+  reference: string;
+  requirement: string;
+  status: 'active' | 'superseded';
+  recorded_by: string;
+  recorded_at_revision: number;
+  superseded_by?: string;
+  owner_change_reference?: string;
+}
+
+export interface ComplianceCitation {
+  id: string;
+  status: 'open' | 'resolved';
+  severity: ComplianceSeverity;
+  violation_kind: ComplianceViolationKind;
+  target_context: string;
+  packet_id: string | null;
+  attempt: number | null;
+  decision_ids: string[];
+  document_ids: string[];
+  observed_deviation: string;
+  evidence_reference: string;
+  required_correction: string;
+  issued_by: string;
+  issued_at_revision: number;
+  reopened_packet?: boolean;
+  resolved_at_revision?: number;
+  resolved_by?: string;
+  resolution_evidence?: string;
+  resolution_note?: string;
+}
+
+export interface ComplianceCheckpoint {
+  id: string;
+  target_context: string;
+  packet_id: string | null;
+  attempt: number | null;
+  status: 'clear' | 'violations-found';
+  checked_decision_ids: string[];
+  checked_document_ids: string[];
+  evidence_reference: string;
+  note: string;
+  recorded_by: string;
+  recorded_at_revision: number;
+}
+
+export interface ComplianceMonitorInput {
+  enabled: boolean;
+  monitor_context?: string;
+  watched_contexts?: string[];
+  decisions?: SettledDecisionInput[];
+  documents?: GoverningDocumentInput[];
+  block_handover_on_open_citations?: boolean;
+  block_dispatch_on_target_citation?: boolean;
+  require_checkpoint_before_handover?: boolean;
+}
+
+export interface ComplianceMonitorState {
+  enabled: boolean;
+  monitor_context: string;
+  watched_contexts: string[];
+  block_handover_on_open_citations: boolean;
+  block_dispatch_on_target_citation: boolean;
+  require_checkpoint_before_handover: boolean;
+  decisions: SettledDecision[];
+  documents: GoverningDocument[];
+  citations: ComplianceCitation[];
+  checkpoints: ComplianceCheckpoint[];
+}
+
+// ---------------------------------------------------------------------------
 // Task-first briefs
 
 export interface WorkItemInput {
@@ -242,6 +352,7 @@ export interface BriefInput {
   dei?: DeiInput;
   improvement?: ImprovementInput;
   cache_policy?: CachePolicyInput;
+  compliance_monitor?: ComplianceMonitorInput;
   preset?: PresetBinding;
   intake_triage?: TriageResponse;
   external_inputs?: Record<string, unknown>;
@@ -450,6 +561,37 @@ export type ReplanEvent = EventBase & {
   plan_after: DispatchPlan;
   approvals: ReplanApproval[];
 };
+export type ComplianceRuleEvent = EventBase & {
+  type: 'compliance_rule';
+  kind: 'decision' | 'document';
+  rule_id: string;
+  supersedes_id?: string;
+  owner_change_reference?: string;
+};
+export type ComplianceCiteEvent = EventBase & {
+  type: 'compliance_cite';
+  citation_id: string;
+  target_context: string;
+  violation_kind: ComplianceViolationKind;
+  severity: ComplianceSeverity;
+  decision_ids: string[];
+  document_ids: string[];
+  reopened_packet: boolean;
+};
+export type ComplianceResolveEvent = EventBase & {
+  type: 'compliance_resolve';
+  citation_id: string;
+  resolution_evidence: string;
+  resolution_note: string;
+};
+export type ComplianceCheckpointEvent = EventBase & {
+  type: 'compliance_checkpoint';
+  checkpoint_id: string;
+  target_context: string;
+  status: 'clear' | 'violations-found';
+  checked_decision_ids: string[];
+  checked_document_ids: string[];
+};
 
 export type WorkflowEvent =
   | AssignEvent
@@ -457,9 +599,12 @@ export type WorkflowEvent =
   | SubmitEvent
   | ReviewEvent
   | ReasonEvent
-  | ReplanEvent;
+  | ReplanEvent
+  | ComplianceRuleEvent
+  | ComplianceCiteEvent
+  | ComplianceResolveEvent
+  | ComplianceCheckpointEvent;
 export type EventType = WorkflowEvent['type'];
-
 // Later events of a batch may omit expected_revision; the controller fills it in order.
 type WithOptionalRevision<T> = T extends unknown
   ? Omit<T, 'expected_revision'> & { expected_revision?: number }
@@ -504,6 +649,7 @@ export interface Run {
   dei?: DeiPolicy;
   improvement?: ImprovementPolicy;
   cache_policy?: CachePolicy;
+  compliance_monitor?: ComplianceMonitorState;
   preset?: PresetBinding;
   planning_limits?: PlanningLimitsInput;
   supervision?: Supervision;

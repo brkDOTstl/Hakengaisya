@@ -95,6 +95,10 @@ For an explicitly enabled Harness2 policy, read [the bounded optimizer contract]
 
 The graph creates only actual work packets. Supervisory levels exist where their scope requires them; no ceremonial departments are appended. A terminal packet uses the internal handover identifier and the root supervisor checks final user acceptance there. Full-template execution requires explicit reference_workflow:true for a requested rehearsal; it is not the ordinary default.
 
+## Requirement and decision compliance monitor
+
+For long-running or multi-compaction work, enable the dedicated zero-production `compliance_monitor` (`compliance-monitor` organization module, `brief.compliance_monitor`) in an isolated context separate from `lead_context` and every worker slot. The monitor performs zero production work and never takes delivery-signoff authority; it holds the authoritative ledger of settled owner decisions (`must_not_reask: true` by default) and governing documents (`compliance_record_rule`). Only `monitor_context` may supersede settled rules with an explicit `owner_change_reference`, issue blocking citations (`compliance_cite`) when `lead_context` or a major executor forgets a decision, drifts from a document or attempts to re-ask an already-settled question, resolve verified fixes (`compliance_resolve`), and record the clear pre-handover checkpoint (`compliance_checkpoint`) required before final handover acceptance. Use `compliance_inspect` to wake the monitor with a clean, compact read-only oversight brief instead of raw transcripts.
+
 ## Evidence and efficiency
 
 Record actual model binding, calls when exposed, waits, useful work, correction rounds and observed quality/cost. Do not attribute wall-clock gaps to model speed without telemetry. Forecasts use historical task observations; they do not prove a future bill, global-optimal schedule or measured speedup.

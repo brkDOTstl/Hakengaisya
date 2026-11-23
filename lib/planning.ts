@@ -1,4 +1,5 @@
 import { normalizeCachePolicy } from './cache-policy.ts';
+import { assertMonitorNotInWorkers } from './compliance-monitor.ts';
 import { normalizeImprovement } from './learning.ts';
 import { normalizeDei, reserveDeiWork } from './participation.ts';
 import { assertRegisteredSupervisor, createSupervision } from './supervision.ts';
@@ -1498,6 +1499,9 @@ const isFeasible = (item: Alternative): item is FeasibleAlternative =>
 
 export function planWork(brief: BriefInput, workers: WorkerInput[]): AuditedPlan {
   const dei = normalizeDei(brief.dei);
+  if (brief.compliance_monitor?.enabled) {
+    assertMonitorNotInWorkers(brief.compliance_monitor.monitor_context, workers);
+  }
   const requested =
     brief.planning_limits?.max_workers ??
     brief.planning_limits?.max_parallel ??

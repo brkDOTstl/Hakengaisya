@@ -194,3 +194,46 @@ test('packaged organization composition runs from an unrelated directory', () =>
   assert.equal(proposal.position_count, 8);
   assert.equal(proposal.phase, 'production');
 });
+
+test('compliance-monitor module adds a non-producing oversight role that cannot merge with any other position', () => {
+  const withMonitor = composeOrganization(catalog, {
+    ...small,
+    max_positions: 4,
+    core_modules: ['core', 'software', 'compliance-monitor'],
+    phases: [],
+  });
+  assert.equal(withMonitor.position_count, 3);
+  const monitor = withMonitor.positions.find((role) => role.id === 'compliance_monitor');
+  assert.equal(monitor?.non_producing, true);
+  assert.equal(monitor?.escalates_to, 'project_owner');
+  assert.ok(monitor?.independent_of.includes('project_lead'));
+  assert.ok(monitor?.independent_of.includes('technical_lead'));
+  const monitorAcceptance = withMonitor.acceptance.find(
+    (item) => item.position === 'compliance_monitor',
+  );
+  assert.equal(monitorAcceptance?.own_production_signoff_by, null);
+  assert.match(monitorAcceptance?.oversight_escalation ?? '', /project_owner/);
+
+  assert.throws(
+    () =>
+      composeOrganization(catalog, {
+        ...small,
+        max_positions: 4,
+        core_modules: ['core', 'software', 'compliance-monitor'],
+        phases: [],
+        merge_positions: [{ from: 'compliance_monitor', into: 'technical_lead' }],
+      }),
+    /Non-producing compliance oversight cannot merge/,
+  );
+  assert.throws(
+    () =>
+      composeOrganization(catalog, {
+        ...small,
+        max_positions: 4,
+        core_modules: ['core', 'software', 'compliance-monitor'],
+        phases: [],
+        merge_positions: [{ from: 'technical_lead', into: 'compliance_monitor' }],
+      }),
+    /Non-producing compliance oversight cannot merge/,
+  );
+});

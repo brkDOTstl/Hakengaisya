@@ -32,6 +32,11 @@ const usage = [
   'experience-lookup <run.json> <request.json>',
   'project-memory-register <run.json> <request.json>',
   'project-memory-lookup <run.json> <request.json>',
+  'compliance-inspect <run.json> [request.json]',
+  'compliance-record-rule <run.json> <request.json>',
+  'compliance-cite <run.json> <request.json>',
+  'compliance-resolve <run.json> <request.json>',
+  'compliance-checkpoint <run.json> <request.json>',
   'optimizer-snapshot <directory>',
   'optimizer-host-next <request.json>',
   'optimizer-host-claim <request.json>',
@@ -131,6 +136,31 @@ try {
     );
   else if (command === 'project-memory-lookup' && target && source)
     result = await commands.project_memory_lookup.run(
+      { run_file: target, request: await json(source) },
+      context,
+    );
+  else if (command === 'compliance-inspect' && target && !extra)
+    result = await commands.compliance_inspect.run(
+      { run_file: target, request: source ? await json(source) : undefined },
+      context,
+    );
+  else if (command === 'compliance-record-rule' && target && source)
+    result = await commands.compliance_record_rule.run(
+      { run_file: target, request: await json(source) },
+      context,
+    );
+  else if (command === 'compliance-cite' && target && source)
+    result = await commands.compliance_cite.run(
+      { run_file: target, request: await json(source) },
+      context,
+    );
+  else if (command === 'compliance-resolve' && target && source)
+    result = await commands.compliance_resolve.run(
+      { run_file: target, request: await json(source) },
+      context,
+    );
+  else if (command === 'compliance-checkpoint' && target && source)
+    result = await commands.compliance_checkpoint.run(
       { run_file: target, request: await json(source) },
       context,
     );

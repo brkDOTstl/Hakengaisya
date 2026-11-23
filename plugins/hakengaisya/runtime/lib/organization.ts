@@ -10,6 +10,8 @@ export interface OrganizationPositionInput {
   skills: string[];
   evidence_mode: string;
   independent_of?: string[];
+  non_producing?: boolean;
+  escalates_to?: string;
 }
 
 export interface OrganizationModule {
@@ -82,6 +84,7 @@ export interface OrganizationProposal {
     direct_signoff_by: string | null;
     own_production_signoff_by: string | null;
     root_acceptance: string | null;
+    oversight_escalation?: string;
   }[];
   exit_criteria: string[];
   reference_months: [number, number] | null;
@@ -178,6 +181,11 @@ export function composeOrganization(
       check(!positions.has(original.id), 'Duplicate position identifier');
       text(original.evidence_mode);
       names(original.independent_of ?? [], 'Independent role requirements');
+      check(
+        original.non_producing === undefined || typeof original.non_producing === 'boolean',
+        'Position non_producing flag must be boolean',
+      );
+      if (original.escalates_to !== undefined) text(original.escalates_to);
       for (const key of ['functions', 'deliverables', 'skills'] as const) {
         names(original[key], `Position ${key}`);
         check(original[key].length > 0, 'Positions need real work, outputs and skills');
@@ -224,6 +232,10 @@ export function composeOrganization(
     check(
       from && into && from !== into && from.reports_to !== null && into.reports_to !== null,
       'Merges need two active non-root positions',
+    );
+    check(
+      !from.non_producing && !into.non_producing,
+      'Non-producing compliance oversight cannot merge with any other position',
     );
     check(
       from.reports_to === into.id || from.reports_to === into.reports_to,
@@ -285,11 +297,16 @@ export function composeOrganization(
     acceptance: roles.map((position) => ({
       position: position.id,
       direct_signoff_by: position.reports_to,
-      own_production_signoff_by: position.reports_to,
+      own_production_signoff_by: position.non_producing ? null : position.reports_to,
       root_acceptance:
         position.reports_to === null
           ? 'Project owner and real outcome evidence; no self-certified production.'
           : null,
+      ...(position.non_producing && position.escalates_to
+        ? {
+            oversight_escalation: `Direct escalation to ${position.escalates_to}; zero production work and cannot be silenced or merged by ${position.reports_to ?? 'root'}.`,
+          }
+        : {}),
     })),
     exit_criteria: phase?.exit_criteria ?? [],
     reference_months: phase?.months ?? null,
