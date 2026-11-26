@@ -35,6 +35,9 @@ const CONFIG_FIELDS = [
   'block_handover_on_open_citations',
   'block_dispatch_on_target_citation',
   'require_checkpoint_before_handover',
+  'audit_every_n_submissions',
+  'audit_on_replan',
+  'max_minutes_between_audits',
 ];
 
 const DECISION_FIELDS = ['id', 'summary', 'source', 'must_not_reask', 'applies_to'];
@@ -179,6 +182,9 @@ export function normalizeComplianceMonitor(
       block_handover_on_open_citations: true,
       block_dispatch_on_target_citation: true,
       require_checkpoint_before_handover: true,
+      audit_every_n_submissions: null,
+      audit_on_replan: false,
+      max_minutes_between_audits: null,
       decisions: [],
       documents: [],
       citations: [],
@@ -210,10 +216,33 @@ export function normalizeComplianceMonitor(
     'block_handover_on_open_citations',
     'block_dispatch_on_target_citation',
     'require_checkpoint_before_handover',
+    'audit_on_replan',
   ] as const) {
     if (value[flag] !== undefined) {
       check(typeof value[flag] === 'boolean', `compliance_monitor.${flag} must be boolean`);
     }
+  }
+  let auditEveryNSubmissions: number | null = null;
+  if (value.audit_every_n_submissions !== undefined && value.audit_every_n_submissions !== null) {
+    check(
+      typeof value.audit_every_n_submissions === 'number' &&
+        Number.isSafeInteger(value.audit_every_n_submissions) &&
+        value.audit_every_n_submissions >= 1 &&
+        value.audit_every_n_submissions <= 1000,
+      'compliance_monitor.audit_every_n_submissions must be an integer between 1 and 1000',
+    );
+    auditEveryNSubmissions = value.audit_every_n_submissions;
+  }
+  let maxMinutesBetweenAudits: number | null = null;
+  if (value.max_minutes_between_audits !== undefined && value.max_minutes_between_audits !== null) {
+    check(
+      typeof value.max_minutes_between_audits === 'number' &&
+        Number.isFinite(value.max_minutes_between_audits) &&
+        value.max_minutes_between_audits > 0 &&
+        value.max_minutes_between_audits <= 10080,
+      'compliance_monitor.max_minutes_between_audits must be a positive number up to 10080',
+    );
+    maxMinutesBetweenAudits = value.max_minutes_between_audits;
   }
 
   const decisionsRaw = value.decisions ?? [];
@@ -244,6 +273,9 @@ export function normalizeComplianceMonitor(
     block_dispatch_on_target_citation: (value.block_dispatch_on_target_citation as boolean) ?? true,
     require_checkpoint_before_handover:
       (value.require_checkpoint_before_handover as boolean) ?? true,
+    audit_every_n_submissions: auditEveryNSubmissions,
+    audit_on_replan: (value.audit_on_replan as boolean) ?? true,
+    max_minutes_between_audits: maxMinutesBetweenAudits,
     decisions,
     documents,
     citations: [],
@@ -300,32 +332,55 @@ export function watchedTargetsOf(run: Run): string[] {
   return [...targets].sort();
 }
 
+const PERIODIC_BRAKE_CODES: Record<string, true> = {
+  'submission-threshold': true,
+  'replan-detected': true,
+  'time-elapsed': true,
+};
+
 export function assertComplianceStartable(run: Run, packet: Packet): void {
   const cm = run.compliance_monitor;
-  if (!cm?.enabled || !cm.block_dispatch_on_target_citation) return;
+  if (!cm?.enabled) return;
   const openBlocking = cm.citations.filter(
     (item) => item.status === 'open' && item.severity === 'blocking',
   );
-  if (openBlocking.length === 0) return;
-
   const owner = packet.assignment?.owner_context;
-  for (const citation of openBlocking) {
-    if (citation.target_context === run.lead_context) {
-      throw new Error(
-        `Lead context has an open blocking compliance citation (${citation.id}); resolve forgotten decisions or drift before starting more work`,
-      );
+  let isCorrectiveRework = false;
+
+  if (cm.block_dispatch_on_target_citation && openBlocking.length > 0) {
+    for (const citation of openBlocking) {
+      if (citation.target_context === run.lead_context) {
+        throw new Error(
+          `Lead context has an open blocking compliance citation (${citation.id}); resolve forgotten decisions or drift before starting more work`,
+        );
+      }
+      const matchesOwner = owner !== undefined && citation.target_context === owner;
+      const matchesPacket = citation.packet_id !== null && citation.packet_id === packet.id;
+      if (!matchesOwner && !matchesPacket) continue;
+      // Allow corrective rework strictly for the exact reopened packet on a newer attempt.
+      const corrective =
+        citation.packet_id === packet.id &&
+        citation.attempt !== null &&
+        packet.attempt > citation.attempt;
+      if (corrective) {
+        isCorrectiveRework = true;
+      } else {
+        throw new Error(
+          `Target executor or packet has an open blocking compliance citation (${citation.id}); correct and resolve the violation before starting work`,
+        );
+      }
     }
-    const matchesOwner = owner !== undefined && citation.target_context === owner;
-    const matchesPacket = citation.packet_id !== null && citation.packet_id === packet.id;
-    if (!matchesOwner && !matchesPacket) continue;
-    // Allow corrective rework strictly for the exact reopened packet on a newer attempt.
-    const isCorrectiveRework =
-      citation.packet_id === packet.id &&
-      citation.attempt !== null &&
-      packet.attempt > citation.attempt;
-    if (!isCorrectiveRework) {
+  }
+
+  if (!isCorrectiveRework) {
+    const wake = evaluateComplianceWake(run, {
+      now: latestJournalRecordedAt(run) ?? undefined,
+      include_audit_packet: false,
+    });
+    const periodic = wake.reasons.filter((item) => Boolean(PERIODIC_BRAKE_CODES[item.code]));
+    if (periodic.length > 0) {
       throw new Error(
-        `Target executor or packet has an open blocking compliance citation (${citation.id}); correct and resolve the violation before starting work`,
+        `Periodic compliance audit required (${periodic.map((item) => item.code).join(', ')}); wake ${cm.monitor_context} via compliance_inspect and record a clear compliance_checkpoint before starting more work`,
       );
     }
   }
@@ -439,8 +494,17 @@ export function assertComplianceReviewGate(
     `Open blocking compliance citation (${packetCitation?.id ?? ''}) on packet ${packet.id} must be resolved by the compliance monitor before acceptance`,
   );
 
-  if (!finalAcceptance) return;
+  const wake = evaluateComplianceWake(run, {
+    now: latestJournalRecordedAt(run) ?? undefined,
+    include_audit_packet: false,
+  });
+  const periodic = wake.reasons.filter((item) => Boolean(PERIODIC_BRAKE_CODES[item.code]));
+  check(
+    periodic.length === 0,
+    `Periodic compliance audit required (${periodic.map((item) => item.code).join(', ')}); wake ${cm.monitor_context} via compliance_inspect and record a clear compliance_checkpoint before accepting ${packet.id}`,
+  );
 
+  if (!finalAcceptance) return;
   const clearance = handoverClearance(run);
   if (cm.block_handover_on_open_citations) {
     check(
@@ -1304,5 +1368,310 @@ export function summarizeComplianceMonitor(
     reask_violations: reaskViolations,
     lead_citations: leadCitations,
     handover_clearance_ready: clearance.ready,
+  };
+}
+
+export type ComplianceWakeReasonCode =
+  | 'open-blocking-citation'
+  | 'submission-threshold'
+  | 'replan-detected'
+  | 'time-elapsed'
+  | 'handover-pending'
+  | 'forced-hook';
+
+export interface ComplianceWakeReason {
+  code: ComplianceWakeReasonCode;
+  blocking: boolean;
+  detail: string;
+  count?: number;
+  threshold?: number;
+  elapsed_minutes?: number;
+  citation_ids?: string[];
+}
+
+export interface ComplianceWakeOptions {
+  now?: string;
+  force?: boolean;
+  hook_reason?: string;
+  target_context?: string;
+  packet_id?: string;
+  include_audit_packet?: boolean;
+}
+
+export interface ComplianceWakeStatus {
+  enabled: boolean;
+  wake_required: boolean;
+  blocking_gate_active: boolean;
+  monitor_context: string | null;
+  run_id: string;
+  revision: number;
+  trigger_fingerprint: string | null;
+  reasons: ComplianceWakeReason[];
+  counters: {
+    submissions_since_last_clear: number;
+    replans_since_last_clear: number;
+    open_blocking_citations: number;
+    elapsed_minutes_since_anchor: number | null;
+    last_clear_checkpoint_revision: number | null;
+    last_clear_checkpoint_at: string | null;
+  };
+  audit_packet: ReturnType<typeof prepareComplianceAudit> | null;
+  recommended_action: string;
+}
+
+function parseIsoMs(value: unknown): number | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+export function latestJournalRecordedAt(run: Run): string | null {
+  for (let i = run.journal.length - 1; i >= 0; i -= 1) {
+    const ts = run.journal[i]?.recorded_at;
+    if (parseIsoMs(ts) !== null) return ts as string;
+  }
+  return null;
+}
+
+function recordedAtForRevision(run: Run, revision: number): string | null {
+  for (let i = run.journal.length - 1; i >= 0; i -= 1) {
+    const entry = run.journal[i];
+    if (entry?.revision === revision && parseIsoMs(entry.recorded_at) !== null) {
+      return entry.recorded_at as string;
+    }
+  }
+  return null;
+}
+
+function latestQualifyingClearCheckpoint(run: Run): {
+  checkpoint: ComplianceCheckpoint;
+  recorded_at: string | null;
+} | null {
+  const cm = run.compliance_monitor;
+  if (!cm?.enabled) return null;
+  const activeDecisions = cm.decisions
+    .filter((item) => item.status === 'active')
+    .map((item) => item.id);
+  const activeDocuments = cm.documents
+    .filter((item) => item.status === 'active')
+    .map((item) => item.id);
+  const clearCheckpoints = cm.checkpoints
+    .filter((cp) => cp.status === 'clear' && cp.recorded_by === cm.monitor_context)
+    .sort((a, b) => b.recorded_at_revision - a.recorded_at_revision);
+  for (const cp of clearCheckpoints) {
+    const coversAll =
+      activeDecisions.every((id) => cp.checked_decision_ids.includes(id)) &&
+      activeDocuments.every((id) => cp.checked_document_ids.includes(id));
+    if (coversAll) {
+      return {
+        checkpoint: cp,
+        recorded_at: recordedAtForRevision(run, cp.recorded_at_revision),
+      };
+    }
+  }
+  return null;
+}
+
+export function evaluateComplianceWake(
+  run: Run,
+  options: ComplianceWakeOptions = {},
+): ComplianceWakeStatus {
+  const cm = run.compliance_monitor;
+  if (!cm?.enabled) {
+    return {
+      enabled: false,
+      wake_required: false,
+      blocking_gate_active: false,
+      monitor_context: null,
+      run_id: run.run_id,
+      revision: run.revision,
+      trigger_fingerprint: null,
+      reasons: [],
+      counters: {
+        submissions_since_last_clear: 0,
+        replans_since_last_clear: 0,
+        open_blocking_citations: 0,
+        elapsed_minutes_since_anchor: null,
+        last_clear_checkpoint_revision: null,
+        last_clear_checkpoint_at: null,
+      },
+      audit_packet: null,
+      recommended_action: 'Compliance monitor is not enabled for this run.',
+    };
+  }
+  if (options.now !== undefined) {
+    check(
+      parseIsoMs(options.now) !== null,
+      'Invalid ISO timestamp supplied to compliance wake check',
+    );
+  }
+  const lastClear = latestQualifyingClearCheckpoint(run);
+  const lastClearRevision = lastClear?.checkpoint.recorded_at_revision ?? 0;
+
+  let submissionsSinceClear = 0;
+  let replansSinceClear = 0;
+  let hasPostClearActivity = false;
+  let earliestJournalAt: string | null = null;
+
+  for (const entry of run.journal) {
+    if (earliestJournalAt === null && parseIsoMs(entry?.recorded_at) !== null) {
+      earliestJournalAt = entry.recorded_at as string;
+    }
+    const type = entry?.event?.type;
+    if (!type || entry.revision <= lastClearRevision) continue;
+    if (type === 'submit') submissionsSinceClear += 1;
+    if (type === 'replan') replansSinceClear += 1;
+    if (
+      type === 'start' ||
+      type === 'submit' ||
+      type === 'review' ||
+      type === 'replan' ||
+      type === 'compliance_rule'
+    ) {
+      hasPostClearActivity = true;
+    }
+  }
+
+  const packets = Object.values(run.packets);
+  const complete = packets.every((packet) => packet.status === 'accepted');
+  const hasActiveWork =
+    hasPostClearActivity ||
+    packets.some(
+      (packet) =>
+        packet.status === 'running' || packet.status === 'in_review' || packet.status === 'blocked',
+    );
+
+  const openBlocking = cm.citations
+    .filter((item) => item.status === 'open' && item.severity === 'blocking')
+    .map((item) => item.id);
+
+  const anchorIso = lastClear?.recorded_at ?? earliestJournalAt;
+  const anchorMs = parseIsoMs(anchorIso);
+  const nowMs = parseIsoMs(options.now);
+  const elapsedMinutes =
+    anchorMs !== null && nowMs !== null && nowMs >= anchorMs
+      ? Math.round(((nowMs - anchorMs) / 60_000) * 100) / 100
+      : null;
+
+  const reasons: ComplianceWakeReason[] = [];
+
+  if (openBlocking.length > 0) {
+    reasons.push({
+      code: 'open-blocking-citation',
+      blocking: true,
+      detail: `${openBlocking.length} open blocking compliance citation(s) require verification and resolution.`,
+      count: openBlocking.length,
+      citation_ids: openBlocking,
+    });
+  }
+
+  const submitCap = cm.audit_every_n_submissions ?? null;
+  if (submitCap !== null && submissionsSinceClear >= submitCap) {
+    reasons.push({
+      code: 'submission-threshold',
+      blocking: true,
+      detail: `${submissionsSinceClear} submission(s) recorded since the last clear compliance checkpoint (threshold: ${submitCap}).`,
+      count: submissionsSinceClear,
+      threshold: submitCap,
+    });
+  }
+
+  const auditOnReplan = cm.audit_on_replan ?? true;
+  if (auditOnReplan && replansSinceClear > 0) {
+    reasons.push({
+      code: 'replan-detected',
+      blocking: true,
+      detail: `${replansSinceClear} replan(s) occurred since the last clear compliance checkpoint; verify settled decisions and governing documents were not dropped.`,
+      count: replansSinceClear,
+    });
+  }
+
+  const maxMinutes = cm.max_minutes_between_audits ?? null;
+  let timeBucket: number | null = null;
+  if (
+    maxMinutes !== null &&
+    !complete &&
+    hasActiveWork &&
+    elapsedMinutes !== null &&
+    elapsedMinutes >= maxMinutes
+  ) {
+    timeBucket = Math.floor(elapsedMinutes / maxMinutes);
+    reasons.push({
+      code: 'time-elapsed',
+      blocking: true,
+      detail: `${elapsedMinutes} minutes elapsed since the last compliance audit anchor (limit: ${maxMinutes} min).`,
+      elapsed_minutes: elapsedMinutes,
+      threshold: maxMinutes,
+    });
+  }
+
+  const clearance = handoverClearance(run);
+  if (
+    cm.require_checkpoint_before_handover &&
+    run.packets.handover?.status === 'in_review' &&
+    !clearance.ready
+  ) {
+    reasons.push({
+      code: 'handover-pending',
+      blocking: true,
+      detail:
+        'Terminal handover is in_review and requires a current clear compliance checkpoint covering all active decisions and governing documents.',
+    });
+  }
+
+  if (options.force === true) {
+    reasons.push({
+      code: 'forced-hook',
+      blocking: false,
+      detail:
+        typeof options.hook_reason === 'string' && options.hook_reason.trim()
+          ? `Host hook requested immediate compliance audit: ${options.hook_reason.trim()}`
+          : 'Host lifecycle hook requested an immediate compliance audit.',
+    });
+  }
+
+  const wakeRequired = reasons.length > 0;
+  const blockingGateActive = reasons.some((item) => item.blocking);
+  const triggerFingerprint = wakeRequired
+    ? sha256Digest({
+        run_id: run.run_id,
+        revision: run.revision,
+        codes: reasons.map((item) => item.code),
+        open_blocking: openBlocking,
+        time_bucket: timeBucket,
+        hook_reason: options.force ? (options.hook_reason?.trim() ?? 'forced') : null,
+      })
+    : null;
+
+  const includeAudit = options.include_audit_packet ?? true;
+  const auditPacket =
+    wakeRequired && includeAudit
+      ? prepareComplianceAudit(run, {
+          target_context: options.target_context,
+          packet_id: options.packet_id,
+        })
+      : null;
+
+  return {
+    enabled: true,
+    wake_required: wakeRequired,
+    blocking_gate_active: blockingGateActive,
+    monitor_context: cm.monitor_context,
+    run_id: run.run_id,
+    revision: run.revision,
+    trigger_fingerprint: triggerFingerprint,
+    reasons,
+    counters: {
+      submissions_since_last_clear: submissionsSinceClear,
+      replans_since_last_clear: replansSinceClear,
+      open_blocking_citations: openBlocking.length,
+      elapsed_minutes_since_anchor: elapsedMinutes,
+      last_clear_checkpoint_revision: lastClear?.checkpoint.recorded_at_revision ?? null,
+      last_clear_checkpoint_at: lastClear?.recorded_at ?? null,
+    },
+    audit_packet: auditPacket,
+    recommended_action: wakeRequired
+      ? `Wake isolated monitor_context "${cm.monitor_context}" with the attached audit_packet (${reasons.map((item) => item.code).join(', ')}); issue compliance_cite on any drift or record a clear compliance_checkpoint.`
+      : 'No compliance monitor wake is required at this revision.',
   };
 }

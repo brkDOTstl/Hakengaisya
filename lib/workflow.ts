@@ -8,7 +8,9 @@ import {
   assertComplianceReviewGate,
   assertComplianceStartable,
   assertMonitorIsolation,
+  evaluateComplianceWake,
   handoverClearance,
+  latestJournalRecordedAt,
   normalizeComplianceMonitor,
 } from './compliance-monitor.ts';
 import { normalizeImprovement } from './learning.ts';
@@ -1064,6 +1066,10 @@ export function nextActions(run: Run) {
               run.compliance_monitor.citations.filter((item) => item.status === 'open'),
             ),
             handover_clearance: handoverClearance(run),
+            wake_status: evaluateComplianceWake(run, {
+              now: latestJournalRecordedAt(run) ?? undefined,
+              include_audit_packet: false,
+            }),
           },
         }
       : {}),

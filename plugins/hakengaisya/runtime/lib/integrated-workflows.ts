@@ -18,6 +18,8 @@ import {
   type ComplianceCiteRequest,
   type ComplianceResolveRequest,
   type ComplianceRuleRequest,
+  type ComplianceWakeOptions,
+  evaluateComplianceWake,
   issueComplianceCitation,
   prepareComplianceAudit,
   recordComplianceCheckpoint,
@@ -775,6 +777,24 @@ export async function runComplianceInspect(
       : form<{ target_context?: string; packet_id?: string }>(request);
   const run = await readRun(resolveRunFile(run_file, base));
   return prepareComplianceAudit(run, input);
+}
+
+export async function runComplianceWakeCheck(
+  run_file: unknown,
+  request: unknown,
+  base?: string | null,
+) {
+  const input =
+    request === undefined || request === null ? {} : form<ComplianceWakeOptions>(request);
+  const run = await readRun(resolveRunFile(run_file, base));
+  return evaluateComplianceWake(run, {
+    now: input.now ?? new Date().toISOString(),
+    force: input.force,
+    hook_reason: input.hook_reason,
+    target_context: input.target_context,
+    packet_id: input.packet_id,
+    include_audit_packet: input.include_audit_packet,
+  });
 }
 
 export async function runComplianceRecordRule(

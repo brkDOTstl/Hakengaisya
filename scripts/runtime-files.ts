@@ -40,6 +40,7 @@ export function runtimeFiles(): string[] {
     ...presets,
     ...presetExamples,
     'scripts/workflow.ts',
+    'scripts/compliance-watchdog.ts',
     'examples/integrated/cold-start.json',
     'packages/optimizer/src/adapter.ts',
     'packages/optimizer/src/contract.ts',

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { commands } from '../lib/commands.ts';
 import {
+  evaluateComplianceWake,
   issueComplianceCitation,
   prepareComplianceAudit,
   recordComplianceCheckpoint,
@@ -690,4 +691,248 @@ test('compliance CLI/MCP commands persist rule updates, citations, checkpoints a
   const snapshot = await lookupProjectMemory(run, 'demo-repo', stateDir);
   assert.deepEqual(snapshot.entry_ids, ['owner-sqlite-rule']);
   assert.match(snapshot.rendered_prefix, /## \[decisions\] Settled storage engine/);
+});
+
+test('periodic hard brakes block dispatch and acceptance on submission threshold, replan and elapsed time until monitor records a clear checkpoint', () => {
+  let run = createRun(
+    null,
+    monitoredBrief({
+      compliance_monitor: {
+        enabled: true,
+        monitor_context: 'compliance-monitor',
+        watched_contexts: ['ctx-alpha'],
+        audit_every_n_submissions: 1,
+        audit_on_replan: true,
+        max_minutes_between_audits: 10,
+        decisions: [
+          {
+            id: 'dec-storage-sqlite',
+            summary: 'Use local SQLite.',
+            source: 'docs/DECISIONS.md#D-01',
+            must_not_reask: true,
+          },
+        ],
+        documents: [
+          {
+            id: 'doc-api-contract',
+            reference: 'docs/api.md',
+            requirement: 'Include revision numbers in responses.',
+          },
+        ],
+      },
+    }),
+  );
+  const at = (ev: BatchEvent, iso: string) =>
+    applyEvent(run, { ...ev, expected_revision: run.revision } as WorkflowEvent, iso);
+
+  run = at(
+    {
+      id: 'a-storage',
+      packet_id: 'work_storage',
+      attempt: 1,
+      type: 'assign',
+      actor_context: 'lead',
+      assignment: {
+        owner_context: 'ctx-alpha',
+        reviewer_context: 'lead',
+        contributor_contexts: [],
+        writes: ['src/storage.ts'],
+      },
+    },
+    '2026-11-24T00:00:00.000Z',
+  );
+  run = at(
+    {
+      id: 'a-api',
+      packet_id: 'work_api',
+      attempt: 1,
+      type: 'assign',
+      actor_context: 'lead',
+      assignment: {
+        owner_context: 'ctx-alpha',
+        reviewer_context: 'lead',
+        contributor_contexts: [],
+        writes: ['src/api.ts'],
+      },
+    },
+    '2026-11-24T00:00:05.000Z',
+  );
+  run = at(
+    {
+      id: 's-storage',
+      packet_id: 'work_storage',
+      attempt: 1,
+      type: 'start',
+      actor_context: 'ctx-alpha',
+    },
+    '2026-11-24T00:01:00.000Z',
+  );
+  run = at(
+    {
+      id: 'sub-storage',
+      packet_id: 'work_storage',
+      attempt: 1,
+      type: 'submit',
+      actor_context: 'ctx-alpha',
+      outputs: [{ id: 'storage_code', reference: 'src/storage.ts', summary: 'SQLite.' }],
+      evidence: [{ reference: 'logs/s.txt', summary: 'Pass.' }],
+    },
+    '2026-11-24T00:02:00.000Z',
+  );
+
+  // Submission threshold (1) trips automatically even if lead forgot to call monitor!
+  const snap = nextActions(run);
+  assert.equal(snap.compliance_monitor?.wake_status.wake_required, true);
+  assert.equal(snap.compliance_monitor?.wake_status.blocking_gate_active, true);
+  assert.ok(
+    snap.compliance_monitor?.wake_status.reasons.some((r) => r.code === 'submission-threshold'),
+  );
+
+  // Lead CANNOT start work_api OR accept work_storage until monitor inspects and records a clear checkpoint!
+  assert.throws(
+    () => prepareDispatch(run, 'work_api'),
+    /Periodic compliance audit required \(submission-threshold\)/,
+  );
+  assert.throws(
+    () =>
+      at(
+        {
+          id: 'rev-blocked',
+          packet_id: 'work_storage',
+          attempt: 1,
+          type: 'review',
+          actor_context: 'lead',
+          decision: 'accepted',
+          checks: [{ index: 0, result: 'pass', evidence_reference: 'logs/s.txt', note: 'OK' }],
+        },
+        '2026-11-24T00:02:10.000Z',
+      ),
+    /Periodic compliance audit required \(submission-threshold\)/,
+  );
+
+  // Monitor records clear checkpoint -> both acceptance and next dispatch immediately unblock!
+  run = recordComplianceCheckpoint(
+    run,
+    {
+      expected_revision: run.revision,
+      actor_context: 'compliance-monitor',
+      checkpoint_id: 'cp-step-1',
+      status: 'clear',
+      checked_decision_ids: ['dec-storage-sqlite'],
+      checked_document_ids: ['doc-api-contract'],
+      evidence_reference: 'logs/audit-1.txt',
+      note: 'Verified work_storage adheres to SQLite decision.',
+    },
+    '2026-11-24T00:03:00.000Z',
+  ).run;
+
+  run = at(
+    {
+      id: 'rev-storage-ok',
+      packet_id: 'work_storage',
+      attempt: 1,
+      type: 'review',
+      actor_context: 'lead',
+      decision: 'accepted',
+      checks: [{ index: 0, result: 'pass', evidence_reference: 'logs/s.txt', note: 'OK' }],
+    },
+    '2026-11-24T00:03:10.000Z',
+  );
+  assert.equal(run.packets.work_storage.status, 'accepted');
+
+  // Elapsed time > max_minutes_between_audits (10m) after last clear checkpoint (00:03 -> 00:15 = 12m) triggers time-elapsed!
+  const elapsedWake = evaluateComplianceWake(run, { now: '2026-11-24T00:15:00.000Z' });
+  assert.equal(elapsedWake.wake_required, true);
+  assert.equal(elapsedWake.blocking_gate_active, true);
+  assert.ok(elapsedWake.reasons.some((r) => r.code === 'time-elapsed'));
+  assert.equal(elapsedWake.audit_packet?.role, 'compliance_monitor');
+
+  // A replan recorded after the last clear checkpoint trips replan-detected and blocks dispatch until audited!
+  const replanned: ReturnType<typeof createRun> = {
+    ...run,
+    revision: run.revision + 1,
+    journal: [
+      ...run.journal,
+      {
+        revision: run.revision + 1,
+        recorded_at: '2026-11-24T00:04:00.000Z',
+        event: {
+          id: 'replan-sim',
+          expected_revision: run.revision,
+          packet_id: 'handover',
+          attempt: 1,
+          actor_context: 'lead',
+          type: 'replan',
+          reason: 'Synthetic replan.',
+          plan_before: {} as never,
+          plan_after: {} as never,
+          approvals: [],
+        },
+      },
+    ],
+  };
+  assert.throws(
+    () => prepareDispatch(replanned, 'work_api'),
+    /Periodic compliance audit required \(replan-detected\)/,
+  );
+});
+
+test('compliance-wake-check CLI supports host lifecycle hooks with --force, --reason and exit code 2 on wake', async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'hk-wake-cli-'));
+  const runFile = path.join(workspace, 'run.json');
+  const run = createRun(
+    null,
+    monitoredBrief({
+      compliance_monitor: {
+        enabled: true,
+        monitor_context: 'compliance-monitor',
+        audit_every_n_submissions: 1,
+        decisions: [
+          {
+            id: 'dec-sqlite',
+            summary: 'Use SQLite.',
+            source: 'docs/DECISIONS.md#D-01',
+            must_not_reask: true,
+          },
+        ],
+        documents: [],
+      },
+    }),
+  );
+  await createRunFile(runFile, run);
+
+  // Clean run -> exit 0, wake_required: false.
+  const clean = spawnSync(
+    process.execPath,
+    [workflowCli, 'compliance-wake-check', runFile, '--exit-nonzero-on-wake'],
+    { cwd: workspace, encoding: 'utf8' },
+  );
+  assert.equal(clean.status, 0);
+  assert.equal((JSON.parse(clean.stdout) as { wake_required: boolean }).wake_required, false);
+
+  // PostCompact / PreAskUser hook with --force --reason -> exit 2 + attached read-only audit packet!
+  const forced = spawnSync(
+    process.execPath,
+    [
+      workflowCli,
+      'compliance-wake-check',
+      runFile,
+      '--force',
+      '--reason',
+      'post-compact',
+      '--exit-nonzero-on-wake',
+    ],
+    { cwd: workspace, encoding: 'utf8' },
+  );
+  assert.equal(forced.status, 2);
+  const parsed = JSON.parse(forced.stdout) as {
+    wake_required: boolean;
+    reasons: { code: string; detail: string }[];
+    audit_packet: { role: string; must_not_reask_decision_ids: string[] };
+  };
+  assert.equal(parsed.wake_required, true);
+  assert.equal(parsed.reasons[0].code, 'forced-hook');
+  assert.match(parsed.reasons[0].detail, /post-compact/);
+  assert.equal(parsed.audit_packet.role, 'compliance_monitor');
+  assert.deepEqual(parsed.audit_packet.must_not_reask_decision_ids, ['dec-sqlite']);
 });

@@ -33,6 +33,7 @@ const usage = [
   'project-memory-register <run.json> <request.json>',
   'project-memory-lookup <run.json> <request.json>',
   'compliance-inspect <run.json> [request.json]',
+  'compliance-wake-check <run.json> [request.json] [--force] [--reason <text>] [--exit-nonzero-on-wake]',
   'compliance-record-rule <run.json> <request.json>',
   'compliance-cite <run.json> <request.json>',
   'compliance-resolve <run.json> <request.json>',
@@ -144,7 +145,40 @@ try {
       { run_file: target, request: source ? await json(source) : undefined },
       context,
     );
-  else if (command === 'compliance-record-rule' && target && source)
+  else if (command === 'compliance-wake-check' && target) {
+    const flags = process.argv.slice(4);
+    let requestPath: string | null = null;
+    let force = false;
+    let hookReason: string | undefined;
+    let exitNonzeroOnWake = false;
+    for (let i = 0; i < flags.length; i += 1) {
+      const arg = flags[i];
+      if (arg === '--force') force = true;
+      else if (arg === '--exit-nonzero-on-wake') exitNonzeroOnWake = true;
+      else if (arg === '--reason' && flags[i + 1]) {
+        hookReason = flags[i + 1];
+        i += 1;
+      } else if (!arg.startsWith('--') && requestPath === null) {
+        requestPath = arg;
+      } else {
+        throw new Error(`Unknown compliance-wake-check option: ${arg}`);
+      }
+    }
+    const fileRequest = requestPath ? await json<Record<string, unknown>>(requestPath) : {};
+    const wakeResult = (await commands.compliance_wake_check.run(
+      {
+        run_file: target,
+        request: {
+          ...fileRequest,
+          ...(force ? { force: true } : {}),
+          ...(hookReason !== undefined ? { hook_reason: hookReason } : {}),
+        },
+      },
+      context,
+    )) as { wake_required?: boolean };
+    result = wakeResult;
+    if (exitNonzeroOnWake && wakeResult.wake_required) process.exitCode = 2;
+  } else if (command === 'compliance-record-rule' && target && source)
     result = await commands.compliance_record_rule.run(
       { run_file: target, request: await json(source) },
       context,

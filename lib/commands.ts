@@ -14,6 +14,7 @@ import {
   runComplianceInspect,
   runComplianceRecordRule,
   runComplianceResolve,
+  runComplianceWakeCheck,
   runExperienceLookup,
   runExperienceRegister,
   runFeedbackFlush,
@@ -354,6 +355,18 @@ export const commands: Readonly<Record<string, Command>> = {
       request: object('Optional filter: { target_context?, packet_id? }.'),
     }),
     run: ({ run_file, request }, context) => runComplianceInspect(run_file, request, context?.base),
+  },
+  compliance_wake_check: {
+    description:
+      'Evaluate whether the isolated compliance monitor must wake now (open blocking citations, periodic submission/replan/time thresholds, pending handover clearance, or forced host lifecycle hook) and attach the compact read-only audit packet when wake_required is true.',
+    inputSchema: schema(['run_file'], {
+      run_file: runFile,
+      request: object(
+        'Optional: { now?, force?, hook_reason?, target_context?, packet_id?, include_audit_packet? }.',
+      ),
+    }),
+    run: ({ run_file, request }, context) =>
+      runComplianceWakeCheck(run_file, request, context?.base),
   },
   compliance_record_rule: {
     description:

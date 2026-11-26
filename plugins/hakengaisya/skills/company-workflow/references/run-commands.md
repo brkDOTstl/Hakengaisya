@@ -18,6 +18,7 @@ node HELPER harness2-job RUN.json PACKET_ID [STARTING_HARNESS.json]
 node HELPER harness2-result RUN.json JOB.json REPORT.json
 node HELPER event RUN.json EVENT.json
 node HELPER compliance-inspect RUN.json [REQUEST.json]
+node HELPER compliance-wake-check RUN.json [REQUEST.json] [--force] [--reason TEXT] [--exit-nonzero-on-wake]
 node HELPER compliance-record-rule RUN.json REQUEST.json
 node HELPER compliance-cite RUN.json REQUEST.json
 node HELPER compliance-resolve RUN.json REQUEST.json
@@ -36,7 +37,7 @@ Optional [DEI participation](model-participation.md) is configured in task-first
 
 Optional [Harness2 improvement](harness2.md) adds the read-only MCP tools hakengaisya_optimizer_job and hakengaisya_optimizer_result. They prepare a bounded job and validate its reviewed submission; the separate worker runs outside the controller lock. They do not launch models or accept technical work.
 
-Optional [Requirement & decision compliance monitor](compliance-monitor.md) adds `hakengaisya_compliance_inspect` (read-only oversight brief for the isolated monitor), `hakengaisya_compliance_record_rule`, `hakengaisya_compliance_cite`, `hakengaisya_compliance_resolve` and `hakengaisya_compliance_checkpoint`. The monitor performs zero production work, never merges with producing roles, and alone resolves citations or clears pre-handover checkpoints.
+Optional [Requirement & decision compliance monitor](compliance-monitor.md) adds `hakengaisya_compliance_inspect` (read-only oversight brief for the isolated monitor), `hakengaisya_compliance_wake_check` (read-only trigger check for hooks/watchdogs), `hakengaisya_compliance_record_rule`, `hakengaisya_compliance_cite`, `hakengaisya_compliance_resolve` and `hakengaisya_compliance_checkpoint`, plus the opt-in out-of-band `scripts/compliance-watchdog.ts` CLI. The monitor performs zero production work, never merges with producing roles, and alone resolves citations or clears pre-handover checkpoints.
 
 ## Brief
 

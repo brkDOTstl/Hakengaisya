@@ -1,7 +1,9 @@
 import { sha256Digest } from './canonical.ts';
 import {
   applicableComplianceForDispatch,
+  evaluateComplianceWake,
   handoverClearance,
+  latestJournalRecordedAt,
   summarizeComplianceMonitor,
 } from './compliance-monitor.ts';
 import { agentReview } from './participation.ts';
@@ -195,6 +197,10 @@ export function prepareReview(run: Run, packetId: string) {
           compliance_preview: {
             ...summarizeComplianceMonitor(run, packet.id === 'handover'),
             handover_clearance: handoverClearance(run),
+            wake_status: evaluateComplianceWake(run, {
+              now: latestJournalRecordedAt(run) ?? undefined,
+              include_audit_packet: false,
+            }),
           },
         }
       : {}),

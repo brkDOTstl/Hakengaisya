@@ -154,6 +154,9 @@ export interface ComplianceMonitorInput {
   block_handover_on_open_citations?: boolean;
   block_dispatch_on_target_citation?: boolean;
   require_checkpoint_before_handover?: boolean;
+  audit_every_n_submissions?: number | null;
+  audit_on_replan?: boolean;
+  max_minutes_between_audits?: number | null;
 }
 
 export interface ComplianceMonitorState {
@@ -163,6 +166,9 @@ export interface ComplianceMonitorState {
   block_handover_on_open_citations: boolean;
   block_dispatch_on_target_citation: boolean;
   require_checkpoint_before_handover: boolean;
+  audit_every_n_submissions?: number | null;
+  audit_on_replan?: boolean;
+  max_minutes_between_audits?: number | null;
   decisions: SettledDecision[];
   documents: GoverningDocument[];
   citations: ComplianceCitation[];
